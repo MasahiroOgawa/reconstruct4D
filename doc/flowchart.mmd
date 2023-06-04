@@ -1,0 +1,10 @@
+flowchart TD
+    A(extract points) -->|uniform distribution| B(get u,v flow)
+    B --> C(compute previsou position x_t-1)
+    B --> D(compute rotation deleted x_t)
+    C --> E(get rotation deleted arrow)
+    D --> E
+    E --> |reratively long 2 arrows from distanced region| F(choose 2 arrows)
+    F --> |crossed point| G(compute FoE)
+    G --> |RANSAC| H(update FoE)
+    H --> I(extract outliers as moving objects)
