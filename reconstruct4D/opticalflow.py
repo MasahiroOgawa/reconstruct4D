@@ -5,10 +5,10 @@ import main_flow
 import torch
 import unimatch.unimatch as unimatch
 
-'''
-compute optical flow estimation.
-'''
 class UnimatchFlow():
+    '''
+    compute optical flow using unimatch algorithm
+    '''
     def __init__(self) -> None:
         # treat args as a global variable
         parser = main_flow.get_args_parser()
@@ -26,4 +26,12 @@ class UnimatchFlow():
                             reg_refine=args.reg_refine,
                             task=args.task).to(device)
         print(model)
+
+    def compute(self, img1, img2):
+        '''
+        compute optical flow from 2 consecutive images.
+        '''
+        pass
+
+
 # %%
