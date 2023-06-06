@@ -1,11 +1,9 @@
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import numpy as np
-
-# compute optical flow estimation
 # %%
+import opticalflow
 
-x = np.linspace(0, 20, 100)
-plt.plot(x, np.sin(x))
-plt.show() 
+def main():
+    flow = opticalflow.UnimatchFlow()
+
+if __name__ == '__main__':
+    main()
 # %%
