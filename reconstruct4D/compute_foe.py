@@ -24,8 +24,11 @@ def main():
         print(imgname)
         print(img.shape)
         cv2.imshow('img', img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        key = cv2.waitKey(0)
+        if key == ord('q'):
+            break
+
+    cv2.destroyAllWindows()
 
     flow.compute(None, None)
 
