@@ -1,9 +1,11 @@
 # %%
+import torch
+import os
 import sys
 sys.path.append('../unimatch')
 import main_flow
 import unimatch
-import torch
+
 
 class UnimatchFlow():
     '''

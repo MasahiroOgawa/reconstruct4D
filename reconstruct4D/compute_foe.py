@@ -1,9 +1,9 @@
 # %%
+import os
+import cv2
 import sys
 sys.path.append('..')
 import reconstruct4D.opticalflow as opticalflow
-import os
-import cv2
 
 def main():
     # preparation
