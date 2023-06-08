@@ -9,9 +9,7 @@ def main():
     # preparation
     # TODO: use argparse. but currently to use jupyter, we cannot use argparse.
     image_dir = '/mnt/data/study/mine/computer_vision/todaiura/images/480p'
-    print(image_dir)
 
-    # get image files
     imgfiles = sorted([file for file in os.listdir(image_dir) if file.endswith('.jpg') or file.endswith('.png')])
     print(imgfiles)
     flow = opticalflow.UnimatchFlow()

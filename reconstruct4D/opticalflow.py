@@ -10,7 +10,10 @@ class UnimatchFlow():
     compute optical flow using unimatch algorithm
     '''
     def __init__(self) -> None:
-        pass
+        flow_dir = '../unimatch/output/todaiura'
+        flow_files = sorted([file for file in os.listdir(flow_dir) if file.endswith('.flo')])
+        print(f"flow_files={flow_files}")
+
         # # treat args as a global variable
         # parser = main_flow.get_args_parser()
         # args = parser.parse_args()
