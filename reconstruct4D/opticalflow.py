@@ -2,9 +2,11 @@
 import torch
 import os
 import sys
-sys.path.append('../unimatch')
+import cv2
+sys.path.append('../unimatch') # for import dataloader
 import main_flow
 import unimatch
+import utils
 
 
 class UnimatchFlow():
@@ -13,31 +15,24 @@ class UnimatchFlow():
     '''
     def __init__(self) -> None:
         flow_dir = '../unimatch/output/todaiura'
-        flow_files = sorted([file for file in os.listdir(flow_dir) if file.endswith('.flo')])
-        print(f"flow_files={flow_files}")
-
-        # # treat args as a global variable
-        # parser = main_flow.get_args_parser()
-        # args = parser.parse_args()
-        # print(args)
-
-        # # load model
-        # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        # model = unimatch.UniMatch(feature_channels=args.feature_channels,
-        #                     num_scales=args.num_scales,
-        #                     upsample_factor=args.upsample_factor,
-        #                     num_head=args.num_head,
-        #                     ffn_dim_expansion=args.ffn_dim_expansion,
-        #                     num_transformer_layers=args.num_transformer_layers,
-        #                     reg_refine=args.reg_refine,
-        #                     task=args.task).to(device)
-        # print(model)
+        self.flow_files = sorted([os.path.join(flow_dir, file) for file in os.listdir(flow_dir) if file.endswith('.flo')])
+        print(f"flow_files={self.flow_files}")
 
     def compute(self, img1, img2):
         '''
         compute optical flow from 2 consecutive images.
+        currently just read flow from files.
         '''
-        pass
+        for flow_file in self.flow_files:
+            flow = utils.frame_utils.readFlow(flow_file)
+
+            # debug
+            img = utils.flow_viz.flow_to_image(flow)
+            cv2.imshow('img', img)
+            key = cv2.waitKey(0)
+            if key == ord('q'):
+                break
+        
 
 
 # %%
