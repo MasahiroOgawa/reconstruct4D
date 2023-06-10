@@ -21,22 +21,20 @@ prev_img = None
 # process each image
 for imgname in imgfiles:
     img = cv2.imread(os.path.join(image_dir, imgname))
+
     if prev_img is None:
         prev_img = img
         continue
 
     # debug
-    # display input images.
-    print(imgname)
     print(img.shape)
-    cv2.imshow('img', img)
 
-    # currently just read flow from files.
-    imgnum = imgname.split('.')[0]
-    flow_file = os.path.join(flow.flow_dir, f"{imgnum}_pred.flo")
-    print(f"flow_file={flow_file}")
-    flow.compute(flow_file)
-
+    # currently just read flow from corresponding image file name.
+    flow.compute(imgname)
+    
+    # display result
+    result_img = cv2.vconcat([img, flow.flow_img])
+    cv2.imshow('result', result_img)
     key = cv2.waitKey(0)
     if key == ord('q'):
         break

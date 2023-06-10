@@ -16,20 +16,16 @@ class UnimatchFlow():
     def __init__(self) -> None:
         currentfiledirectory = os.path.dirname(os.path.abspath(__file__))
         self.flow_dir = os.path.join(currentfiledirectory, '../unimatch/output/todaiura')
-        self.flow_files = sorted([os.path.join(self.flow_dir, file) for file in os.listdir(self.flow_dir) if file.endswith('.flo')])
-        print(f"flow_files={self.flow_files}")
 
-    def compute(self, flow_file):
+    def compute(self, imgname):
         '''
         compute optical flow from 2 consecutive images.
         currently just read flow from files.
         '''
+        imgnum = imgname.split('.')[0]
+        flow_file = os.path.join(self.flow_dir, f"{imgnum}_pred.flo")
         flow = utils.frame_utils.readFlow(flow_file)
 
-        # debug
-        flow_img = utils.flow_viz.flow_to_image(flow)
-        cv2.imshow('flow', flow_img)
-        
-
+        self.flow_img = utils.flow_viz.flow_to_image(flow)
 
 # %%
