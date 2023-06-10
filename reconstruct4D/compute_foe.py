@@ -13,8 +13,8 @@ image_dir = '/mnt/data/study/mine/computer_vision/todaiura/images/480p'
 
 # preparation
 imgfiles = sorted([file for file in os.listdir(image_dir) if file.endswith('.jpg') or file.endswith('.png')])
-print(imgfiles)
-flow = opticalflow.UnimatchFlow()
+print(f"reading input image files: {imgfiles}")
+unimatch = opticalflow.UnimatchFlow()
 prev_img = None
 
 # %%imgname
@@ -27,13 +27,13 @@ for imgname in imgfiles:
         continue
 
     # debug
-    print(img.shape)
+    print(f"{imgname} : {img.shape}")
 
     # currently just read flow from corresponding image file name.
-    flow.compute(imgname)
+    unimatch.compute(imgname)
     
-    # display result
-    result_img = cv2.vconcat([img, flow.flow_img])
+    # display the esult
+    result_img = cv2.vconcat([img, unimatch.flow_img])
     cv2.imshow('result', result_img)
     key = cv2.waitKey(0)
     if key == ord('q'):

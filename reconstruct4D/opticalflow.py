@@ -24,8 +24,8 @@ class UnimatchFlow():
         '''
         imgnum = imgname.split('.')[0]
         flow_file = os.path.join(self.flow_dir, f"{imgnum}_pred.flo")
-        flow = utils.frame_utils.readFlow(flow_file)
+        self.flow = utils.frame_utils.readFlow(flow_file)
 
-        self.flow_img = utils.flow_viz.flow_to_image(flow)
+        self.flow_img = utils.flow_viz.flow_to_image(self.flow)
 
 # %%
