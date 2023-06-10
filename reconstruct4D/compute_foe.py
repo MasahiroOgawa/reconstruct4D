@@ -4,6 +4,7 @@ import cv2
 import sys
 sys.path.append('..')
 import reconstruct4D.opticalflow as opticalflow
+import reconstruct4D.focus_of_expansion as focus_of_expansion
 
 # def main():
 
@@ -16,6 +17,7 @@ imgfiles = sorted([file for file in os.listdir(image_dir) if file.endswith('.jpg
 print(f"reading input image files: {imgfiles}")
 unimatch = opticalflow.UnimatchFlow()
 prev_img = None
+foe = focus_of_expansion.FoE()
 
 # %%imgname
 # process each image
@@ -39,6 +41,9 @@ for imgname in imgfiles:
     if key == ord('q'):
         break
 
+    foe.compute(unimatch.flow)
+
+    # prepare for the next frame
     prev_img = img
 
 cv2.destroyAllWindows()
