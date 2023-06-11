@@ -20,11 +20,11 @@ class FoE():
 
             i, j = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
             l1 = self.comp_flowline(i, j)
-            if l1[0] == 0 and l1[1] == 0:
+            if np.array(l1).all() == 0                               :
                 continue
             i, j = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
             l2 = self.comp_flowline(i, j)
-            if l2[0] == 0 and l2[1] == 0:
+            if np.array(l2).all() == 0:
                 continue
             foe = np.cross(l1, l2)
 
