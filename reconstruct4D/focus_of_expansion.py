@@ -3,8 +3,8 @@ import cv2
 
 class FoE():
     def __init__(self, f) -> None:
-        self.f = f
-        self.flow_thre = 2.0
+        self.f = f # focal length
+        self.flow_thre = 3.0 # if u and v flow is lower than this value, the flow is ignored.
 
     def compute(self, flow, flow_img):
         '''
@@ -20,8 +20,12 @@ class FoE():
 
             i, j = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
             l1 = self.comp_flowline(i, j)
-            u, v = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
-            l2 = self.comp_flowline(u, v)
+            if l1[0] == 0 and l1[1] == 0:
+                continue
+            i, j = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
+            l2 = self.comp_flowline(i, j)
+            if l2[0] == 0 and l2[1] == 0:
+                continue
             foe = np.cross(l1, l2)
 
             # debug. draw line
@@ -29,13 +33,13 @@ class FoE():
             self.draw_line(l2)
             self.draw_homogeneous_point(foe, self.debug_img)
             self.draw_homogeneous_point(foe, self.foe_img)
-            cv2.imshow('FoE', self.debug_img)
+            cv2.imshow('Debug', self.debug_img)
             key = cv2.waitKey(0)
             if key == ord('q'):
                 exit()
 
         # draw flow image
-        cv2.imshow('foe', self.foe_img)
+        cv2.imshow('FoE', self.foe_img)
         key = cv2.waitKey(0)
         if key == ord('q'):
             exit()
