@@ -4,6 +4,7 @@ import cv2
 class FoE():
     def __init__(self, f) -> None:
         self.f = f
+        self.flow_thre = 2.0
 
     def compute(self, flow, flow_img):
         '''
@@ -15,23 +16,23 @@ class FoE():
 
         # randomly select 2 points from flow
         for _ in range(100):
+            self.debug_img = self.foe_img.copy()
+
             i, j = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
             l1 = self.comp_flowline(i, j)
-            for _ in range(10):
-                self.debug_img = self.foe_img.copy()
+            u, v = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
+            l2 = self.comp_flowline(u, v)
+            foe = np.cross(l1, l2)
 
-                i, j = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
-                l2 = self.comp_flowline(i, j)
-                foe = np.cross(l1, l2)
-
-                # debug. draw line
-                self.draw_line(l1)
-                self.draw_line(l2)
-                self.draw_homogeneous_point(foe, self.debug_img)
-                cv2.imshow('FoE', self.debug_img)
-                key = cv2.waitKey(0)
-                if key == ord('q'):
-                    exit()
+            # debug. draw line
+            self.draw_line(l1)
+            self.draw_line(l2)
+            self.draw_homogeneous_point(foe, self.debug_img)
+            self.draw_homogeneous_point(foe, self.foe_img)
+            cv2.imshow('FoE', self.debug_img)
+            key = cv2.waitKey(0)
+            if key == ord('q'):
+                exit()
 
         # draw flow image
         cv2.imshow('foe', self.foe_img)
@@ -47,7 +48,7 @@ class FoE():
         v = self.flow[i, j, 1]
 
         # if flow is too small, return zero line
-        if abs(u) < 0.1 and abs(v) < 0.1:
+        if abs(u) < self.flow_thre and abs(v) < self.flow_thre:
             return [0, 0, 0]
 
         x_prev = [j - u, i - v, 1]
