@@ -21,7 +21,7 @@ class FoE():
                  x_prev = [j - u, i - v, 1]
 
                  # debug. draw arrow
-                 cv2.arrowedLine(flow_img, (j, i), (int(j - u), int(i - v)), (0, 0, 255), 1)
+                 cv2.arrowedLine(flow_img, list(map(int, x_prev[0:2])), x[0:2], (0, 0, 255), 1)
                  cv2.imshow('flow arrow', flow_img)
 
                  # no rotation correction version
