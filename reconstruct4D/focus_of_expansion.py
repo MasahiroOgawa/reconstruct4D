@@ -45,6 +45,11 @@ class FoE():
         # flow
         u = self.flow[i, j, 0]
         v = self.flow[i, j, 1]
+
+        # if flow is too small, return zero line
+        if abs(u) < 0.1 and abs(v) < 0.1:
+            return [0, 0, 0]
+
         x_prev = [j - u, i - v, 1]
 
         # debug. draw arrow
@@ -62,6 +67,7 @@ class FoE():
         # draw cross at the point
         cv2.line(out_img, (pt[0] - 10, pt[1]), (pt[0] + 10, pt[1]), (0, 0, 255), 10)
         cv2.line(out_img, (pt[0], pt[1] - 10), (pt[0], pt[1] + 10), (0, 0, 255), 10)
+
 
     def draw_line(self, line):
         if line[0] == 0 and line[1] == 0:
