@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
-loglevel='DEBUG'
+
+loglevel=3 # 0: no log, 1: print log, 2: debug, 3: debug with detailed image
 
 class FoE():
     def __init__(self, f) -> None:
@@ -12,15 +13,16 @@ class FoE():
         compute focus of expansion from optical flow.
         '''
         self.flow = flow
-        self.foe_img = flow_img 
 
-        if loglevel == 'DEBUG':
-            self.debug_img = flow_img
+        if loglevel>1:
+            self.foe_img = flow_img.copy()
+            self.debug_img = flow_img.copy()
             self.draw_flow_asarrow(flow)
 
         # randomly select 2 points from flow
         for _ in range(100):
-            self.debug_img = self.foe_img.copy()
+            if loglevel>1:
+                self.debug_img = self.foe_img.copy()
 
             i, j = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
             l1 = self.comp_flowline(i, j)
@@ -32,21 +34,21 @@ class FoE():
                 continue
             foe = np.cross(l1, l2)
 
-            # debug. draw line
-            self.draw_line(l1)
-            self.draw_line(l2)
-            self.draw_homogeneous_point(foe, self.debug_img)
-            self.draw_homogeneous_point(foe, self.foe_img)
-            cv2.imshow('Debug', self.debug_img)
+            if loglevel>2:
+                self.draw_line(l1)
+                self.draw_line(l2)
+                self.draw_homogeneous_point(foe, self.debug_img)
+                self.draw_homogeneous_point(foe, self.foe_img)
+                cv2.imshow('Debug', self.debug_img)
+                key = cv2.waitKey(0)
+                if key == ord('q'):
+                    exit()
+
+        if loglevel>1:
+            cv2.imshow('FoE', self.foe_img)
             key = cv2.waitKey(0)
             if key == ord('q'):
                 exit()
-
-        # draw flow image
-        cv2.imshow('FoE', self.foe_img)
-        key = cv2.waitKey(0)
-        if key == ord('q'):
-            exit()
 
 
     def comp_flowline(self, i: int, j: int):
@@ -95,4 +97,4 @@ class FoE():
             for j in range(0, flow.shape[1], 10):
                 u = flow[i, j, 0]
                 v = flow[i, j, 1]
-                cv2.arrowedLine(self.debug_img, (int(j-u), int(i-v)), (j, i), (0, 0, 255), 1)
+                cv2.arrowedLine(self.foe_img, (int(j-u), int(i-v)), (j, i), (0, 0, 255), 1)
