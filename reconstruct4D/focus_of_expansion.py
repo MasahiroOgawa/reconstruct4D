@@ -13,10 +13,10 @@ class FoE():
         '''
         self.flow = flow
         self.foe_img = flow_img 
-        self.debug_img = flow_img
 
         if loglevel == 'DEBUG':
-            self.draw_flow_asarrow(flow, flow_img)
+            self.debug_img = flow_img
+            self.draw_flow_asarrow(flow)
 
         # randomly select 2 points from flow
         for _ in range(100):
@@ -87,7 +87,7 @@ class FoE():
         cv2.line(self.debug_img, pt1, pt2, (0, 255, 0), 1)
 
 
-    def draw_flow_asarrow(self, flow, img):
+    def draw_flow_asarrow(self, flow):
         '''
         draw flow as arrow
         '''
@@ -95,5 +95,4 @@ class FoE():
             for j in range(0, flow.shape[1], 10):
                 u = flow[i, j, 0]
                 v = flow[i, j, 1]
-                cv2.arrowedLine(img, (int(j-u), int(i-v)), (j, i), (0, 0, 255), 1)
-        return img
+                cv2.arrowedLine(self.debug_img, (int(j-u), int(i-v)), (j, i), (0, 0, 255), 1)
