@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+loglevel='DEBUG'
 
 class FoE():
     def __init__(self, f) -> None:
@@ -13,6 +14,9 @@ class FoE():
         self.flow = flow
         self.foe_img = flow_img 
         self.debug_img = flow_img
+
+        if loglevel == 'DEBUG':
+            self.draw_flow_asarrow(flow, flow_img)
 
         # randomly select 2 points from flow
         for _ in range(100):
@@ -43,6 +47,7 @@ class FoE():
         key = cv2.waitKey(0)
         if key == ord('q'):
             exit()
+
 
     def comp_flowline(self, i: int, j: int):
         x = [j, i, 1]
@@ -80,3 +85,15 @@ class FoE():
         pt1 = (0, int(-line[2] / line[1]))
         pt2 = (self.foe_img.shape[1], int(-(line[2] + line[0] * self.foe_img.shape[1]) / line[1]))
         cv2.line(self.debug_img, pt1, pt2, (0, 255, 0), 1)
+
+
+    def draw_flow_asarrow(self, flow, img):
+        '''
+        draw flow as arrow
+        '''
+        for i in range(0, flow.shape[0], 10):
+            for j in range(0, flow.shape[1], 10):
+                u = flow[i, j, 0]
+                v = flow[i, j, 1]
+                cv2.arrowedLine(img, (int(j-u), int(i-v)), (j, i), (0, 0, 255), 1)
+        return img
