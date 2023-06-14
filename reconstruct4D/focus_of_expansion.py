@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-loglevel=3 # 0: no log, 1: print log, 2: debug, 3: debug with detailed image
+loglevel = 3 # 0: no log, 1: print log, 2: debug, 3: debug with detailed image
 
 class FoE():
     def __init__(self, f) -> None:
@@ -17,19 +17,20 @@ class FoE():
         if loglevel>1:
             self.foe_img = flow_img.copy()
             self.debug_img = flow_img.copy()
-            self.draw_flow_asarrow(flow)
+            self.draw_flowarrow(flow)
 
         # randomly select 2 points from flow
         for _ in range(100):
             if loglevel>1:
                 self.debug_img = self.foe_img.copy()
 
-            i, j = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
-            l1 = self.comp_flowline(i, j)
+            # compute FoE
+            row, col = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
+            l1 = self.comp_flowline(row, col)
             if np.array(l1).all() == 0                               :
                 continue
-            i, j = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
-            l2 = self.comp_flowline(i, j)
+            row, col = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
+            l2 = self.comp_flowline(row, col)
             if np.array(l2).all() == 0:
                 continue
             foe = np.cross(l1, l2)
@@ -51,21 +52,21 @@ class FoE():
                 exit()
 
 
-    def comp_flowline(self, i: int, j: int):
-        x = [j, i, 1]
+    def comp_flowline(self, row: int, col: int):
+        x = [col, row, 1]
             
         # flow
-        u = self.flow[i, j, 0]
-        v = self.flow[i, j, 1]
+        u = self.flow[row, col, 0]
+        v = self.flow[row, col, 1]
 
         # if flow is too small, return zero line
         if abs(u) < self.flow_thre and abs(v) < self.flow_thre:
             return [0, 0, 0]
 
-        x_prev = [j - u, i - v, 1]
+        x_prev = [col - u, row - v, 1]
 
-        # debug. draw arrow
-        cv2.arrowedLine(self.debug_img, list(map(int, x_prev[0:2])), x[0:2], (0, 0, 255), 3)
+        if loglevel>2:
+            cv2.arrowedLine(self.debug_img, list(map(int, x_prev[0:2])), x[0:2], (0, 0, 255), 3)
 
         # no rotation correction version
         line = np.cross(x, x_prev)
@@ -89,12 +90,12 @@ class FoE():
         cv2.line(self.debug_img, pt1, pt2, (0, 255, 0), 1)
 
 
-    def draw_flow_asarrow(self, flow):
+    def draw_flowarrow(self, flow):
         '''
         draw flow as arrow
         '''
-        for i in range(0, flow.shape[0], 10):
-            for j in range(0, flow.shape[1], 10):
-                u = flow[i, j, 0]
-                v = flow[i, j, 1]
-                cv2.arrowedLine(self.foe_img, (int(j-u), int(i-v)), (j, i), (0, 0, 255), 1)
+        for row in range(0, flow.shape[0], 10):
+            for col in range(0, flow.shape[1], 10):
+                u = flow[row, col, 0]
+                v = flow[row, col, 1]
+                cv2.arrowedLine(self.foe_img, (int(col-u), int(row-v)), (col, row), (0, 0, 255), 1)
