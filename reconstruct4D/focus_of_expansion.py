@@ -8,7 +8,8 @@ class FoE():
         self.f = f # focal length
         self.flow_thre = 3.0 # if u and v flow is lower than this value, the flow is ignored.
 
-    def compute(self, flow, flow_img):
+
+    def compute(self, flow, flow_img = None):
         '''
         compute focus of expansion from optical flow.
         '''
@@ -17,33 +18,11 @@ class FoE():
         if loglevel>1:
             self.foe_img = flow_img.copy()
             self.debug_img = flow_img.copy()
-            self.draw_flowarrow(flow)
+            self.draw_flowarrow(flow, self.foe_img)
 
         # randomly select 2 points from flow
         for _ in range(100):
-            if loglevel>1:
-                self.debug_img = self.foe_img.copy()
-
-            # compute FoE
-            row, col = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
-            l1 = self.comp_flowline(row, col)
-            if np.array(l1).all() == 0                               :
-                continue
-            row, col = np.random.randint(0, flow.shape[0]), np.random.randint(0, flow.shape[1])
-            l2 = self.comp_flowline(row, col)
-            if np.array(l2).all() == 0:
-                continue
-            foe = np.cross(l1, l2)
-
-            if loglevel>2:
-                self.draw_line(l1)
-                self.draw_line(l2)
-                self.draw_homogeneous_point(foe, self.debug_img)
-                self.draw_homogeneous_point(foe, self.foe_img)
-                cv2.imshow('Debug', self.debug_img)
-                key = cv2.waitKey(0)
-                if key == ord('q'):
-                    exit()
+            foe = self.comp_foe_candidate()
 
         if loglevel>1:
             cv2.imshow('FoE', self.foe_img)
@@ -71,6 +50,33 @@ class FoE():
         # no rotation correction version
         line = np.cross(x, x_prev)
         return line
+    
+
+    def comp_foe_candidate(self):
+        # compute FoE from 2 flow lines
+        row, col = np.random.randint(0, self.flow.shape[0]), np.random.randint(0, self.flow.shape[1])
+        l1 = self.comp_flowline(row, col)
+        if np.array(l1).all() == 0                               :
+            return
+        row, col = np.random.randint(0, self.flow.shape[0]), np.random.randint(0, self.flow.shape[1])
+        l2 = self.comp_flowline(row, col)
+        if np.array(l2).all() == 0:
+            return
+        foe = np.cross(l1, l2)
+
+        # draw debug image
+        if loglevel>2:
+            self.debug_img = self.foe_img.copy()
+            self.draw_line(l1, self.debug_img)
+            self.draw_line(l2, self.debug_img)
+            self.draw_homogeneous_point(foe, self.debug_img)
+            self.draw_homogeneous_point(foe, self.foe_img)
+            cv2.imshow('Debug', self.debug_img)
+            key = cv2.waitKey(0)
+            if key == ord('q'):
+                exit()
+
+        return foe
 
 
     def draw_homogeneous_point(self, hom_pt, out_img):
@@ -82,15 +88,15 @@ class FoE():
         cv2.line(out_img, (pt[0], pt[1] - 10), (pt[0], pt[1] + 10), (0, 0, 255), 10)
 
 
-    def draw_line(self, line):
+    def draw_line(self, line, img):
         if line[0] == 0 and line[1] == 0:
             return
         pt1 = (0, int(-line[2] / line[1]))
-        pt2 = (self.foe_img.shape[1], int(-(line[2] + line[0] * self.foe_img.shape[1]) / line[1]))
-        cv2.line(self.debug_img, pt1, pt2, (0, 255, 0), 1)
+        pt2 = (img.shape[1], int(-(line[2] + line[0] * img.shape[1]) / line[1]))
+        cv2.line(img, pt1, pt2, (0, 255, 0), 1)
 
 
-    def draw_flowarrow(self, flow):
+    def draw_flowarrow(self, flow, img):
         '''
         draw flow as arrow
         '''
@@ -98,4 +104,4 @@ class FoE():
             for col in range(0, flow.shape[1], 10):
                 u = flow[row, col, 0]
                 v = flow[row, col, 1]
-                cv2.arrowedLine(self.foe_img, (int(col-u), int(row-v)), (col, row), (0, 0, 255), 1)
+                cv2.arrowedLine(img, (int(col-u), int(row-v)), (col, row), (0, 0, 255), 1)
