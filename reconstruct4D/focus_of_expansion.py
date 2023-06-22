@@ -7,6 +7,9 @@ class FoE():
     def __init__(self, f) -> None:
         self.f = f # focal length
         self.flow_thre = 3.0 # if u and v flow is lower than this value, the flow is ignored.
+        self.foe_thre = 100 # less than this value, the foe becomes outlier.
+        self.inlier_angle_thre = np.pi / 180 # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
+        self.inlier_rate_thre = 0.9 # if inlier rate is higher than this value, the foe is accepted.
 
 
     def compute(self, flow, flow_img = None):
@@ -23,6 +26,12 @@ class FoE():
         # randomly select 2 points from flow
         for _ in range(100):
             foe = self.comp_foe_candidate()
+            if foe is None:
+                continue
+            inlier_rate = self.comp_inlier_rate(foe)
+            print(f"FoE: {foe} , inlier_rate: {inlier_rate}")
+            if inlier_rate > self.inlier_rate_thre:
+                break
 
         if loglevel>1:
             cv2.imshow('FoE', self.foe_img)
@@ -39,7 +48,7 @@ class FoE():
         v = self.flow[row, col, 1]
 
         # if flow is too small, return zero line
-        if abs(u) < self.flow_thre and abs(v) < self.flow_thre:
+        if (u**2 + v**2) < self.flow_thre**2:
             return [0, 0, 0]
 
         x_prev = [col - u, row - v, 1]
@@ -52,7 +61,11 @@ class FoE():
         return line
     
 
-    def comp_foe_candidate(self):
+    def comp_foe_candidate(self) -> np.ndarray: 
+        '''
+        compute FoE from 2 flow lines
+        FoE is in 3D homogeneous coordinate.
+        '''
         # compute FoE from 2 flow lines
         row, col = np.random.randint(0, self.flow.shape[0]), np.random.randint(0, self.flow.shape[1])
         l1 = self.comp_flowline(row, col)
@@ -78,6 +91,33 @@ class FoE():
 
         return foe
 
+    def comp_inlier_rate(self, foe) -> float:
+        '''
+        compute inlier rate from FoE
+        args: 
+            foe: FoE in 3D homogeneous coordinate
+        '''
+        num_inlier = 0
+        num_valid_pixel = 0
+        # check all pixels
+        for row in range(self.flow.shape[0]):
+            for col in range(self.flow.shape[1]):
+                u = self.flow[row, col, 0]
+                v = self.flow[row, col, 1]
+
+                # skip if flow is too small
+                if (u**2 + v**2) < self.flow_thre**2:
+                    continue
+                num_valid_pixel += 1
+
+                # compare angle between flow and FoE to each pixel
+                estimated_angle = np.arctan2(foe[0] - col, foe[1] - row)
+                flow_angle = np.arctan2(u, v)
+                if np.abs(estimated_angle - flow_angle) < self.inlier_angle_thre:
+                    num_inlier += 1
+
+        inlier_rate = num_inlier / num_valid_pixel
+        return inlier_rate
 
     def draw_homogeneous_point(self, hom_pt, out_img):
         if hom_pt[2] == 0:
