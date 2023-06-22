@@ -5,11 +5,15 @@ loglevel = 3 # 0: no log, 1: print log, 2: debug, 3: debug with detailed image
 
 class FoE():
     def __init__(self, f) -> None:
+        # fixed parameters
         self.f = f # focal length
         self.flow_thre = 3.0 # if u and v flow is lower than this value, the flow is ignored.
         self.foe_thre = 100 # less than this value, the foe becomes outlier.
         self.inlier_angle_thre = np.pi / 180 # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
         self.inlier_rate_thre = 0.9 # if inlier rate is higher than this value, the foe is accepted.
+       
+        # variables
+        self.inlier_rate = 0.0
 
 
     def compute(self, flow, flow_img = None):
@@ -28,12 +32,14 @@ class FoE():
             foe = self.comp_foe_candidate()
             if foe is None:
                 continue
-            inlier_rate = self.comp_inlier_rate(foe)
-            print(f"FoE: {foe} , inlier_rate: {inlier_rate}")
-            if inlier_rate > self.inlier_rate_thre:
+            self.comp_inlier_rate(foe)
+            print(f"FoE: {foe} , inlier_rate: {self.inlier_rate}")
+            if self.inlier_rate > self.inlier_rate_thre:
                 break
 
         if loglevel>1:
+            if self.inlier_rate < self.inlier_rate_thre:
+                cv2.putText(self.foe_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             cv2.imshow('FoE', self.foe_img)
             key = cv2.waitKey(0)
             if key == ord('q'):
@@ -116,8 +122,10 @@ class FoE():
                 if np.abs(estimated_angle - flow_angle) < self.inlier_angle_thre:
                     num_inlier += 1
 
-        inlier_rate = num_inlier / num_valid_pixel
-        return inlier_rate
+        if num_valid_pixel == 0:
+            self.inlier_rate = 0
+        else:
+            self.inlier_rate = num_inlier / num_valid_pixel
 
     def draw_homogeneous_point(self, hom_pt, out_img):
         if hom_pt[2] == 0:
