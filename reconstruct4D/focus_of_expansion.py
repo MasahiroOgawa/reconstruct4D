@@ -35,9 +35,10 @@ class FoE():
             if foe_candi is None:
                 continue
             self.comp_inlier_rate(foe_candi)
-            print(f"FoE candidate: {foe_candi} , inlier_rate: {self.inlier_rate}")
+            print(f"FoE candidate: {foe_candi} , inlier_rate: {self.inlier_rate * 100:.2f} %")
             if self.inlier_rate > self.inlier_rate_thre:
                 self.foe = foe_candi
+                self.draw_homogeneous_point(self.foe, self.foe_img)
                 break
 
         if loglevel>1:
@@ -87,11 +88,11 @@ class FoE():
         row, col = np.random.randint(0, self.flow.shape[0]), np.random.randint(0, self.flow.shape[1])
         l1 = self.comp_flowline(row, col)
         if l1 is None :
-            return
+            return None
         row, col = np.random.randint(0, self.flow.shape[0]), np.random.randint(0, self.flow.shape[1])
         l2 = self.comp_flowline(row, col)
         if l2 is None :    
-            return
+            return None
         foe = np.cross(l1, l2)
 
         # draw debug image
@@ -100,7 +101,6 @@ class FoE():
             self.draw_line(l1, self.debug_img)
             self.draw_line(l2, self.debug_img)
             self.draw_homogeneous_point(foe, self.debug_img)
-            self.draw_homogeneous_point(foe, self.foe_img)
             cv2.imshow('Debug', self.debug_img)
             key = cv2.waitKey(0)
             if key == ord('q'):
