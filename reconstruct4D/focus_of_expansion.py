@@ -1,24 +1,26 @@
 import numpy as np
 import cv2
 
-loglevel = 3 # 0: no log, 1: print log, 2: debug, 3: debug with detailed image
+loglevel = 3 # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
 
 class FoE():
     def __init__(self, f) -> None:
         # fixed parameters
         self.f = f # focal length
-        self.flow_thre = 3.0 # if u and v flow is lower than this value, the flow is ignored.
-        self.foe_thre = 100 # less than this value, the foe becomes outlier.
-        self.inlier_angle_thre = np.pi / 180 # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
+        self.flow_thre = 3.0 # if flow length is lower than this value, the flow is ignored.
+        self.inlier_angle_thre = 10 * np.pi / 180 # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
         self.inlier_rate_thre = 0.9 # if inlier rate is higher than this value, the foe is accepted.
        
         # variables
         self.inlier_rate = 0.0
+        self.foe = None
 
 
     def compute(self, flow, flow_img = None):
         '''
         compute focus of expansion from optical flow.
+        args:
+            flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
         '''
         self.flow = flow
 
@@ -27,14 +29,15 @@ class FoE():
             self.debug_img = flow_img.copy()
             self.draw_flowarrow(flow, self.foe_img)
 
-        # randomly select 2 points from flow
+        # randomly select 2 points from flow to compute FoE.
         for _ in range(100):
-            foe = self.comp_foe_candidate()
-            if foe is None:
+            foe_candi = self.comp_foe_candidate()
+            if foe_candi is None:
                 continue
-            self.comp_inlier_rate(foe)
-            print(f"FoE: {foe} , inlier_rate: {self.inlier_rate}")
+            self.comp_inlier_rate(foe_candi)
+            print(f"FoE candidate: {foe_candi} , inlier_rate: {self.inlier_rate}")
             if self.inlier_rate > self.inlier_rate_thre:
+                self.foe = foe_candi
                 break
 
         if loglevel>1:
@@ -46,7 +49,15 @@ class FoE():
                 exit()
 
 
-    def comp_flowline(self, row: int, col: int):
+    def comp_flowline(self, row: int, col: int) -> np.ndarray:
+        '''
+        compute flow line from flow at (row, col)
+        args:
+            row: row index of flow
+            col: column index of flow
+        return:
+            line: flow line in 3D homogeneous coordinate. if flow is too small, return None.
+        '''
         x = [col, row, 1]
             
         # flow
@@ -55,7 +66,7 @@ class FoE():
 
         # if flow is too small, return zero line
         if (u**2 + v**2) < self.flow_thre**2:
-            return [0, 0, 0]
+            return None
 
         x_prev = [col - u, row - v, 1]
 
@@ -75,11 +86,11 @@ class FoE():
         # compute FoE from 2 flow lines
         row, col = np.random.randint(0, self.flow.shape[0]), np.random.randint(0, self.flow.shape[1])
         l1 = self.comp_flowline(row, col)
-        if np.array(l1).all() == 0                               :
+        if l1 is None :
             return
         row, col = np.random.randint(0, self.flow.shape[0]), np.random.randint(0, self.flow.shape[1])
         l2 = self.comp_flowline(row, col)
-        if np.array(l2).all() == 0:
+        if l2 is None :    
             return
         foe = np.cross(l1, l2)
 
