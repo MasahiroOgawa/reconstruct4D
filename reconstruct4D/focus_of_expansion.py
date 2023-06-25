@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-loglevel = 3 # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
+loglevel = 2 # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
 
 class FoE():
     def __init__(self, f) -> None:
@@ -14,6 +14,7 @@ class FoE():
         # variables
         self.inlier_rate = 0.0
         self.foe = None
+        self.result_img = None
 
 
     def compute(self, flow, flow_img = None):
@@ -25,9 +26,9 @@ class FoE():
         self.flow = flow
 
         if loglevel>1:
-            self.foe_img = flow_img.copy()
+            self.result_img = flow_img.copy()
             self.debug_img = flow_img.copy()
-            self.draw_flowarrow(flow, self.foe_img)
+            self.draw_flowarrow(flow, self.result_img)
 
         # randomly select 2 points from flow to compute FoE.
         for _ in range(100):
@@ -38,14 +39,14 @@ class FoE():
             print(f"FoE candidate: {foe_candi} , inlier_rate: {self.inlier_rate * 100:.2f} %")
             if self.inlier_rate > self.inlier_rate_thre:
                 self.foe = foe_candi
-                self.draw_homogeneous_point(self.foe, self.foe_img)
+                self.draw_homogeneous_point(self.foe, self.result_img)
                 break
 
         if loglevel>1:
             if self.inlier_rate < self.inlier_rate_thre:
-                cv2.putText(self.foe_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            cv2.imshow('FoE', self.foe_img)
-            key = cv2.waitKey(0)
+                cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            cv2.imshow('FoE', self.result_img)
+            key = cv2.waitKey(1)
             if key == ord('q'):
                 exit()
 
@@ -97,7 +98,7 @@ class FoE():
 
         # draw debug image
         if loglevel>2:
-            self.debug_img = self.foe_img.copy()
+            self.debug_img = self.result_img.copy()
             self.draw_line(l1, self.debug_img)
             self.draw_line(l2, self.debug_img)
             self.draw_homogeneous_point(foe, self.debug_img)

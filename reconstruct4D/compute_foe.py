@@ -22,7 +22,7 @@ def main():
         img = cv2.imread(os.path.join(image_dir, imgname))
 
         if prev_img is None:
-            prev_img = img
+            prev_img = img  
             continue
 
         # debug
@@ -31,15 +31,18 @@ def main():
         # currently just read flow from corresponding image file name.
         unimatch.compute(imgname)
         
-        # display the esult
-        result_img = cv2.vconcat([img, unimatch.flow_img])
-        cv2.imshow('result', result_img)
-        key = cv2.waitKey(0)
-        if key == ord('q'):
-            break
-
         # compute focus of expansion
         foe.compute(unimatch.flow, unimatch.flow_img)
+        foe_img = foe.result_img
+
+        # display the esult
+        result_img = cv2.vconcat([img, unimatch.flow_img])
+        result_img = cv2.vconcat([result_img, foe_img])
+        result_img = cv2.resize(result_img, (480,640))
+        cv2.imshow('result', result_img)
+        key = cv2.waitKey(1)
+        if key == ord('q'):
+            break
 
         # prepare for the next frame
         prev_img = img
