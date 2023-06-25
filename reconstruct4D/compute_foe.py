@@ -3,46 +3,50 @@ import cv2
 import sys
 sys.path.append('..')
 import reconstruct4D.opticalflow as opticalflow
-import reconstruct4D.focus_of_expansion as focus_of_expansion
+from reconstruct4D.focus_of_expansion import FoE
 
 def main():
     # paramaters
     # TODO: use argparse. but currently to use jupyter, we cannot use argparse.
     image_dir = '/mnt/data/study/mine/computer_vision/todaiura/images/480p'
+    loglevel = 0 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
 
     # preparation
     imgfiles = sorted([file for file in os.listdir(image_dir) if file.endswith('.jpg') or file.endswith('.png')])
     print(f"reading input image files: {imgfiles}")
     unimatch = opticalflow.UnimatchFlow()
     prev_img = None
-    foe = focus_of_expansion.FoE(f=1000)
+    foe = FoE(f=3.45719e+03, loglevel = loglevel)
 
     # process each image
     for imgname in imgfiles:
         img = cv2.imread(os.path.join(image_dir, imgname))
 
         if prev_img is None:
-            prev_img = img  
+            prev_img = img
             continue
 
-        # debug
-        print(f"{imgname} : {img.shape}")
+        if loglevel > 0:
+            print(f"{imgname} : {img.shape}")
 
         # currently just read flow from corresponding image file name.
         unimatch.compute(imgname)
         
         # compute focus of expansion
         foe.compute(unimatch.flow, unimatch.flow_img)
-        foe_img = foe.result_img
+
+        # create result the image and save it.
+        result_img = cv2.vconcat([img, unimatch.flow_img])
+        result_img = cv2.vconcat([result_img, foe.result_img])
+        cv2.imwrite(f"../output/{imgname}", result_img)
 
         # display the esult
-        result_img = cv2.vconcat([img, unimatch.flow_img])
-        result_img = cv2.vconcat([result_img, foe_img])
-        result_img = cv2.resize(result_img, (480,640))
-        cv2.imshow('result', result_img)
-        key = cv2.waitKey(1)
-        if key == ord('q'):
-            break
+        if loglevel > 1:
+            result_img = cv2.resize(result_img, (480,640))
+            cv2.imshow('result', result_img)
+            key = cv2.waitKey(1)
+            if key == ord('q'):
+                break
 
         # prepare for the next frame
         prev_img = img

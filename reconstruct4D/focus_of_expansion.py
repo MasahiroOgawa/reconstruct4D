@@ -1,11 +1,10 @@
 import numpy as np
 import cv2
 
-loglevel = 2 # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
-
 class FoE():
-    def __init__(self, f) -> None:
+    def __init__(self, f, loglevel = 0) -> None:
         # fixed parameters
+        self.loglevel = loglevel # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
         self.f = f # focal length
         self.flow_thre = 3.0 # if flow length is lower than this value, the flow is ignored.
         self.inlier_angle_thre = 10 * np.pi / 180 # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
@@ -24,29 +23,36 @@ class FoE():
             flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
         '''
         self.flow = flow
-
-        if loglevel>1:
+        if flow_img is None:
+            self.result_img = cv2.Mat(flow.shape[0], flow.shape[1], cv2.CV_8UC3, cv2.Scalar(0,0,0))
+        else:
             self.result_img = flow_img.copy()
-            self.debug_img = flow_img.copy()
-            self.draw_flowarrow(flow, self.result_img)
+            if self.loglevel>1:
+                self.draw_flowarrow(flow, self.result_img)
+            if self.loglevel>2:
+                self.debug_img = self.flow_img.copy()
 
-        # randomly select 2 points from flow to compute FoE.
-        for _ in range(100):
+        # RANSAC to find FoE
+        for _ in range(20):
             foe_candi = self.comp_foe_candidate()
             if foe_candi is None:
                 continue
             self.comp_inlier_rate(foe_candi)
-            print(f"FoE candidate: {foe_candi} , inlier_rate: {self.inlier_rate * 100:.2f} %")
+
+            if self.loglevel>0:
+                print(f"FoE candidate: {foe_candi} , inlier_rate: {self.inlier_rate * 100:.2f} %")
+
             if self.inlier_rate > self.inlier_rate_thre:
                 self.foe = foe_candi
                 self.draw_homogeneous_point(self.foe, self.result_img)
                 break
 
-        if loglevel>1:
-            if self.inlier_rate < self.inlier_rate_thre:
+        if self.inlier_rate < self.inlier_rate_thre:
                 cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        if self.loglevel>1:
             cv2.imshow('FoE', self.result_img)
-            key = cv2.waitKey(1)
+            key = cv2.waitKey(0)
             if key == ord('q'):
                 exit()
 
@@ -72,7 +78,7 @@ class FoE():
 
         x_prev = [col - u, row - v, 1]
 
-        if loglevel>2:
+        if self.loglevel>2:
             cv2.arrowedLine(self.debug_img, list(map(int, x_prev[0:2])), x[0:2], (0, 0, 255), 3)
 
         # no rotation correction version
@@ -97,7 +103,7 @@ class FoE():
         foe = np.cross(l1, l2)
 
         # draw debug image
-        if loglevel>2:
+        if self.loglevel>2:
             self.debug_img = self.result_img.copy()
             self.draw_line(l1, self.debug_img)
             self.draw_line(l2, self.debug_img)
