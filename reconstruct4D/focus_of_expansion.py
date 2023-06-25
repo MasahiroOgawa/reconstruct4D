@@ -14,6 +14,7 @@ class FoE():
         self.inlier_rate = 0.0
         self.foe = None
         self.result_img = None
+        self.outlier_img = None # 0: unknown, 1: inlier, 2: outlier
 
 
     def compute(self, flow, flow_img = None):
@@ -22,7 +23,9 @@ class FoE():
         args:
             flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
         '''
+        # prepare variables
         self.flow = flow
+        self.outlier_img = np.zeros((flow.shape[0], flow.shape[1], 3), dtype=np.uint8)
         if flow_img is None:
             self.result_img = cv2.Mat(flow.shape[0], flow.shape[1], cv2.CV_8UC3, cv2.Scalar(0,0,0))
         else:
@@ -30,7 +33,7 @@ class FoE():
             if self.loglevel>1:
                 self.draw_flowarrow(flow, self.result_img)
             if self.loglevel>2:
-                self.debug_img = self.flow_img.copy()
+                self.debug_img = flow_img.copy()
 
         # RANSAC to find FoE
         for _ in range(20):
@@ -53,6 +56,11 @@ class FoE():
         if self.loglevel>1:
             cv2.imshow('FoE', self.result_img)
             key = cv2.waitKey(1)
+            if key == ord('q'):
+                exit()
+        if self.loglevel > 2:
+            cv2.imshow("outlier", self.outlier_img)
+            key = cv2.waitKey(0)
             if key == ord('q'):
                 exit()
 
@@ -126,11 +134,13 @@ class FoE():
         # check all pixels
         for row in range(self.flow.shape[0]):
             for col in range(self.flow.shape[1]):
+                # get flow
                 u = self.flow[row, col, 0]
                 v = self.flow[row, col, 1]
 
                 # skip if flow is too small
                 if (u**2 + v**2) < self.flow_thre**2:
+                    self.outlier_img[row, col] = (0,0,0) # unknown
                     continue
                 num_valid_pixel += 1
 
@@ -139,6 +149,9 @@ class FoE():
                 flow_angle = np.arctan2(u, v)
                 if np.abs(estimated_angle - flow_angle) < self.inlier_angle_thre:
                     num_inlier += 1
+                    self.outlier_img[row, col] = (0,255,0) # inlier
+                else:
+                    self.outlier_img[row, col] = (0,0,255) # outlier
 
         if num_valid_pixel == 0:
             self.inlier_rate = 0
