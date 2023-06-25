@@ -9,7 +9,7 @@ def main():
     # paramaters
     # TODO: use argparse. but currently to use jupyter, we cannot use argparse.
     image_dir = '/mnt/data/study/mine/computer_vision/todaiura/images/480p'
-    loglevel = 0 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
+    loglevel = 2 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
 
     # preparation
     imgfiles = sorted([file for file in os.listdir(image_dir) if file.endswith('.jpg') or file.endswith('.png')])

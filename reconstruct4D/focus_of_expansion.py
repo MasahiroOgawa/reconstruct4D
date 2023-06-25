@@ -52,7 +52,7 @@ class FoE():
 
         if self.loglevel>1:
             cv2.imshow('FoE', self.result_img)
-            key = cv2.waitKey(0)
+            key = cv2.waitKey(1)
             if key == ord('q'):
                 exit()
 
