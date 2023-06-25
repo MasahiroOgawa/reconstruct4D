@@ -61,7 +61,7 @@ class FoE():
                 self.outlier_img[self.outlier_mask == 2] = (0, 0, 255)
                 
                 cv2.imshow("outlier", self.outlier_img)
-                key = cv2.waitKey(0)
+                key = cv2.waitKey(1)
                 if key == ord('q'):
                     exit()
 
@@ -124,7 +124,7 @@ class FoE():
             self.draw_line(l2, self.debug_img)
             self.draw_homogeneous_point(foe, self.debug_img)
             cv2.imshow('Debug', self.debug_img)
-            key = cv2.waitKey(0)
+            key = cv2.waitKey(1)
             if key == ord('q'):
                 exit()
 
