@@ -14,7 +14,7 @@ class FoE():
         self.inlier_rate = 0.0
         self.foe = None
         self.result_img = None
-        self.outlier_img = None # 0: unknown, 1: inlier, 2: outlier
+        self.outlier_mask = None # 0: unknown, 1: inlier, 2: outlier
 
 
     def compute(self, flow, flow_img = None):
@@ -25,9 +25,9 @@ class FoE():
         '''
         # prepare variables
         self.flow = flow
-        self.outlier_img = np.zeros((flow.shape[0], flow.shape[1], 3), dtype=np.uint8)
+        self.outlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
         if flow_img is None:
-            self.result_img = cv2.Mat(flow.shape[0], flow.shape[1], cv2.CV_8UC3, cv2.Scalar(0,0,0))
+            self.result_img = np.zeros((flow.shape[0], flow.shape[1], 3), dtype=np.uint8)
         else:
             self.result_img = flow_img.copy()
             if self.loglevel>1:
@@ -52,15 +52,21 @@ class FoE():
 
         if self.inlier_rate < self.inlier_rate_thre:
                 cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        else:
+            if self.loglevel > 2:
+                # overlay outlier mask into input image
+                self.outlier_img = self.result_img.copy()
+                self.outlier_img[self.outlier_mask == 1] = (0, 255, 0)
+                self.outlier_img[self.outlier_mask == 2] = (0, 0, 255)
+                
+                cv2.imshow("outlier", self.outlier_img)
+                key = cv2.waitKey(0)
+                if key == ord('q'):
+                    exit()
 
         if self.loglevel>1:
             cv2.imshow('FoE', self.result_img)
             key = cv2.waitKey(1)
-            if key == ord('q'):
-                exit()
-        if self.loglevel > 2:
-            cv2.imshow("outlier", self.outlier_img)
-            key = cv2.waitKey(0)
             if key == ord('q'):
                 exit()
 
@@ -140,7 +146,7 @@ class FoE():
 
                 # skip if flow is too small
                 if (u**2 + v**2) < self.flow_thre**2:
-                    self.outlier_img[row, col] = (0,0,0) # unknown
+                    self.outlier_mask[row, col] = 0 # unknown
                     continue
                 num_valid_pixel += 1
 
@@ -149,9 +155,9 @@ class FoE():
                 flow_angle = np.arctan2(u, v)
                 if np.abs(estimated_angle - flow_angle) < self.inlier_angle_thre:
                     num_inlier += 1
-                    self.outlier_img[row, col] = (0,255,0) # inlier
+                    self.outlier_mask[row, col] = 1 # inlier
                 else:
-                    self.outlier_img[row, col] = (0,0,255) # outlier
+                    self.outlier_mask[row, col] = 2 # outlier
 
         if num_valid_pixel == 0:
             self.inlier_rate = 0
