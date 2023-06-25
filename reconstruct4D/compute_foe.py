@@ -35,18 +35,25 @@ def main():
         # compute focus of expansion
         foe.compute(unimatch.flow, unimatch.flow_img)
 
-        # create result the image and save it.
-        result_img = cv2.vconcat([img, unimatch.flow_img])
-        result_img = cv2.vconcat([result_img, foe.result_img])
-        cv2.imwrite(f"../output/{imgname}", result_img)
+        # overlay tranparently outlier_mask into input image
+        overlay_img = img.copy()//2
+        # increase red channel for outlier_mask == 2
+        overlay_img[foe.outlier_mask == 2, 2] += 128
 
-        # display the esult
+        # display the result
         if loglevel > 1:
-            result_img = cv2.resize(result_img, (480,640))
+            result_img = cv2.vconcat([img, unimatch.flow_img])
+            overlay_img = cv2.vconcat([foe.result_img, overlay_img])
+            result_img = cv2.hconcat([result_img, overlay_img])
+            result_img = cv2.resize(result_img, (640,480))
             cv2.imshow('result', result_img)
             key = cv2.waitKey(1)
             if key == ord('q'):
                 break
+
+
+        # create result the image and save it.
+        cv2.imwrite(f"../output/{imgname}", result_img)
 
         # prepare for the next frame
         prev_img = img
