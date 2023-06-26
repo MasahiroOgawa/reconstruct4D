@@ -14,7 +14,8 @@ class FoE():
         self.inlier_rate = 0.0
         self.foe = None
         self.result_img = None
-        self.outlier_mask = None # 0: unknown, 1: inlier, 2: outlier
+        self.inlier_mask = None # 0: unknown, 1: inlier, 2: outlier
+        self.maxinlier_mask = None 
 
 
     def compute(self, flow, flow_img = None):
@@ -25,7 +26,8 @@ class FoE():
         '''
         # prepare variables
         self.flow = flow
-        self.outlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
+        self.inlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
+        self.maxinlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
         if flow_img is None:
             self.result_img = np.zeros((flow.shape[0], flow.shape[1], 3), dtype=np.uint8)
         else:
@@ -36,25 +38,26 @@ class FoE():
                 self.debug_img = flow_img.copy()
 
         # RANSAC to find FoE
+        max_inlier_rate = 0.0
         for _ in range(20):
             foe_candi = self.comp_foe_candidate()
             if foe_candi is None:
                 continue
             self.comp_inlier_rate(foe_candi)
 
-            if self.loglevel>0:
-                print(f"FoE candidate: {foe_candi} , inlier_rate: {self.inlier_rate * 100:.2f} %")
-
-            if self.inlier_rate > self.inlier_rate_thre:
+            if self.inlier_rate > max_inlier_rate:
+                max_inlier_rate = self.inlier_rate
                 self.foe = foe_candi
-                self.draw_homogeneous_point(self.foe, self.result_img)
-                break
+                self.maxinlier_mask = self.inlier_mask.copy()
+                if self.inlier_rate > self.inlier_rate_thre:
+                    self.draw_homogeneous_point(self.foe, self.result_img)
+                    break
 
         if self.loglevel > 2:
             # overlay outlier mask into input image
             self.outlier_img = self.result_img.copy()
-            self.outlier_img[self.outlier_mask == 1] = (0, 255, 0)
-            self.outlier_img[self.outlier_mask == 2] = (0, 0, 255)
+            self.outlier_img[self.maxinlier_mask == 1] = (0, 255, 0)
+            self.outlier_img[self.maxinlier_mask == 2] = (0, 0, 255)
             cv2.imshow("outlier", self.outlier_img)
             key = cv2.waitKey(1)
             if key == ord('q'):
@@ -62,13 +65,7 @@ class FoE():
 
         if self.inlier_rate < self.inlier_rate_thre:
                 cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                self.outlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
-
-        if self.loglevel>1:
-            cv2.imshow('FoE', self.result_img)
-            key = cv2.waitKey(1)
-            if key == ord('q'):
-                exit()
+                self.maxinlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
 
 
     def comp_flowline(self, row: int, col: int) -> np.ndarray:
@@ -137,6 +134,7 @@ class FoE():
         '''
         num_inlier = 0
         num_valid_pixel = 0
+
         # check all pixels
         for row in range(self.flow.shape[0]):
             for col in range(self.flow.shape[1]):
@@ -146,7 +144,7 @@ class FoE():
 
                 # skip if flow is too small
                 if (u**2 + v**2) < self.flow_thre**2:
-                    self.outlier_mask[row, col] = 0 # unknown
+                    self.inlier_mask[row, col] = 0 # unknown
                     continue
                 num_valid_pixel += 1
 
@@ -155,14 +153,18 @@ class FoE():
                 flow_angle = np.arctan2(u, v)
                 if np.abs(estimated_angle - flow_angle) < self.inlier_angle_thre:
                     num_inlier += 1
-                    self.outlier_mask[row, col] = 1 # inlier
+                    self.inlier_mask[row, col] = 1 # inlier
                 else:
-                    self.outlier_mask[row, col] = 2 # outlier
+                    self.inlier_mask[row, col] = 2 # outlier
 
         if num_valid_pixel == 0:
             self.inlier_rate = 0
         else:
             self.inlier_rate = num_inlier / num_valid_pixel
+
+        if self.loglevel > 0:
+            print(f"FoE candidate: {foe} , inlier_rate: {self.inlier_rate * 100:.2f} %")
+
 
     def draw_homogeneous_point(self, hom_pt, out_img):
         if hom_pt[2] == 0:

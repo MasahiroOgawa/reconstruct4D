@@ -38,7 +38,7 @@ def main():
         # overlay tranparently outlier_mask into input image
         overlay_img = img.copy()//2
         # increase red channel for outlier_mask == 2
-        overlay_img[foe.outlier_mask == 2, 2] += 128
+        overlay_img[foe.maxinlier_mask == 2, 2] += 128
         result_img = overlay_img
 
         # display the result
