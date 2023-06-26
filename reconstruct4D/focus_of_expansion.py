@@ -50,20 +50,19 @@ class FoE():
                 self.draw_homogeneous_point(self.foe, self.result_img)
                 break
 
+        if self.loglevel > 2:
+            # overlay outlier mask into input image
+            self.outlier_img = self.result_img.copy()
+            self.outlier_img[self.outlier_mask == 1] = (0, 255, 0)
+            self.outlier_img[self.outlier_mask == 2] = (0, 0, 255)
+            cv2.imshow("outlier", self.outlier_img)
+            key = cv2.waitKey(1)
+            if key == ord('q'):
+                exit()
+
         if self.inlier_rate < self.inlier_rate_thre:
                 cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 self.outlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
-        else:
-            if self.loglevel > 2:
-                # overlay outlier mask into input image
-                self.outlier_img = self.result_img.copy()
-                self.outlier_img[self.outlier_mask == 1] = (0, 255, 0)
-                self.outlier_img[self.outlier_mask == 2] = (0, 0, 255)
-                
-                cv2.imshow("outlier", self.outlier_img)
-                key = cv2.waitKey(1)
-                if key == ord('q'):
-                    exit()
 
         if self.loglevel>1:
             cv2.imshow('FoE', self.result_img)
