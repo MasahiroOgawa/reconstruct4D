@@ -24,18 +24,7 @@ class FoE():
         args:
             flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
         '''
-        # prepare variables
-        self.flow = flow
-        self.inlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
-        self.maxinlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
-        if flow_img is None:
-            self.result_img = np.zeros((flow.shape[0], flow.shape[1], 3), dtype=np.uint8)
-        else:
-            self.result_img = flow_img.copy()
-            if self.loglevel>1:
-                self.draw_flowarrow(flow, self.result_img)
-            if self.loglevel>2:
-                self.debug_img = flow_img.copy()
+        self.prepare_variables(flow, flow_img)
 
         self.comp_foe_by_ransac()
 
@@ -200,3 +189,18 @@ class FoE():
                 u = flow[row, col, 0]
                 v = flow[row, col, 1]
                 cv2.arrowedLine(img, (int(col-u), int(row-v)), (col, row), (0, 0, 255), 1)
+
+
+    def prepare_variables(self, flow, flow_img):
+        # prepare variables
+        self.flow = flow
+        self.inlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
+        self.maxinlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
+        if flow_img is None:
+            self.result_img = np.zeros((flow.shape[0], flow.shape[1], 3), dtype=np.uint8)
+        else:
+            self.result_img = flow_img.copy()
+            if self.loglevel>1:
+                self.draw_flowarrow(flow, self.result_img)
+            if self.loglevel>2:
+                self.debug_img = flow_img.copy()
