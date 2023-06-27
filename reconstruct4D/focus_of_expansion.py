@@ -37,24 +37,10 @@ class FoE():
             if self.loglevel>2:
                 self.debug_img = flow_img.copy()
 
-        # RANSAC to find FoE
-        max_inlier_rate = 0.0
-        for _ in range(20):
-            foe_candi = self.comp_foe_candidate()
-            if foe_candi is None:
-                continue
-            self.comp_inlier_rate(foe_candi)
+        self.comp_foe_by_ransac()
 
-            if self.inlier_rate > max_inlier_rate:
-                max_inlier_rate = self.inlier_rate
-                self.foe = foe_candi
-                self.maxinlier_mask = self.inlier_mask.copy()
-                if self.inlier_rate > self.inlier_rate_thre:
-                    self.draw_homogeneous_point(self.foe, self.result_img)
-                    break
-
+        # overlay outlier mask into input image
         if self.loglevel > 2:
-            # overlay outlier mask into input image
             self.outlier_img = self.result_img.copy()
             self.outlier_img[self.maxinlier_mask == 1] = (0, 255, 0)
             self.outlier_img[self.maxinlier_mask == 2] = (0, 0, 255)
@@ -64,8 +50,8 @@ class FoE():
                 exit()
 
         if self.inlier_rate < self.inlier_rate_thre:
-                cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                self.maxinlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
+            cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            self.maxinlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
 
 
     def comp_flowline(self, row: int, col: int) -> np.ndarray:
@@ -96,6 +82,28 @@ class FoE():
         line = np.cross(x, x_prev)
         return line
     
+
+    def comp_foe_by_ransac(self):
+        '''
+        compute FoE by RANSAC
+        '''
+        max_inlier_rate = 0.0
+
+        for _ in range(20):
+            foe_candi = self.comp_foe_candidate()
+            if foe_candi is None:
+                continue
+            self.comp_inlier_rate(foe_candi)
+
+            if self.inlier_rate > max_inlier_rate:
+                max_inlier_rate = self.inlier_rate
+                self.maxinlier_mask = self.inlier_mask.copy()
+                # currently we don't recompute FoE using all inliers, because our final objective is getting outlier mask.
+                self.foe = foe_candi
+                if self.inlier_rate > self.inlier_rate_thre:
+                    self.draw_homogeneous_point(self.foe, self.result_img)
+                    break
+
 
     def comp_foe_candidate(self) -> np.ndarray: 
         '''
