@@ -28,15 +28,8 @@ class FoE():
 
         self.comp_foe_by_ransac()
 
-        # overlay outlier mask into input image
         if self.loglevel > 2:
-            self.outlier_img = self.result_img.copy()
-            self.outlier_img[self.maxinlier_mask == 1] = (0, 255, 0)
-            self.outlier_img[self.maxinlier_mask == 2] = (0, 0, 255)
-            cv2.imshow("outlier", self.outlier_img)
-            key = cv2.waitKey(1)
-            if key == ord('q'):
-                exit()
+            self.draw_outlier_img()
 
         if self.inlier_rate < self.inlier_rate_thre:
             cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
@@ -163,6 +156,17 @@ class FoE():
             print(f"FoE candidate: {foe} , inlier_rate: {self.inlier_rate * 100:.2f} %")
 
 
+    def draw_flowarrow(self, flow, img):
+        '''
+        draw flow as arrow
+        '''
+        for row in range(0, flow.shape[0], 10):
+            for col in range(0, flow.shape[1], 10):
+                u = flow[row, col, 0]
+                v = flow[row, col, 1]
+                cv2.arrowedLine(img, (int(col-u), int(row-v)), (col, row), (0, 0, 255), 1)
+
+
     def draw_homogeneous_point(self, hom_pt, out_img):
         if hom_pt[2] == 0:
             return
@@ -180,15 +184,14 @@ class FoE():
         cv2.line(img, pt1, pt2, (0, 255, 0), 1)
 
 
-    def draw_flowarrow(self, flow, img):
-        '''
-        draw flow as arrow
-        '''
-        for row in range(0, flow.shape[0], 10):
-            for col in range(0, flow.shape[1], 10):
-                u = flow[row, col, 0]
-                v = flow[row, col, 1]
-                cv2.arrowedLine(img, (int(col-u), int(row-v)), (col, row), (0, 0, 255), 1)
+    def draw_outlier_img(self):
+        self.outlier_img = self.result_img.copy()
+        self.outlier_img[self.maxinlier_mask == 1] = (0, 255, 0)
+        self.outlier_img[self.maxinlier_mask == 2] = (0, 0, 255)
+        cv2.imshow("outlier", self.outlier_img)
+        key = cv2.waitKey(1)
+        if key == ord('q'):
+            exit()
 
 
     def prepare_variables(self, flow, flow_img):
