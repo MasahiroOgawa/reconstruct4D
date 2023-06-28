@@ -31,6 +31,7 @@ class FoE():
         if self.loglevel > 2:
             self.draw_outlier_img()
 
+        # treat rotating camera case
         if self.inlier_rate < self.inlier_rate_thre:
             cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             self.maxinlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
@@ -115,6 +116,7 @@ class FoE():
                 exit()
 
         return foe
+
 
     def comp_inlier_rate(self, foe) -> float:
         '''
