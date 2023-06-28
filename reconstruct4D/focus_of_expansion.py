@@ -9,6 +9,7 @@ class FoE():
         self.flow_thre = 3.0 # if flow length is lower than this value, the flow is ignored.
         self.inlier_angle_thre = 10 * np.pi / 180 # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
         self.inlier_rate_thre = 0.9 # if inlier rate is higher than this value, the foe is accepted.
+        self.is_camera_rotating = False # if camera is rotating, foe is not computed.
        
         # variables
         self.inlier_rate = 0.0
@@ -28,13 +29,10 @@ class FoE():
 
         self.comp_foe_by_ransac()
 
-        if self.loglevel > 2:
-            self.draw_outlier_img()
-
         # treat rotating camera case
         if self.inlier_rate < self.inlier_rate_thre:
+            self.is_camera_rotating = True
             cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            self.maxinlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
 
 
     def comp_flowline(self, row: int, col: int) -> np.ndarray:
@@ -184,16 +182,6 @@ class FoE():
         pt1 = (0, int(-line[2] / line[1]))
         pt2 = (img.shape[1], int(-(line[2] + line[0] * img.shape[1]) / line[1]))
         cv2.line(img, pt1, pt2, (0, 255, 0), 1)
-
-
-    def draw_outlier_img(self):
-        self.outlier_img = self.result_img.copy()
-        self.outlier_img[self.maxinlier_mask == 1] = (0, 255, 0)
-        self.outlier_img[self.maxinlier_mask == 2] = (0, 0, 255)
-        cv2.imshow("outlier", self.outlier_img)
-        key = cv2.waitKey(1)
-        if key == ord('q'):
-            exit()
 
 
     def prepare_variables(self, flow, flow_img):

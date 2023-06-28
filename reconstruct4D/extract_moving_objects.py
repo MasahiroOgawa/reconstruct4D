@@ -15,6 +15,7 @@ def main():
     imgfiles = sorted([file for file in os.listdir(image_dir) if file.endswith('.jpg') or file.endswith('.png')])
     print(f"reading input image files: {imgfiles}")
     unimatch = opticalflow.UnimatchFlow()
+    flow_analyzer = opticalflow.FlowAnalyzer()
     prev_img = None
     foe = FoE(f=3.45719e+03, loglevel = loglevel)
 
@@ -35,6 +36,13 @@ def main():
         # compute focus of expansion
         foe.compute(unimatch.flow, unimatch.flow_img)
 
+        # treat the camera is rotating case
+        if foe.is_camera_rotating:
+            flow_analyzer.compute(unimatch.flow)
+            foe.maxinlier_mask = flow_analyzer.flow_mask
+
+        opticalflow.draw_flow_mask(foe.maxinlier_mask)
+
         # overlay tranparently outlier_mask into input image
         overlay_img = img.copy()//2
         # increase red channel for outlier_mask == 2
@@ -42,7 +50,7 @@ def main():
         result_img = overlay_img
 
         # display the result
-        if loglevel > 1:
+        if loglevel > 1:            
             result_img = cv2.vconcat([img, unimatch.flow_img])
             overlay_img = cv2.vconcat([foe.result_img, overlay_img])
             result_img = cv2.hconcat([result_img, overlay_img])
