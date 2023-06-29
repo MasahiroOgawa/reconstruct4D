@@ -54,7 +54,7 @@ def main():
             result_img = cv2.vconcat([img, unimatch.flow_img])
             overlay_img = cv2.vconcat([foe.result_img, overlay_img])
             result_img = cv2.hconcat([result_img, overlay_img])
-            result_img = cv2.resize(result_img, (640,480))
+            result_img = cv2.resize(result_img, (1280,960))
             cv2.imshow('result', result_img)
             key = cv2.waitKey(1)
             if key == ord('q'):

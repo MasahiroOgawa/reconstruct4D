@@ -185,7 +185,7 @@ class FoE():
 
 
     def prepare_variables(self, flow, flow_img):
-        # prepare variables
+        self.is_camera_rotating = False
         self.flow = flow
         self.inlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
         self.maxinlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
