@@ -3,7 +3,7 @@
 # set root directory
 ROOT_DIR=$(dirname "$0")/..
 # variables
-INPUT_IMAGE_DIR=${ROOT_DIR}/data/todaiura
+INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
 OUTPUT_FLOW_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})/flow
 
 ####################
