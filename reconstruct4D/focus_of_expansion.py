@@ -57,7 +57,7 @@ class FoE():
         x_prev = [col - u, row - v, 1]
 
         if self.loglevel>2:
-            cv2.arrowedLine(self.debug_img, list(map(int, x_prev[0:2])), x[0:2], (0, 0, 255), 3)
+            cv2.arrowedLine(self.debug_img, tuple(map(int, x_prev[0:2])), tuple(x[0:2]), (0, 0, 255), 3)
 
         # no rotation correction version
         line = np.cross(x, x_prev)

@@ -3,7 +3,7 @@ import numpy as np
 import os
 import sys
 import torch
-sys.path.append('../ext/unimatch') # for import dataloader
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]), 'ext', "unimatch")) # for import dataloader
 import main_flow
 import unimatch
 import utils
@@ -13,9 +13,8 @@ class UnimatchFlow():
     '''
     compute optical flow using unimatch algorithm
     '''
-    def __init__(self) -> None:
-        currentfiledirectory = os.path.dirname(os.path.abspath(__file__))
-        self.flow_dir = os.path.join(currentfiledirectory, '../unimatch/output/todaiura')
+    def __init__(self, flow_result_dir) -> None:
+        self.flow_result_dir = flow_result_dir
 
 
     def compute(self, imgname):
@@ -29,7 +28,7 @@ class UnimatchFlow():
             self.flow_img: size = h x w x 3. 3 means RGB channel which represents flow orientation.
         '''
         imgnum = imgname.split('.')[0]
-        flow_file = os.path.join(self.flow_dir, f"{imgnum}_pred.flo")
+        flow_file = os.path.join(self.flow_result_dir, f"{imgnum}_pred.flo")
         self.flow = utils.frame_utils.readFlow(flow_file)
 
         self.flow_img = utils.flow_viz.flow_to_image(self.flow)

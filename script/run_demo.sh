@@ -2,9 +2,13 @@
 
 # set root directory
 ROOT_DIR=$(dirname "$0")/..
-# variables
+
+# variables. You can change this.
 INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
-OUTPUT_FLOW_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})/flow
+
+# automatically defined from INPUT_IMAGE_DIR
+OUTPUT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})
+OUTPUT_FLOW_DIR=${OUTPUT_DIR}/flow
 
 ####################
 
@@ -30,7 +34,8 @@ else
        echo "[INFO] save optical flow to ${OUTPUT_FLOW_DIR}"
 fi
 
-# echo "[INFO] run extract moving objects"
-# python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
-#        --inference_dir ${ROOT_DIR}/demo/todaiura \
-#        --resume ${ROOT_DIR}/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
+echo "[INFO] run extract moving objects"
+python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
+       --input_dir ${INPUT_IMAGE_DIR} \
+       --flow_result_dir ${OUTPUT_FLOW_DIR} \
+       --output_dir ${OUTPUT_DIR}
