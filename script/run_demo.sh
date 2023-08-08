@@ -9,6 +9,7 @@ INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
 # automatically defined from INPUT_IMAGE_DIR
 OUTPUT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})
 OUTPUT_FLOW_DIR=${OUTPUT_DIR}/flow
+OUTPUT_SEG_DIR=${OUTPUT_DIR}/seg
 
 ####################
 
@@ -39,6 +40,17 @@ fi
 echo "[INFO] run segmentation"
 eval "$(conda shell.bash activate internimage)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
+if [ -d ${OUTPUT_SEG_DIR} ]; then
+       echo "[INFO] ${OUTPUT_SEG_DIR} already exists. Skip running segmentation."
+else
+       mkdir -p ${OUTPUT_SEG_DIR}
+       CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/ext/InternImage/segmentation/image_demo.py \
+              ${INPUT_IMAGE_DIR} \
+              ${ROOT_DIR}/ext/InternImage/segmentation/configs/ade20k/upernet_internimage_t_512_160k_ade20k.py  \
+              ${ROOT_DIR}/ext/InternImage/segmentation/checkpoint_dir/seg/upernet_internimage_t_512_160k_ade20k.pth  \
+  --palette ade20k --out ${OUTPUT_SEG_DIR}
+fi
+
 
 # echo "[INFO] run extract moving objects"
 # python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
