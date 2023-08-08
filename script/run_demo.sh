@@ -13,6 +13,8 @@ OUTPUT_FLOW_DIR=${OUTPUT_DIR}/flow
 ####################
 
 echo "[INFO] compute optical flow"
+eval "$(conda shell.bash activate study)"
+echo "[INFO] env: $CONDA_DEFAULT_ENV" 
 if [ -d ${OUTPUT_FLOW_DIR} ]; then
        echo "[INFO] ${OUTPUT_FLOW_DIR} already exists. Skip computing optical flow."
 else
@@ -34,8 +36,12 @@ else
        echo "[INFO] save optical flow to ${OUTPUT_FLOW_DIR}"
 fi
 
-echo "[INFO] run extract moving objects"
-python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
-       --input_dir ${INPUT_IMAGE_DIR} \
-       --flow_result_dir ${OUTPUT_FLOW_DIR} \
-       --output_dir ${OUTPUT_DIR}
+echo "[INFO] run segmentation"
+eval "$(conda shell.bash activate internimage)"
+echo "[INFO] env: $CONDA_DEFAULT_ENV"
+
+# echo "[INFO] run extract moving objects"
+# python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
+#        --input_dir ${INPUT_IMAGE_DIR} \
+#        --flow_result_dir ${OUTPUT_FLOW_DIR} \
+#        --output_dir ${OUTPUT_DIR}
