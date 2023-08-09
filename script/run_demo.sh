@@ -52,8 +52,8 @@ else
 fi
 
 
-# echo "[INFO] run extract moving objects"
-# python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
-#        --input_dir ${INPUT_IMAGE_DIR} \
-#        --flow_result_dir ${OUTPUT_FLOW_DIR} \
-#        --output_dir ${OUTPUT_DIR}
+echo "[INFO] run extract moving objects"
+python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
+       --input_dir ${INPUT_IMAGE_DIR} \
+       --flow_result_dir ${OUTPUT_FLOW_DIR} \
+       --output_dir ${OUTPUT_DIR}
