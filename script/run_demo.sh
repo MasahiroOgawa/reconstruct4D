@@ -53,6 +53,8 @@ fi
 
 
 echo "[INFO] run extract moving objects"
+eval "$(conda shell.bash activate study)"
+echo "[INFO] env: $CONDA_DEFAULT_ENV"
 python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
        --input_dir ${INPUT_IMAGE_DIR} \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
