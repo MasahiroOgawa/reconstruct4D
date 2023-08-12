@@ -37,6 +37,7 @@ else
        echo "[INFO] save optical flow to ${OUTPUT_FLOW_DIR}"
 fi
 
+
 echo "[INFO] run segmentation"
 eval "$(conda shell.bash activate internimage)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
@@ -48,9 +49,15 @@ else
               ${INPUT_IMAGE_DIR} \
               ${ROOT_DIR}/ext/InternImage/segmentation/configs/ade20k/upernet_internimage_t_512_160k_ade20k.py  \
               ${ROOT_DIR}/ext/InternImage/segmentation/checkpoint_dir/seg/upernet_internimage_t_512_160k_ade20k.pth  \
-  --palette ade20k --out ${OUTPUT_SEG_DIR}
-fi
+               --palette ade20k --out ${OUTPUT_SEG_DIR}
 
+       # if you have strong GPU, you can use the following model.
+       # CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/ext/InternImage/segmentation/image_demo.py \
+       #        ${INPUT_IMAGE_DIR} \
+       #        ${ROOT_DIR}/ext/InternImage/segmentation/configs/ade20k/mask2former_internimage_h_896_80k_cocostuff2ade20k_ss.py  \
+       #        ${ROOT_DIR}/ext/InternImage/segmentation/checkpoint_dir/seg/mask2former_internimage_h_896_80k_cocostuff2ade20k.pth \
+       #         --palette ade20k --out ${OUTPUT_SEG_DIR}
+fi
 
 echo "[INFO] run extract moving objects"
 eval "$(conda shell.bash activate study)"
