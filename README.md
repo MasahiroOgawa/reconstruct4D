@@ -1,6 +1,18 @@
 # reconstruct4D
 This is a 4D reconstruction project.
 
+# setup
+```
+conda env create -f environment.yml
+conda acrivate reconstruct4D
+```
+
+# run demo
+```
+./script/run_demo.sh
+```
+
+# update code
 ## everyday update for users
 ```
 git pull --recurse-submodules
