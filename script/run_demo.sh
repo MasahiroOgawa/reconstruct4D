@@ -13,8 +13,9 @@ OUTPUT_SEG_DIR=${OUTPUT_DIR}/seg
 
 ####################
 
+
 echo "[INFO] compute optical flow"
-eval "$(conda shell.bash activate study)"
+eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV" 
 if [ -d ${OUTPUT_FLOW_DIR} ]; then
        echo "[INFO] ${OUTPUT_FLOW_DIR} already exists. Skip computing optical flow."
@@ -59,8 +60,9 @@ else
        #         --palette ade20k --out ${OUTPUT_SEG_DIR}
 fi
 
+
 echo "[INFO] run extract moving objects"
-eval "$(conda shell.bash activate study)"
+eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
 python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
        --input_dir ${INPUT_IMAGE_DIR} \
