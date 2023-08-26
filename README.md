@@ -4,7 +4,7 @@ This is a 4D reconstruction project.
 # setup
 ```
 conda env create -f environment.yml
-conda acrivate reconstruct4D
+conda activate reconstruct4D
 ```
 
 # run demo
