@@ -4,3 +4,6 @@
 [submodule "ext/InternImage"]
 	path = ext/InternImage
 	url = git@github.com:MasahiroOgawa/InternImage.git
+[submodule "ext/cityscapesScripts"]
+	path = ext/cityscapesScripts
+	url = https://github.com/mcordts/cityscapesScripts.git
