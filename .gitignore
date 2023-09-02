@@ -164,6 +164,8 @@ cython_debug/
 
 # Results
 output/
+#simbolic link case
+output 
 
 # Input data
 data/todaiura
