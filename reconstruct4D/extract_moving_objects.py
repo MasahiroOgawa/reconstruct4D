@@ -63,6 +63,7 @@ def main(args):
         cv2.imwrite(f"{args.output_dir}/{imgname}", result_img)
 
         # prepare for the next frame
+        prev_imgname = imgname
         prev_img = img
 
     cv2.destroyAllWindows()
