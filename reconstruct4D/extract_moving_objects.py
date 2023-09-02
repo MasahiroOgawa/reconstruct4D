@@ -41,17 +41,17 @@ def main(args):
 
         opticalflow.draw_flow_mask(foe.maxinlier_mask)
 
-        # overlay tranparently outlier_mask into input image
+        # overlay tranparently outlier_mask(moving object mask) into input image
         overlay_img = img.copy()//2
-        # increase red channel for outlier_mask == 2
+        # increase the red channel for outlier_mask == 2(outlier)
         overlay_img[foe.maxinlier_mask == 2, 2] += 128
         result_img = overlay_img
 
         # display the result
         if args.loglevel > 1:            
-            result_img = cv2.vconcat([img, unimatch.flow_img]) # left image
-            overlay_img = cv2.vconcat([foe.result_img, overlay_img]) # right image
-            result_img = cv2.hconcat([result_img, overlay_img])
+            left_img = cv2.vconcat([img, unimatch.flow_img])
+            right_img = cv2.vconcat([foe.result_img, result_img])
+            result_img = cv2.hconcat([left_img, right_img])
             result_img = cv2.resize(result_img, (1280,960))
             cv2.imshow('result', result_img)
             key = cv2.waitKey(1)
