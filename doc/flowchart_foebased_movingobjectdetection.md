@@ -12,5 +12,5 @@ flowchart TD
     K --> L(extract undominant flow as moving objects)
 
     style A fill:#3390FF
-    classDef foe fill:#33FF36
+    classDef foe fill:#098739
 ```

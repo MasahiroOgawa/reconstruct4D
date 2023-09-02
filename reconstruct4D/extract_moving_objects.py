@@ -9,7 +9,7 @@ from reconstruct4D.focus_of_expansion import FoE
 def main(args):
     # preparation
     imgfiles = sorted([file for file in os.listdir(args.input_dir) if file.endswith('.jpg') or file.endswith('.png')])
-    print(f"reading input image files: {imgfiles}")
+    print(f"[INFO] reading input image files: {imgfiles}")
     unimatch = opticalflow.UnimatchFlow(args.flow_result_dir)
     flow_analyzer = opticalflow.FlowAnalyzer()
     prev_img = None
@@ -25,7 +25,7 @@ def main(args):
             continue
 
         if args.loglevel > 0:
-            print(f"{imgname} : {img.shape}")
+            print(f"[INFO] processing {imgname} : {img.shape}")
 
         # currently just read flow from corresponding image file name.
         # unimatch flow at time t is t to t+1 flow, which is different from what we expect, which is t-1 to t flow.

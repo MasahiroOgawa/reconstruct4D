@@ -4,7 +4,8 @@
 ROOT_DIR=$(dirname "$0")/..
 
 # variables. You can change this.
-INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
+# INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
+INPUT_IMAGE_DIR=${ROOT_DIR}/data/todaiura
 
 # automatically defined from INPUT_IMAGE_DIR
 OUTPUT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})

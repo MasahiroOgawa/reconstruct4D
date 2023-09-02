@@ -153,7 +153,7 @@ class FoE():
             self.inlier_rate = num_inlier / num_valid_pixel
 
         if self.loglevel > 0:
-            print(f"FoE candidate: {foe} , inlier_rate: {self.inlier_rate * 100:.2f} %")
+            print(f"[INFO] FoE candidate: {foe} , inlier_rate: {self.inlier_rate * 100:.2f} %")
 
 
     def draw_flowarrow(self, flow, img):
