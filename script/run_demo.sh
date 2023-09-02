@@ -4,13 +4,14 @@
 ROOT_DIR=$(dirname "$0")/..
 
 # variables. You can change this.
-# INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
-INPUT_IMAGE_DIR=${ROOT_DIR}/data/todaiura
+INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
+# INPUT_IMAGE_DIR=${ROOT_DIR}/data/todaiura
 
 # automatically defined from INPUT_IMAGE_DIR
-OUTPUT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})
-OUTPUT_FLOW_DIR=${OUTPUT_DIR}/flow
-OUTPUT_SEG_DIR=${OUTPUT_DIR}/seg
+OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})
+OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
+OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/seg
+OUTPUT_FINAL_DIR=${OUTPUT_PARENT_DIR}/final
 
 ####################
 
@@ -65,7 +66,8 @@ fi
 echo "[INFO] run extract moving objects"
 eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
+mkdir -p ${OUTPUT_FINAL_DIR}
 python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
        --input_dir ${INPUT_IMAGE_DIR} \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
-       --output_dir ${OUTPUT_DIR}
+       --output_dir ${OUTPUT_FINAL_DIR}
