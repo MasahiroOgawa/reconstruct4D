@@ -13,7 +13,7 @@ def main(args):
     unimatch = opticalflow.UnimatchFlow(args.flow_result_dir)
     flow_analyzer = opticalflow.FlowAnalyzer()
     prev_img = None
-    foe = FoE(f=3.45719e+03, loglevel = args.loglevel) # f is focal length of the camera. This value is for the sample images.
+    foe = FoE(loglevel = args.loglevel)
 
     # process each image
     for imgname in imgfiles:
@@ -49,8 +49,8 @@ def main(args):
 
         # display the result
         if args.loglevel > 1:            
-            result_img = cv2.vconcat([img, unimatch.flow_img])
-            overlay_img = cv2.vconcat([foe.result_img, overlay_img])
+            result_img = cv2.vconcat([img, unimatch.flow_img]) # left image
+            overlay_img = cv2.vconcat([foe.result_img, overlay_img]) # right image
             result_img = cv2.hconcat([result_img, overlay_img])
             result_img = cv2.resize(result_img, (1280,960))
             cv2.imshow('result', result_img)
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='extract moving objects')
     parser.add_argument('--input_dir', type=str, default='../data/sample', help='input image directory')
     parser.add_argument('--flow_result_dir', type=str, default='../output/sample/flow', help='optical flow result directory')
-    parser.add_argument('--output_dir', type=str, default='../output/sample', help='output image directory')
+    parser.add_argument('--output_dir', type=str, default='../output/sample/final', help='output image directory')
     parser.add_argument('--loglevel', type=int, default=3, help='log level:0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image')
     args = parser.parse_args()
 

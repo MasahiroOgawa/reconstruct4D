@@ -2,10 +2,9 @@ import numpy as np
 import cv2
 
 class FoE():
-    def __init__(self, f, loglevel = 0) -> None:
+    def __init__(self, loglevel = 0) -> None:
         # fixed parameters
         self.loglevel = loglevel # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
-        self.f = f # focal length
         self.flow_thre = 3.0 # if flow length is lower than this value, the flow is ignored.
         self.inlier_angle_thre = 10 * np.pi / 180 # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
         self.inlier_rate_thre = 0.9 # if inlier rate is higher than this value, the foe is accepted.
