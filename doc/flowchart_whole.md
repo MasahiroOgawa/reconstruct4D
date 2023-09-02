@@ -6,4 +6,8 @@ flowchart LR
     imgt --> seg(segmentation)
     foe --> mov[moving object region]
     seg --> mov
+
+    style flow fill:#3390FF
+    style foe fill:#098739
+    style seg fill:#FF9633
 ```
