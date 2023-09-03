@@ -10,8 +10,8 @@ INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
 # automatically defined from INPUT_IMAGE_DIR
 OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})
 OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
-OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/seg
-OUTPUT_FINAL_DIR=${OUTPUT_PARENT_DIR}/final
+OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
+OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 
 ####################
 
@@ -69,11 +69,16 @@ fi
 echo "[INFO] run extract moving objects"
 eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
-mkdir -p ${OUTPUT_FINAL_DIR}
+mkdir -p ${OUTPUT_MOVOBJ_DIR}
 python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
        --input_dir ${INPUT_IMAGE_DIR} \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
-       --output_dir ${OUTPUT_FINAL_DIR}
-echo "[INFO] creating a movie"
-ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_FINAL_DIR}/*.png" \
-       -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_FINAL_DIR}/moving_object.mp4
+       --output_dir ${OUTPUT_MOVOBJ_DIR}
+
+
+echo "[INFO] creating a segmentation movie (ffmpeg in InternImage conda env doesn't support libx264, so we create it here.)"
+ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_SEG_DIR}/*.jpg" \
+       -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_SEG_DIR}/segmentation.mp4
+echo "[INFO] creating a final movie"
+ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_MOVOBJ_DIR}/*.png" \
+       -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_MOVOBJ_DIR}/moving_object.mp4
