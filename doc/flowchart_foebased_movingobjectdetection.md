@@ -7,10 +7,16 @@ flowchart TD
     F:::foe --> |2 flow arrows| G(compute FoE as cross point of 2 arrows)
     G:::foe --> |iteratively compute FoE| H(update FoE by RANSAC)
     H:::foe --> |FoE, inliers, outliers, unkown| I{inlier > 90% of valid points?}
-    I --> |Yes| J(extract outliers as moving points)
-    I --> |No| K(compute dominant flow)
-    K --> L(extract undominant flow as moving objects)
+    I:::cam --> |Yes| J(extract outliers as moving points):::movpix
+    I --> |No| M{median flow length > thre ?}:::cam
+    M --> |Yes| N(camera is stopping):::cam
+    M --> |No| O(camera is rotating):::cam
+    O --> K(compute dominant flow):::movpix
+    N --> K
+    K --> L(extract undominant flow as moving objects):::movpix
 
     style A fill:#3390FF
     classDef foe fill:#098739
+    classDef cam fill: #8EA928
+    classDef movpix fill: #3DA98C
 ```
