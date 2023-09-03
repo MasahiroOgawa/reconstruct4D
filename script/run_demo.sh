@@ -4,8 +4,8 @@
 ROOT_DIR=$(dirname "$0")/..
 
 # variables. You can change this.
-# INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
-INPUT_IMAGE_DIR=${ROOT_DIR}/data/todaiura
+INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
+# INPUT_IMAGE_DIR=${ROOT_DIR}/data/todaiura
 
 # automatically defined from INPUT_IMAGE_DIR
 OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})
@@ -38,6 +38,9 @@ else
        --num_reg_refine 6 \
        --save_flo_flow
        echo "[INFO] save optical flow to ${OUTPUT_FLOW_DIR}"
+       echo "[INFO] creating a flow movie"
+       ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_FLOW_DIR}/*.png" \
+              -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_FLOW_DIR}/flow.mp4
 fi
 
 
@@ -71,3 +74,6 @@ python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
        --input_dir ${INPUT_IMAGE_DIR} \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
        --output_dir ${OUTPUT_FINAL_DIR}
+echo "[INFO] creating a movie"
+ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_FINAL_DIR}/*.png" \
+       -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_FINAL_DIR}/moving_object.mp4

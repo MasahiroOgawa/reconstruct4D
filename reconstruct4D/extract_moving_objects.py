@@ -60,7 +60,9 @@ def main(args):
 
 
         # create result the image and save it.
-        cv2.imwrite(f"{args.output_dir}/{imgname}", result_img)
+        # change file extension to png
+        save_imgname = imgname.replace('.jpg', '.png')
+        cv2.imwrite(f"{args.output_dir}/{save_imgname}", result_img)
 
         # prepare for the next frame
         prev_imgname = imgname
