@@ -34,6 +34,10 @@ def main(args):
         # compute focus of expansion
         foe.compute(unimatch.flow, unimatch.flow_img)
 
+        # treat the camera is stopping case
+        #TODO: needs to define foe.camera_state: TRANSLATING, ROTATING, STOPPING
+        # stopping erea is defined as foe.inlier_mask[row, col] = 0
+
         # treat the camera is rotating case
         if foe.is_camera_rotating:
             flow_analyzer.compute(unimatch.flow)
@@ -58,8 +62,7 @@ def main(args):
             if key == ord('q'):
                 break
 
-
-        # create result the image and save it.
+        # create the result image and save it.
         # change file extension to png
         save_imgname = imgname.replace('.jpg', '.png')
         cv2.imwrite(f"{args.output_dir}/{save_imgname}", result_img)

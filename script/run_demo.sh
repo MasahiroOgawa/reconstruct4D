@@ -75,7 +75,6 @@ python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
        --output_dir ${OUTPUT_MOVOBJ_DIR}
 
-
 echo "[INFO] creating a segmentation movie (ffmpeg in InternImage conda env doesn't support libx264, so we create it here.)"
 ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_SEG_DIR}/*.jpg" \
        -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_SEG_DIR}/segmentation.mp4
