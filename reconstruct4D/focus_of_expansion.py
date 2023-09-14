@@ -11,9 +11,11 @@ class FoE():
         self.flow_thre = 3.0 # if flow length is lower than this value, the flow is ignored.
         self.inlier_angle_thre = 10 * np.pi / 180 # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
         self.inlier_rate_thre = 0.9 # if inlier rate is higher than this value, the foe is accepted.
+        self.validpix_rate_thre = 0.5 # if valid pixel rate is lower than this value, the camera is considered as stopping.
         self.state = CameraState.STOPPING
        
         # variables
+        self.validpix_rate = 0.0
         self.inlier_rate = 0.0
         self.foe = None
         self.result_img = None
@@ -31,8 +33,9 @@ class FoE():
 
         self.comp_foe_by_ransac()
 
-        # treat rotating camera case
-        if self.inlier_rate < self.inlier_rate_thre:
+        if self.state == CameraState.STOPPING:
+            cv2.putText(self.result_img, "Camera is stopping", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        elif self.inlier_rate < self.inlier_rate_thre:
             self.state = CameraState.ROTATING
             cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
@@ -78,11 +81,18 @@ class FoE():
                 continue
             self.comp_inlier_rate(foe_candi)
 
+            if self.validpix_rate < self.validpix_rate_thre:
+                self.state = CameraState.STOPPING
+                break
+
             if self.inlier_rate > max_inlier_rate:
+                # update by the current best
                 max_inlier_rate = self.inlier_rate
                 self.maxinlier_mask = self.inlier_mask.copy()
                 # currently we don't recompute FoE using all inliers, because our final objective is getting outlier mask.
                 self.foe = foe_candi
+
+                # stop if inlier rate is high enough
                 if self.inlier_rate > self.inlier_rate_thre:
                     self.draw_homogeneous_point(self.foe, self.result_img)
                     break
@@ -148,6 +158,8 @@ class FoE():
                     self.inlier_mask[row, col] = 1 # inlier
                 else:
                     self.inlier_mask[row, col] = 2 # outlier
+
+        self.validpix_rate = num_valid_pixel / (self.flow.shape[0] * self.flow.shape[1])
 
         if num_valid_pixel == 0:
             self.inlier_rate = 0

@@ -36,11 +36,10 @@ def main(args):
         foe.compute(unimatch.flow, unimatch.flow_img)
 
         # treat the camera is stopping case
-        #TODO: needs to define foe.camera_state: TRANSLATING, ROTATING, STOPPING
         # stopping erea is defined as foe.inlier_mask[row, col] = 0
 
         # treat the camera is rotating case
-        if foe.state == CameraState.ROTATING:
+        if (foe.state == CameraState.ROTATING) or (foe.state == CameraState.STOPPING):
             flow_analyzer.compute(unimatch.flow)
             foe.maxinlier_mask = flow_analyzer.flow_mask
 
