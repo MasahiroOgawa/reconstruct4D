@@ -1,5 +1,8 @@
 import numpy as np
 import cv2
+from enum import Enum
+
+CameraState = Enum('CameraState',['STOPPING','ROTATING','ONLY_TRANSLATING'])
 
 class FoE():
     def __init__(self, loglevel = 0) -> None:
@@ -8,7 +11,7 @@ class FoE():
         self.flow_thre = 3.0 # if flow length is lower than this value, the flow is ignored.
         self.inlier_angle_thre = 10 * np.pi / 180 # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
         self.inlier_rate_thre = 0.9 # if inlier rate is higher than this value, the foe is accepted.
-        self.is_camera_rotating = False # if camera is rotating, foe is not computed.
+        self.state = CameraState.STOPPING
        
         # variables
         self.inlier_rate = 0.0
@@ -30,7 +33,7 @@ class FoE():
 
         # treat rotating camera case
         if self.inlier_rate < self.inlier_rate_thre:
-            self.is_camera_rotating = True
+            self.state = CameraState.ROTATING
             cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
 
@@ -184,7 +187,7 @@ class FoE():
 
 
     def prepare_variables(self, flow, flow_img):
-        self.is_camera_rotating = False
+        self.state = CameraState.STOPPING
         self.flow = flow
         self.inlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
         self.maxinlier_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)

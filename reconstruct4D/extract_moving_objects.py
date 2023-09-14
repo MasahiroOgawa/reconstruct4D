@@ -5,6 +5,7 @@ import sys
 sys.path.append(os.path.dirname(sys.path[0]))
 import reconstruct4D.opticalflow as opticalflow
 from reconstruct4D.focus_of_expansion import FoE
+from reconstruct4D.focus_of_expansion import CameraState
 
 def main(args):
     # preparation
@@ -39,7 +40,7 @@ def main(args):
         # stopping erea is defined as foe.inlier_mask[row, col] = 0
 
         # treat the camera is rotating case
-        if foe.is_camera_rotating:
+        if foe.state == CameraState.ROTATING:
             flow_analyzer.compute(unimatch.flow)
             foe.maxinlier_mask = flow_analyzer.flow_mask
 
