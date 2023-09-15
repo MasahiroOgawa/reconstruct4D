@@ -35,11 +35,10 @@ def main(args):
         # compute focus of expansion
         foe.compute(unimatch.flow, unimatch.flow_img)
 
-        # treat the camera is stopping case
         # stopping erea is defined as foe.inlier_mask[row, col] = 0
-
-        # treat the camera is rotating case
-        if (foe.state == CameraState.ROTATING) or (foe.state == CameraState.STOPPING):
+        if foe.state == CameraState.STOPPING:
+            foe.maxinlier_mask = foe.inlier_mask
+        elif (foe.state == CameraState.STOPPING) or (foe.state == CameraState.ROTATING):
             flow_analyzer.compute(unimatch.flow)
             foe.maxinlier_mask = flow_analyzer.flow_mask
 
@@ -47,8 +46,12 @@ def main(args):
 
         # overlay tranparently outlier_mask(moving object mask) into input image
         overlay_img = img.copy()//2
-        # increase the red channel for outlier_mask == 2(outlier)
-        overlay_img[foe.maxinlier_mask == 2, 2] += 128
+        if foe.state == CameraState.STOPPING:
+            # increase the green channel for inlier_mask != 0 (moving)
+            overlay_img[foe.maxinlier_mask != 0, 2] += 128
+        else:
+            # increase the red channel for outlier_mask == 2(outlier)
+            overlay_img[foe.maxinlier_mask == 2, 2] += 128
         result_img = overlay_img
 
         # display the result

@@ -35,6 +35,8 @@ class FoE():
 
         if self.state == CameraState.STOPPING:
             cv2.putText(self.result_img, "Camera is stopping", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        elif self.state == CameraState.ONLY_TRANSLATING:
+            cv2.putText(self.result_img, "Camera is only translating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         elif self.inlier_rate < self.inlier_rate_thre:
             self.state = CameraState.ROTATING
             cv2.putText(self.result_img, "Camera is rotating", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
@@ -83,6 +85,7 @@ class FoE():
 
             if self.validpix_rate < self.validpix_rate_thre:
                 self.state = CameraState.STOPPING
+                self.maxinlier_mask = self.inlier_mask.copy()
                 break
 
             if self.inlier_rate > max_inlier_rate:
@@ -94,6 +97,7 @@ class FoE():
 
                 # stop if inlier rate is high enough
                 if self.inlier_rate > self.inlier_rate_thre:
+                    self.state = CameraState.ONLY_TRANSLATING
                     self.draw_homogeneous_point(self.foe, self.result_img)
                     break
 
