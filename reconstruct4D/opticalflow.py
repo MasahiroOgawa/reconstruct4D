@@ -66,7 +66,7 @@ class FlowAnalyzer():
 
 
 
-def draw_flow_mask(flow_mask):
+def flow_mask_img(flow_mask):
     '''
     draw flow mask image.
     args:
@@ -77,7 +77,4 @@ def draw_flow_mask(flow_mask):
     mask_img = np.zeros((flow_mask.shape[0], flow_mask.shape[1], 3), dtype=np.uint8)
     mask_img[flow_mask == 1] = (0, 255, 0)
     mask_img[flow_mask == 2] = (0, 0, 255)
-    cv2.imshow("flow mask", mask_img)
-    key = cv2.waitKey(1)
-    if key == ord('q'):
-        exit()
+    return mask_img

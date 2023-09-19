@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# stop immediately when error occurred
+set -eu
+
 # set root directory
 ROOT_DIR=$(dirname "$0")/..
 
@@ -45,7 +48,11 @@ fi
 
 
 echo "[INFO] run segmentation"
+# to avoid error: "anaconda3/envs/internimage/etc/conda/activate.d/libblas_mkl_activate.sh: 
+# line 1: MKL_INTERFACE_LAYER: unbound variable", we set +u.
+set +eu
 eval "$(conda shell.bash activate internimage)"
+set -eu
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
 if [ -d ${OUTPUT_SEG_DIR} ]; then
        echo "[INFO] ${OUTPUT_SEG_DIR} already exists. Skip running segmentation."
