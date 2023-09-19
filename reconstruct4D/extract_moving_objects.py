@@ -63,7 +63,7 @@ def main(args):
             row2_img = cv2.hconcat([foe.result_img, flow_mask_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img])
             save_imgsize = (result_imgw, int(
-                result_imgw*img.shape[0]/img.shape[1]))
+                result_imgw*result_img.shape[0]/result_img.shape[1]))
             print(f"imgshape={img.shape}")
             print(f"save_imgsize={save_imgsize}")
             result_img = cv2.resize(
