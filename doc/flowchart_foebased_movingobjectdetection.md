@@ -1,21 +1,30 @@
 ```mermaid
 flowchart TD
-    A(compute flows) -->|optical flow| B(select points randomly)
-    B:::foe --> |flow_x| C(compute previous position x_t-1)
-    C:::foe --> |x_t-1| E(compute flow arrow)
-    E:::foe --> F(select 2 arrows from distanced region)
-    F:::foe --> |2 flow arrows| G(compute FoE as cross point of 2 arrows)
-    G:::foe --> |iteratively compute FoE| H(update FoE by RANSAC)
-    H:::foe --> |FoE, inliers, outliers, unkown| I{inlier > 90% of valid points?}
-    I:::cam --> |Yes| J(extract outliers as moving points):::movpix
-    I --> |No| M{median flow length > thre ?}:::cam
+    D(segment):::seg --> |segmented mask| P(remove sky area):::seg
+    P --> |object mask| R{Does ground/building exist?}:::seg
+    R --> |Yes| M{mean flow length \n in ground/building < thre ?}:::cam
+    R --> |No| N
+    A(compute flows) -->|optical flow| M
     M --> |Yes| N(camera is stopping):::cam
-    M --> |No| O(camera is rotating):::cam
-    O --> K(compute dominant flow):::movpix
-    N --> K
-    K --> L(extract undominant flow as moving objects):::movpix
+    M --> |No| O(camera is moving):::cam
+    O --> B(select points randomly from granound/building):::foe
+    B --> |flow_x| C(compute previous position x_t-1):::foe
+    C --> |x_t-1| E(compute flow arrow):::foe
+    E --> F(select 2 arrows from distanced region):::foe
+    F --> |2 flow arrows| G(compute FoE as cross point of 2 arrows):::foe
+    H --> F
+    G --> H(update FoE by RANSAC):::foe
+    H --> |FoE, inliers, outliers, unkown| I{inlier > 90% of ground/building?}:::cam
+    I --> |Yes| S(camera is going forwarding without rotation):::cam
+    S --> J(extract outliers as moving pixels):::movpix
+    I --> |No| T(camera is rotating):::cam
+    T --> K(compute dominant flow):::movpix
+    N --> Q(extract flow existing pixels as moving pixels):::movpix
+    A --> Q
+    K --> L(extract undominant flow as moving pixels):::movpix
 
     style A fill:#3390FF
+    classDef seg fill:#FF9633 
     classDef foe fill:#098739
     classDef cam fill: #8EA928
     classDef movpix fill: #3DA98C
