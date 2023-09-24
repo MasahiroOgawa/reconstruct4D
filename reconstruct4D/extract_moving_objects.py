@@ -1,7 +1,7 @@
-from .focus_of_expansion import CameraState
-from .focus_of_expansion import FoE
-from . import opticalflow
-from . import segmentator
+from focus_of_expansion import CameraState
+from focus_of_expansion import FoE
+import opticalflow
+import segmentator
 import argparse
 import cv2
 import os
@@ -16,25 +16,29 @@ def main(args):
     print(f"[INFO] reading input image files: {imgfiles}")
     optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
     flow_analyzer = opticalflow.FlowAnalyzer()
+    segm = segmentator.InternImageSegmentator(args.segment_result_dir)
     prev_img = None
     foe = FoE(loglevel=args.loglevel)
     result_imgw = 1280
 
     # process each image
-    for imgname in imgfiles:
-        img = cv2.imread(os.path.join(args.input_dir, imgname))
+    for img_name in imgfiles:
+        img = cv2.imread(os.path.join(args.input_dir, img_name))
 
         if prev_img is None:
-            prev_imgname = imgname
+            prev_imgname = img_name
             prev_img = img
             continue
 
         if args.loglevel > 0:
-            print(f"[INFO] processing {imgname} : {img.shape}")
+            print(f"[INFO] processing {img_name} : {img.shape}")
 
         # currently just read flow from corresponding image file name.
         # unimatch flow at time t is t to t+1 flow, which is different from what we expect, which is t-1 to t flow.
         optflow.compute(prev_imgname)
+
+        # currently jusr read regmentation result from corresponding image file name.
+        segm.compute(img_name)
 
         # compute focus of expansion
         foe.compute(optflow.flow, optflow.flow_img)
@@ -76,11 +80,11 @@ def main(args):
 
         # create the result image and save it.
         # change file extension to png
-        save_imgname = imgname.replace('.jpg', '.png')
+        save_imgname = img_name.replace('.jpg', '.png')
         cv2.imwrite(f"{args.output_dir}/{save_imgname}", result_img)
 
         # prepare for the next frame
-        prev_imgname = imgname
+        prev_imgname = img_name
         prev_img = img
 
     cv2.destroyAllWindows()
@@ -92,6 +96,8 @@ if __name__ == '__main__':
                         default='../data/sample', help='input image directory')
     parser.add_argument('--flow_result_dir', type=str,
                         default='../output/sample/flow', help='optical flow result directory')
+    parser.add_argument('--segment_result_dir', type=str,
+                        default='../output/sample/segment', help='segmentation result directory')
     parser.add_argument('--output_dir', type=str,
                         default='../output/sample/final', help='output image directory')
     parser.add_argument('--loglevel', type=int, default=3,

@@ -80,6 +80,7 @@ mkdir -p ${OUTPUT_MOVOBJ_DIR}
 python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
        --input_dir ${INPUT_IMAGE_DIR} \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
+       --segment_result_dir ${OUTPUT_SEG_DIR} \
        --output_dir ${OUTPUT_MOVOBJ_DIR}
 
 echo "[INFO] creating a segmentation movie (ffmpeg in InternImage conda env doesn't support libx264, so we create it here.)"
