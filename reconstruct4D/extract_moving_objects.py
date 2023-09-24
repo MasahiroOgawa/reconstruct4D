@@ -64,7 +64,7 @@ def main(args):
 
         # display the result
         if args.loglevel > 1:
-            row1_img = cv2.hconcat([img, optflow.flow_img, foe.result_img])
+            row1_img = cv2.hconcat([img, optflow.flow_img, segm.result_img])
             row2_img = cv2.hconcat([foe.result_img, flow_mask_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img])
             save_imgsize = (result_imgw, int(
