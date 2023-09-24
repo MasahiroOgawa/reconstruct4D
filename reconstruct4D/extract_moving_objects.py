@@ -1,6 +1,7 @@
-from focus_of_expansion import CameraState
-from focus_of_expansion import FoE
-import opticalflow as opticalflow
+from .focus_of_expansion import CameraState
+from .focus_of_expansion import FoE
+from . import opticalflow
+from . import segmentator
 import argparse
 import cv2
 import os
@@ -13,7 +14,7 @@ def main(args):
     imgfiles = sorted([file for file in os.listdir(
         args.input_dir) if file.endswith('.jpg') or file.endswith('.png')])
     print(f"[INFO] reading input image files: {imgfiles}")
-    unimatch = opticalflow.UnimatchFlow(args.flow_result_dir)
+    optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
     flow_analyzer = opticalflow.FlowAnalyzer()
     prev_img = None
     foe = FoE(loglevel=args.loglevel)
@@ -33,16 +34,16 @@ def main(args):
 
         # currently just read flow from corresponding image file name.
         # unimatch flow at time t is t to t+1 flow, which is different from what we expect, which is t-1 to t flow.
-        unimatch.compute(prev_imgname)
+        optflow.compute(prev_imgname)
 
         # compute focus of expansion
-        foe.compute(unimatch.flow, unimatch.flow_img)
+        foe.compute(optflow.flow, optflow.flow_img)
 
         # stopping erea is defined as foe.inlier_mask[row, col] = 0
         if foe.state == CameraState.STOPPING:
             foe.maxinlier_mask = foe.inlier_mask
         elif (foe.state == CameraState.STOPPING) or (foe.state == CameraState.ROTATING):
-            flow_analyzer.compute(unimatch.flow)
+            flow_analyzer.compute(optflow.flow)
             foe.maxinlier_mask = flow_analyzer.flow_mask
 
         flow_mask_img = opticalflow.flow_mask_img(foe.maxinlier_mask)
@@ -59,7 +60,7 @@ def main(args):
 
         # display the result
         if args.loglevel > 1:
-            row1_img = cv2.hconcat([img, unimatch.flow_img, foe.result_img])
+            row1_img = cv2.hconcat([img, optflow.flow_img, foe.result_img])
             row2_img = cv2.hconcat([foe.result_img, flow_mask_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img])
             save_imgsize = (result_imgw, int(
