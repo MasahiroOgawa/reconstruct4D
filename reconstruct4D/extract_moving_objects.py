@@ -6,7 +6,7 @@ import argparse
 import cv2
 import os
 import sys
-sys.path.append(os.path.dirname(sys.path[0]))
+import numpy as np
 
 
 def main(args):
@@ -15,7 +15,7 @@ def main(args):
         args.input_dir) if file.endswith('.jpg') or file.endswith('.png')])
     print(f"[INFO] reading input image files: {imgfiles}")
     optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
-    flow_analyzer = opticalflow.FlowAnalyzer()
+    flow_analyzer = opticalflow.FlowAnalyzer(10*np.pi/180, args.loglevel)
     segm = segmentator.InternImageSegmentator(args.segment_result_dir)
     prev_img = None
     foe = FoE(loglevel=args.loglevel)

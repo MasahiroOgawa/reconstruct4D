@@ -9,6 +9,7 @@ ROOT_DIR=$(dirname "$0")/..
 # variables. You can change this.
 INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
 # INPUT_IMAGE_DIR=${ROOT_DIR}/data/todaiura
+LOG_LEVEL=3 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
 
 # automatically defined from INPUT_IMAGE_DIR
 OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})
@@ -81,7 +82,8 @@ python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
        --input_dir ${INPUT_IMAGE_DIR} \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
        --segment_result_dir ${OUTPUT_SEG_DIR} \
-       --output_dir ${OUTPUT_MOVOBJ_DIR}
+       --output_dir ${OUTPUT_MOVOBJ_DIR} \
+       --loglevel ${LOG_LEVEL}
 
 echo "[INFO] creating a segmentation movie (ffmpeg in InternImage conda env doesn't support libx264, so we create it here.)"
 ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_SEG_DIR}/*.jpg" \

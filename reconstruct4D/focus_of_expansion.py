@@ -29,7 +29,7 @@ class FoE():
         self.maxinlier_mask = None
 
     def compute(self, flow, flow_img=None):
-        '''
+        '''..ext.
         compute focus of expansion from optical flow.
         args:
             flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)

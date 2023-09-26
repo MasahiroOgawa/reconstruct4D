@@ -1,21 +1,28 @@
-import cv2
-import numpy as np
+# system import
 import os
 import sys
+import inspect
+
+# 3rd party import
+import cv2
+import numpy as np
 import torch
-sys.path.append(os.path.join(os.path.dirname(sys.path[0]), 'ext', "unimatch")) # for import dataloader
-import main_flow
-import unimatch
+
+# local import
+# for import dataloader
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]), 'ext', 'unimatch'))
 import utils
+import unimatch
+import main_flow
 
 
 class UnimatchFlow():
     '''
     compute optical flow using unimatch algorithm
     '''
+
     def __init__(self, flow_result_dir) -> None:
         self.flow_result_dir = flow_result_dir
-
 
     def compute(self, imgname):
         '''
@@ -34,11 +41,10 @@ class UnimatchFlow():
         self.flow_img = utils.flow_viz.flow_to_image(self.flow)
 
 
-
 class FlowAnalyzer():
-    def __init__(self, loglevel = 0) -> None:
+    def __init__(self, angle_thre=10 * np.pi / 180, loglevel=0) -> None:
         self.loglevel = loglevel
-        self.angle_thre = 10 * np.pi / 180 # 10 degree
+        self.angle_thre = angle_thre  # radian
         pass
 
     def compute(self, flow: np.ndarray):
@@ -48,22 +54,23 @@ class FlowAnalyzer():
             flow: size = h x w x 2. 2 means flow vector (u,v).
         result:
             self.flow_mask: size = h x w. mask value: 0: unknown, 1: inlier, 2: outlier
-        ''' 
+        '''
         # compute flow angle
-        flow_angle = np.arctan2(flow[:,:,1], flow[:,:,0])
+        flow_angle = np.arctan2(flow[:, :, 1], flow[:, :, 0])
 
         # extract median angle
         median_angle = np.median(flow_angle)
 
-        # compute mask from median angle. 
-        self.flow_mask = np.zeros((flow.shape[0], flow.shape[1]), dtype=np.uint8)
+        # compute mask from median angle.
+        self.flow_mask = np.zeros(
+            (flow.shape[0], flow.shape[1]), dtype=np.uint8)
         self.flow_mask[np.abs(flow_angle - median_angle) > self.angle_thre] = 2
-        self.flow_mask[np.abs(flow_angle - median_angle) <= self.angle_thre] = 1
+        self.flow_mask[np.abs(flow_angle - median_angle)
+                       <= self.angle_thre] = 1
 
         if self.loglevel > 2:
             cv2.imshow('flow analyzer', self.flow_mask.numpy())
             cv2.waitKey(1)
-
 
 
 def flow_mask_img(flow_mask):
@@ -74,7 +81,8 @@ def flow_mask_img(flow_mask):
     result:
         self.result_img: size = h x w x 3. 3 means RGB channel which represents flow orientation.
     '''
-    mask_img = np.zeros((flow_mask.shape[0], flow_mask.shape[1], 3), dtype=np.uint8)
+    mask_img = np.zeros(
+        (flow_mask.shape[0], flow_mask.shape[1], 3), dtype=np.uint8)
     mask_img[flow_mask == 1] = (0, 255, 0)
     mask_img[flow_mask == 2] = (0, 0, 255)
     return mask_img
