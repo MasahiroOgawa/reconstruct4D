@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import cv2
+import json
 
 
 class Segmentator():
@@ -18,6 +19,8 @@ class InternImageSegmentator(Segmentator):
     # currenly just load the result from already processd directory.
     def __init__(self, result_dir):
         super().__init__(result_dir)
+        self.classes = json.load(
+            open(os.path.join(result_dir, 'classes.json'), 'r'))
 
     def compute(self, img_name):
         imgnum = img_name.split('.')[0]
