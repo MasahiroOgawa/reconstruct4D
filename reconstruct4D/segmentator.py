@@ -4,13 +4,8 @@ import cv2
 
 
 class Segmentator():
-    def __init__(self, config_file=None, checkpoint_file=None, device='cuda:0', color_palette='ade20k', opacity=0.5):
-        self.config_file = config_file
-        self.checkpoint_file = checkpoint_file
-        self.device = device
-        self.color_palette = color_palette
-        self.opacity = opacity
-        self.model = None
+    def __init__(self, result_dir):
+        self.result_dir = result_dir
 
     def compute():
         pass
@@ -21,10 +16,8 @@ class Segmentator():
 
 class InternImageSegmentator(Segmentator):
     # currenly just load the result from already processd directory.
-    def __init__(self, result_dir, palette='ade20k', opacity=0.5):
-        self.result_dir = result_dir
-        self.palette = palette
-        self.opacity = opacity
+    def __init__(self, result_dir):
+        super().__init__(result_dir)
 
     def compute(self, img_name):
         imgnum = img_name.split('.')[0]
