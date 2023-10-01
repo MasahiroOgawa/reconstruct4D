@@ -27,27 +27,53 @@ class FoE():
         self.result_img = None
         self.inlier_mask = None  # 0: unknown, 1: inlier, 2: outlier
         self.maxinlier_mask = None
+        self.debug_img = None
 
-    def compute(self, flow, flow_img=None):
+    def compute(self, flow):
         '''..ext.
         compute focus of expansion from optical flow.
         args:
             flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
         '''
-        self.prepare_variables(flow, flow_img)
+        self.prepare_variables(flow)
 
         self.comp_foe_by_ransac()
 
+        if (self.state != CameraState.STOPPING and self.state != CameraState.ONLY_TRANSLATING
+                and self.inlier_rate < self.inlier_rate_thre):
+            self.state = CameraState.ROTATING
+
+    def draw(self, bg_img=None):
+        # prepare canvas
+        if bg_img is None:
+            self.result_img = np.zeros(
+                (self.flow.shape[0], self.flow.shape[1], 3), dtype=np.uint8)
+        else:
+            self.result_img = bg_img.copy()
+            if self.loglevel > 1:
+                self.draw_flowarrow(self.flow, self.result_img)
+            if self.loglevel > 2:
+                self.debug_img = bg_img.copy()
+
+        # draw state
         if self.state == CameraState.STOPPING:
             cv2.putText(self.result_img, "Camera is stopping",
                         (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         elif self.state == CameraState.ONLY_TRANSLATING:
+            self.draw_homogeneous_point(self.foe, self.result_img)
             cv2.putText(self.result_img, "Camera is only translating",
                         (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        elif self.inlier_rate < self.inlier_rate_thre:
-            self.state = CameraState.ROTATING
+        elif self.state == CameraState.ROTATING:
             cv2.putText(self.result_img, "Camera is rotating",
                         (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+    def prepare_variables(self, flow):
+        self.state = CameraState.STOPPING
+        self.flow = flow
+        self.inlier_mask = np.zeros(
+            (flow.shape[0], flow.shape[1]), dtype=np.uint8)
+        self.maxinlier_mask = np.zeros(
+            (flow.shape[0], flow.shape[1]), dtype=np.uint8)
 
     def comp_flowline(self, row: int, col: int) -> np.ndarray:
         '''
@@ -107,7 +133,6 @@ class FoE():
                 # stop if inlier rate is high enough
                 if self.inlier_rate > self.inlier_rate_thre:
                     self.state = CameraState.ONLY_TRANSLATING
-                    self.draw_homogeneous_point(self.foe, self.result_img)
                     break
 
     def comp_foe_candidate(self) -> np.ndarray:
@@ -212,20 +237,3 @@ class FoE():
         pt2 = (img.shape[1],
                int(-(line[2] + line[0] * img.shape[1]) / line[1]))
         cv2.line(img, pt1, pt2, (0, 255, 0), 1)
-
-    def prepare_variables(self, flow, flow_img):
-        self.state = CameraState.STOPPING
-        self.flow = flow
-        self.inlier_mask = np.zeros(
-            (flow.shape[0], flow.shape[1]), dtype=np.uint8)
-        self.maxinlier_mask = np.zeros(
-            (flow.shape[0], flow.shape[1]), dtype=np.uint8)
-        if flow_img is None:
-            self.result_img = np.zeros(
-                (flow.shape[0], flow.shape[1], 3), dtype=np.uint8)
-        else:
-            self.result_img = flow_img.copy()
-            if self.loglevel > 1:
-                self.draw_flowarrow(flow, self.result_img)
-            if self.loglevel > 2:
-                self.debug_img = flow_img.copy()

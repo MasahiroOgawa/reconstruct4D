@@ -41,7 +41,7 @@ def main(args):
         segm.compute(img_name)
 
         # compute focus of expansion
-        foe.compute(optflow.flow, optflow.flow_img)
+        foe.compute(optflow.flow)
 
         # stopping erea is defined as foe.inlier_mask[row, col] = 0
         if foe.state == CameraState.STOPPING:
@@ -64,6 +64,8 @@ def main(args):
 
         # display the result
         if args.loglevel > 1:
+            foe.draw(bg_img=optflow.flow_img)
+
             row1_img = cv2.hconcat([img, optflow.flow_img, segm.result_img])
             row2_img = cv2.hconcat([foe.result_img, flow_mask_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img])
