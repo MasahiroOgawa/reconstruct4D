@@ -35,7 +35,8 @@ class FoE():
         args:
             flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
         '''
-        self.prepare_variables(flow)
+        self.flow = flow
+        self.prepare_variables()
 
         self.comp_foe_by_ransac()
 
@@ -44,36 +45,28 @@ class FoE():
             self.state = CameraState.ROTATING
 
     def draw(self, bg_img=None):
-        # prepare canvas
-        if bg_img is None:
+        self.bg_img = bg_img
+
+        self.prepare_canvas()
+        self.draw_state()
+
+    def prepare_variables(self):
+        self.state = CameraState.STOPPING
+        self.inlier_mask = np.zeros(
+            (self.flow.shape[0], self.flow.shape[1]), dtype=np.uint8)
+        self.maxinlier_mask = np.zeros(
+            (self.flow.shape[0], self.flow.shape[1]), dtype=np.uint8)
+
+    def prepare_canvas(self):
+        if self.bg_img is None:
             self.result_img = np.zeros(
                 (self.flow.shape[0], self.flow.shape[1], 3), dtype=np.uint8)
         else:
-            self.result_img = bg_img.copy()
+            self.result_img = self.bg_img.copy()
             if self.loglevel > 1:
                 self.draw_flowarrow(self.flow, self.result_img)
             if self.loglevel > 2:
-                self.debug_img = bg_img.copy()
-
-        # draw state
-        if self.state == CameraState.STOPPING:
-            cv2.putText(self.result_img, "Camera is stopping",
-                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        elif self.state == CameraState.ONLY_TRANSLATING:
-            self.draw_homogeneous_point(self.foe, self.result_img)
-            cv2.putText(self.result_img, "Camera is only translating",
-                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        elif self.state == CameraState.ROTATING:
-            cv2.putText(self.result_img, "Camera is rotating",
-                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-    def prepare_variables(self, flow):
-        self.state = CameraState.STOPPING
-        self.flow = flow
-        self.inlier_mask = np.zeros(
-            (flow.shape[0], flow.shape[1]), dtype=np.uint8)
-        self.maxinlier_mask = np.zeros(
-            (flow.shape[0], flow.shape[1]), dtype=np.uint8)
+                self.debug_img = self.bg_img.copy()
 
     def comp_flowline(self, row: int, col: int) -> np.ndarray:
         '''
@@ -155,7 +148,8 @@ class FoE():
 
         # draw debug image
         if self.loglevel > 2:
-            self.debug_img = self.result_img.copy()
+            self.debug_img = np.zeros(
+                (self.flow.shape[0], self.flow.shape[1], 3), dtype=np.uint8)
             self.draw_line(l1, self.debug_img)
             self.draw_line(l2, self.debug_img)
             self.draw_homogeneous_point(foe, self.debug_img)
@@ -237,3 +231,15 @@ class FoE():
         pt2 = (img.shape[1],
                int(-(line[2] + line[0] * img.shape[1]) / line[1]))
         cv2.line(img, pt1, pt2, (0, 255, 0), 1)
+
+    def draw_state(self):
+        if self.state == CameraState.STOPPING:
+            cv2.putText(self.result_img, "Camera is stopping",
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        elif self.state == CameraState.ONLY_TRANSLATING:
+            self.draw_homogeneous_point(self.foe, self.result_img)
+            cv2.putText(self.result_img, "Camera is only translating",
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        elif self.state == CameraState.ROTATING:
+            cv2.putText(self.result_img, "Camera is rotating",
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
