@@ -18,7 +18,7 @@ class Segmentator():
         else:
             self.dump_classes_with_moving_prob()
             print(
-                f"[ERROR] {self.classes_file} does not exist, so it is created newly. \
+                f"[ERROR] {self.classes_file} does not exist, so it is created newly in data/classes.json. \
                 Please edit moving probability first.")
             exit()
 
