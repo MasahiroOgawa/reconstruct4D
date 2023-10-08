@@ -31,12 +31,6 @@ class Segmentator():
                 Please edit moving probability first.")
             exit()
 
-
-class InternImageSegmentator(Segmentator):
-    # currenly just load the result from already processd directory.
-    def __init__(self, result_dir):
-        super().__init__(result_dir)
-
     def dump_classes_with_moving_prob(self):
         """
         name: dump classes with moving probability.
@@ -55,6 +49,12 @@ class InternImageSegmentator(Segmentator):
         self.classes_file = os.path.join(
             self.this_dir, '..', 'data', 'classes.json')
         json.dump(self.classes, open(self.classes_file, 'w'))
+
+
+class InternImageSegmentator(Segmentator):
+    # currenly just load the result from already processd directory.
+    def __init__(self, result_dir):
+        super().__init__(result_dir)
 
     def compute(self, img_name):
         imgnum = img_name.split('.')[0]
