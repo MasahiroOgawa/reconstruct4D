@@ -65,10 +65,14 @@ def main(args):
         # display the result
         if args.loglevel > 1:
             foe.draw(bg_img=optflow.flow_img)
+            segm.draw(bg_img=img)
 
             row1_img = cv2.hconcat([img, optflow.flow_img, segm.result_img])
-            row2_img = cv2.hconcat([foe.result_img, flow_mask_img, result_img])
-            result_img = cv2.vconcat([row1_img, row2_img])
+            row2_img = cv2.hconcat(
+                [segm.result_movingobj_img, flow_mask_img, result_img])
+            row3_img = cv2.hconcat([foe.result_img, flow_mask_img, result_img])
+            result_img = cv2.vconcat([row1_img, row2_img, row3_img])
+            # resize keeping combined image aspect ratio
             save_imgsize = (result_imgw, int(
                 result_imgw*result_img.shape[0]/result_img.shape[1]))
             print(f"imgshape={img.shape}")

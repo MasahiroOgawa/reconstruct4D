@@ -8,11 +8,14 @@ class Segmentator():
     def __init__(self, result_dir):
         self.result_dir = result_dir
         self.load_classes()
+        self.result_img = None  # segmentation image
+        self.result_movingobj_img = None  # moving object image
 
-    def compute():
+    def compute(self, img_name):
         pass
 
-    def show():
+    def draw(self, bg_img=None):
+        self.bg_img = bg_img
         pass
 
     def load_classes(self):
@@ -62,3 +65,10 @@ class InternImageSegmentator(Segmentator):
         # get segmentation result
         seg_resultfile = os.path.join(self.result_dir, f"{imgnum}.npy")
         self.result_mask = np.load(seg_resultfile)
+
+    def draw(self, bg_img=None):
+        super().draw(bg_img)
+        self.comp_movingobj_img()
+
+    def comp_movingobj_img(self):
+        self.result_movingobj_img = self.bg_img
