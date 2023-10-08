@@ -9,6 +9,12 @@ class Segmentator():
         self.result_dir = result_dir
         self.load_classes()
 
+    def compute():
+        pass
+
+    def show():
+        pass
+
     def load_classes(self):
         self.this_dir = os.path.dirname(os.path.abspath(__file__))
         self.classes_file = os.path.join(
@@ -21,12 +27,6 @@ class Segmentator():
                 f"[ERROR] {self.classes_file} does not exist, so it is created newly in data/classes.json. \
                 Please edit moving probability first.")
             exit()
-
-    def compute():
-        pass
-
-    def show():
-        pass
 
 
 class InternImageSegmentator(Segmentator):

@@ -3,7 +3,7 @@ This is a 4D reconstruction project.
 
 # setup
 ```
-conda env create -f environment.yml
+conda env create -f script/environment.yml
 conda activate reconstruct4D
 ```
 
