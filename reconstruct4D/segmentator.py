@@ -6,7 +6,9 @@ import json
 
 class Segmentator():
     def __init__(self, result_dir):
+        self.this_dir = os.path.dirname(os.path.abspath(__file__))
         self.result_dir = result_dir
+        self.classes = None
         self.load_classes()
         self.result_img = None  # segmentation image
         self.result_movingobj_img = None  # moving object image
@@ -19,15 +21,14 @@ class Segmentator():
         pass
 
     def load_classes(self):
-        self.this_dir = os.path.dirname(os.path.abspath(__file__))
-        self.classes_file = os.path.join(
+        classes_file = os.path.join(
             self.this_dir, '..', 'data', 'classes.json')
-        if os.path.exists(self.classes_file):
-            self.classes = json.load(open(self.classes_file, 'r'))
+        if os.path.exists(classes_file):
+            self.classes = json.load(open(classes_file, 'r'))
         else:
             self.dump_classes_with_moving_prob()
             print(
-                f"[ERROR] {self.classes_file} does not exist, so it is created newly in data/classes.json. \
+                f"[ERROR] {classes_file} does not exist, so it is created newly in data/classes.json. \
                 Please edit moving probability first.")
             exit()
 
@@ -43,7 +44,7 @@ class Segmentator():
         self.classes = []
         for i, class_name in enumerate(self.class_names):
             self.classes.append(
-                {'class_id': i, 'class_name': class_name, 'moving_prob': 0.0})
+                {'class_name': class_name, 'class_id': i, 'moving_prob': 0.0})
 
         # save classes with mobing probability
         self.classes_file = os.path.join(
@@ -71,4 +72,17 @@ class InternImageSegmentator(Segmentator):
         self.comp_movingobj_img()
 
     def comp_movingobj_img(self):
-        self.result_movingobj_img = self.bg_img
+        self.result_movingobj_img = self.bg_img.copy()//2
+
+        # get sky id
+        sky_id = None
+        for class_dict in self.classes:
+            if class_dict['class_name'] == 'sky':
+                sky_id = class_dict['class_id']
+                break
+
+        # draw sky mask as light blue in result_movingobj_img
+        if sky_id is not None:
+            sky_mask = (self.result_mask == sky_id)
+            self.result_movingobj_img[sky_mask,
+                                      0] += 128  # 0 means blue channel
