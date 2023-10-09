@@ -8,18 +8,20 @@ class Segmentator():
     def __init__(self, result_dir):
         self.this_dir = os.path.dirname(os.path.abspath(__file__))
         self.result_dir = result_dir
+        self.result_img = None  # segmentation image
+        self.result_movingobj_img = None  # moving object image
         self.classes = None
         self.load_classes()
         self.sky_id = None
         self.comp_sky_id()
-        self.result_img = None  # segmentation image
-        self.result_movingobj_img = None  # moving object image
+        self.static_ids = []
+        self.THRE_STATIC_PROB = 0.1
+        self.comp_static_ids()
 
     def compute(self, img_name):
         pass
 
     def draw(self, bg_img=None):
-        self.bg_img = bg_img
         pass
 
     def load_classes(self):
@@ -59,6 +61,11 @@ class Segmentator():
                 self.sky_id = class_dict['class_id']
                 break
 
+    def comp_static_ids(self):
+        for class_dict in self.classes:
+            if class_dict['moving_prob'] < self.THRE_STATIC_PROB:
+                self.static_ids.append(class_dict['class_id'])
+
 
 class InternImageSegmentator(Segmentator):
     # currenly just load the result from already processd directory.
@@ -76,7 +83,7 @@ class InternImageSegmentator(Segmentator):
         self.result_mask = np.load(seg_resultfile)
 
     def draw(self, bg_img=None):
-        super().draw(bg_img)
+        self.bg_img = bg_img
         self.comp_movingobj_img()
 
     def comp_movingobj_img(self):
