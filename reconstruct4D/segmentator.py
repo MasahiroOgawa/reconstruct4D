@@ -8,7 +8,8 @@ class Segmentator():
     def __init__(self, result_dir):
         self.this_dir = os.path.dirname(os.path.abspath(__file__))
         self.result_dir = result_dir
-        self.result_img = None  # segmentation image
+        self.seg_img = None  # segmentation image
+        self.seg_mask = None  # segmentation result
         self.result_movingobj_img = None  # moving object image
         self.classes = None
         self.load_classes()
@@ -17,6 +18,8 @@ class Segmentator():
         self.static_ids = []
         self.THRE_STATIC_PROB = 0.1
         self.comp_static_ids()
+        self.sky_mask = None
+        self.static_mask = None
 
     def compute(self, img_name):
         pass
@@ -63,7 +66,8 @@ class Segmentator():
 
     def comp_static_ids(self):
         for class_dict in self.classes:
-            if (class_dict['moving_prob'] < self.THRE_STATIC_PROB) and (class_dict['class_id'] != self.sky_id):
+            if (class_dict['moving_prob'] < self.THRE_STATIC_PROB) \
+                    and (class_dict['class_id'] != self.sky_id):
                 self.static_ids.append(class_dict['class_id'])
 
 
@@ -76,11 +80,22 @@ class InternImageSegmentator(Segmentator):
         imgnum = img_name.split('.')[0]
         # get segmentation image
         seg_imgfile = os.path.join(self.result_dir, f"{imgnum}.jpg")
-        self.result_img = cv2.imread(seg_imgfile)
+        self.seg_img = cv2.imread(seg_imgfile)
 
         # get segmentation result
         seg_resultfile = os.path.join(self.result_dir, f"{imgnum}.npy")
-        self.result_mask = np.load(seg_resultfile)
+        self.seg_mask = np.load(seg_resultfile)
+
+        # compute sky mask
+        if self.sky_id is not None:
+            self.sky_mask = (self.seg_mask == self.sky_id)
+
+        # comput static mask
+        if len(self.static_ids) > 0:
+            self.static_mask = np.zeros_like(self.seg_mask, dtype=bool)
+            for static_id in self.static_ids:
+                self.static_mask = np.logical_or(
+                    self.static_mask, (self.seg_mask == static_id))
 
     def draw(self, bg_img=None):
         self.bg_img = bg_img
@@ -90,12 +105,8 @@ class InternImageSegmentator(Segmentator):
         self.result_movingobj_img = self.bg_img.copy()//2
 
         # draw sky mask as light blue in result_movingobj_img
-        if self.sky_id is not None:
-            sky_mask = (self.result_mask == self.sky_id)
-            self.result_movingobj_img[sky_mask,
-                                      0] += 128  # 0 means blue channel
+        self.result_movingobj_img[self.sky_mask,
+                                  0] += 128  # 0 means blue channel
 
         # draw static mask as gray in result_movingobj_img
-        for static_id in self.static_ids:
-            static_mask = (self.result_mask == static_id)
-            self.result_movingobj_img[static_mask, :] += 128
+        self.result_movingobj_img[self.static_mask, :] += 128
