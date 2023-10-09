@@ -178,37 +178,40 @@ class FoE():
 
     def comp_inlier_rate(self, foe) -> float:
         '''
-        compute inlier rate from FoE
+        compute inlier rate except sky mask from FoE 
         args: 
             foe: FoE in 3D homogeneous coordinate
         '''
         num_inlier = 0
         num_valid_pixel = 0
 
-        # check all pixels
-        for row in range(self.flow.shape[0]):
-            for col in range(self.flow.shape[1]):
-                # get flow
-                u = self.flow[row, col, 0]
-                v = self.flow[row, col, 1]
+        # check pixels inside static mask
+        nonsky_indices = np.where(self.sky_mask == False)
+        for i in range(len(nonsky_indices[0])):
+            row = nonsky_indices[0][i]
+            col = nonsky_indices[1][i]
 
-                # skip if flow is too small
-                if (u**2 + v**2) < self.flow_thre**2:
-                    self.inlier_mask[row, col] = 0  # unknown
-                    continue
-                num_valid_pixel += 1
+            # get flow
+            u = self.flow[row, col, 0]
+            v = self.flow[row, col, 1]
 
-                # compare angle between flow and FoE to each pixel
-                estimated_angle = np.arctan2(foe[0] - col, foe[1] - row)
-                flow_angle = np.arctan2(u, v)
-                if np.abs(estimated_angle - flow_angle) < self.inlier_angle_thre:
-                    num_inlier += 1
-                    self.inlier_mask[row, col] = 1  # inlier
-                else:
-                    self.inlier_mask[row, col] = 2  # outlier
+            # skip if flow is too small
+            if (u**2 + v**2) < self.flow_thre**2:
+                self.inlier_mask[row, col] = 0  # unknown
+                continue
+            num_valid_pixel += 1
+
+            # compare angle between flow and FoE to each pixel
+            estimated_angle = np.arctan2(foe[0] - col, foe[1] - row)
+            flow_angle = np.arctan2(u, v)
+            if np.abs(estimated_angle - flow_angle) < self.inlier_angle_thre:
+                num_inlier += 1
+                self.inlier_mask[row, col] = 1  # inlier
+            else:
+                self.inlier_mask[row, col] = 2  # outlier
 
         self.validpix_rate = num_valid_pixel / \
-            (self.flow.shape[0] * self.flow.shape[1])
+            (len(nonsky_indices[0]) * len(nonsky_indices[1]))
 
         if num_valid_pixel == 0:
             self.inlier_rate = 0
