@@ -10,6 +10,8 @@ class Segmentator():
         self.result_dir = result_dir
         self.classes = None
         self.load_classes()
+        self.sky_id = None
+        self.comp_sky_id()
         self.result_img = None  # segmentation image
         self.result_movingobj_img = None  # moving object image
 
@@ -51,6 +53,12 @@ class Segmentator():
             self.this_dir, '..', 'data', 'classes.json')
         json.dump(self.classes, open(self.classes_file, 'w'))
 
+    def comp_sky_id(self):
+        for class_dict in self.classes:
+            if class_dict['class_name'] == 'sky':
+                self.sky_id = class_dict['class_id']
+                break
+
 
 class InternImageSegmentator(Segmentator):
     # currenly just load the result from already processd directory.
@@ -74,15 +82,8 @@ class InternImageSegmentator(Segmentator):
     def comp_movingobj_img(self):
         self.result_movingobj_img = self.bg_img.copy()//2
 
-        # get sky id
-        sky_id = None
-        for class_dict in self.classes:
-            if class_dict['class_name'] == 'sky':
-                sky_id = class_dict['class_id']
-                break
-
         # draw sky mask as light blue in result_movingobj_img
-        if sky_id is not None:
-            sky_mask = (self.result_mask == sky_id)
+        if self.sky_id is not None:
+            sky_mask = (self.result_mask == self.sky_id)
             self.result_movingobj_img[sky_mask,
                                       0] += 128  # 0 means blue channel
