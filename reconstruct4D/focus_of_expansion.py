@@ -114,8 +114,6 @@ class FoE():
                 continue
             self.comp_inlier_rate(foe_candi)
 
-            # TODO: if the ground (or lower half) is 0 flow, consider it as stopping.
-            # because the lower half is usually the ground, which is not moving.
             if self.validpix_rate < self.validpix_rate_thre:
                 self.state = CameraState.STOPPING
                 self.maxinlier_mask = self.inlier_mask.copy()
@@ -254,11 +252,11 @@ class FoE():
     def draw_state(self):
         if self.state == CameraState.STOPPING:
             cv2.putText(self.result_img, "Camera is stopping",
-                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
         elif self.state == CameraState.ONLY_TRANSLATING:
             self.draw_homogeneous_point(self.foe, self.result_img)
             cv2.putText(self.result_img, "Camera is only translating",
-                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
         elif self.state == CameraState.ROTATING:
             cv2.putText(self.result_img, "Camera is rotating",
-                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
