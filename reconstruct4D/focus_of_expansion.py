@@ -29,13 +29,18 @@ class FoE():
         self.maxinlier_mask = None
         self.debug_img = None
 
-    def compute(self, flow):
+    def compute(self, flow, sky_mask, static_mask):
         '''..ext.
         compute focus of expansion from optical flow.
         args:
             flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
+            sky_mask: mask of sky. shape = (height, width), dtype = bool.
+            static_mask: mask of static object. shape = (height, width), dtype = bool
         '''
         self.flow = flow
+        self.sky_mask = sky_mask
+        self.static_mask = static_mask
+
         self.prepare_variables()
 
         self.comp_foe_by_ransac()
@@ -130,17 +135,15 @@ class FoE():
 
     def comp_foe_candidate(self) -> np.ndarray:
         '''
-        compute FoE from 2 flow lines
+        compute FoE from 2 flow lines only inside static mask.
         FoE is in 3D homogeneous coordinate.
         '''
-        # compute FoE from 2 flow lines
-        row, col = np.random.randint(
-            0, self.flow.shape[0]), np.random.randint(0, self.flow.shape[1])
+        # compute FoE from 2 flow lines only inside static mask.
+        row, col = self.random_point_in_static_mask()
         l1 = self.comp_flowline(row, col)
         if l1 is None:
             return None
-        row, col = np.random.randint(
-            0, self.flow.shape[0]), np.random.randint(0, self.flow.shape[1])
+        row, col = self.random_point_in_static_mask()
         l2 = self.comp_flowline(row, col)
         if l2 is None:
             return None
@@ -159,6 +162,19 @@ class FoE():
                 exit()
 
         return foe
+
+    def random_point_in_static_mask(self):
+        # Find the indices of all pixels in the static mask that have a value of 1
+        indices = np.where(self.static_mask == 1)
+
+        # Randomly select one of the indices
+        index = np.random.choice(len(indices[0]))
+
+        # Get the row and column values corresponding to the selected index
+        row = indices[0][index]
+        col = indices[1][index]
+
+        return row, col
 
     def comp_inlier_rate(self, foe) -> float:
         '''

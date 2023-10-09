@@ -108,5 +108,7 @@ class InternImageSegmentator(Segmentator):
         self.result_movingobj_img[self.sky_mask,
                                   0] += 128  # 0 means blue channel
 
-        # draw static mask as gray in result_movingobj_img
-        self.result_movingobj_img[self.static_mask, :] += 128
+        # draw moving object mask as gray in result_movingobj_img
+        moving_obj_mask = np.logical_not(
+            np.logical_or(self.sky_mask, self.static_mask))
+        self.result_movingobj_img[moving_obj_mask, :] += 128

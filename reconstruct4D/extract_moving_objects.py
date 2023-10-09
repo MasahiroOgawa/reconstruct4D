@@ -41,7 +41,7 @@ def main(args):
         segm.compute(img_name)
 
         # compute focus of expansion
-        foe.compute(optflow.flow)
+        foe.compute(optflow.flow, segm.sky_mask, segm.static_mask)
 
         # stopping erea is defined as foe.inlier_mask[row, col] = 0
         if foe.state == CameraState.STOPPING:
