@@ -63,7 +63,7 @@ class Segmentator():
 
     def comp_static_ids(self):
         for class_dict in self.classes:
-            if class_dict['moving_prob'] < self.THRE_STATIC_PROB:
+            if (class_dict['moving_prob'] < self.THRE_STATIC_PROB) and (class_dict['class_id'] != self.sky_id):
                 self.static_ids.append(class_dict['class_id'])
 
 
@@ -94,3 +94,8 @@ class InternImageSegmentator(Segmentator):
             sky_mask = (self.result_mask == self.sky_id)
             self.result_movingobj_img[sky_mask,
                                       0] += 128  # 0 means blue channel
+
+        # draw static mask as gray in result_movingobj_img
+        for static_id in self.static_ids:
+            static_mask = (self.result_mask == static_id)
+            self.result_movingobj_img[static_mask, :] += 128
