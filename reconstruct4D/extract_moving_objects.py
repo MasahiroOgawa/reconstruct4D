@@ -69,7 +69,7 @@ def main(args):
 
             row1_img = cv2.hconcat([img, optflow.flow_img, segm.seg_img])
             row2_img = cv2.hconcat(
-                [segm.result_movingobj_img, foe.result_img, result_img])
+                [segm.result_movingobj_img, foe.result_img, flow_mask_img])
             row3_img = cv2.hconcat([foe.result_img, flow_mask_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img, row3_img])
             # resize keeping combined image aspect ratio

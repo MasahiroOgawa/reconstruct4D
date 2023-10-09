@@ -11,7 +11,7 @@ class FoE():
         # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
         self.loglevel = loglevel
         # if flow length is lower than this value, the flow is ignored.
-        self.flow_thre = 3.0
+        self.flow_thre = 1.0
         # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
         self.inlier_angle_thre = 10 * np.pi / 180
         # if inlier rate is higher than this value, the foe is accepted.
