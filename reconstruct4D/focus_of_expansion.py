@@ -19,7 +19,7 @@ class FoE():
         # if valid pixel rate is lower than this value, the camera is considered as stopping.
         self.validpix_rate_thre = 0.5
         self.num_ransac = 10
-        self.state = CameraState.ROTATING
+        self.state = CameraState.ROTATING  # most unkown movement.
 
         # variables
         self.validpix_rate = 0.0
@@ -111,7 +111,7 @@ class FoE():
                 continue
             self.comp_inlier_rate(foe_candi)
 
-            # stop if valid pixel rate is too low
+            # stop if valid pixel (flow existing) rate is too low.
             if self.validpix_rate < self.validpix_rate_thre:
                 self.state = CameraState.STOPPING
                 self.maxinlier_mask = self.inlier_mask.copy()
@@ -206,7 +206,7 @@ class FoE():
                 else:
                     self.inlier_mask[row, col] = 2  # outlier
 
-        self.validpix_rate = num_valid_pixel / len(nonsky_indices)
+        self.validpix_rate = num_valid_pixel / len(nonsky_indices[0])
 
         if num_valid_pixel == 0:
             self.inlier_rate = 0
@@ -215,7 +215,7 @@ class FoE():
 
         if self.loglevel > 0:
             print(
-                f"[INFO] FoE candidate: {foe} , inlier_rate: {self.inlier_rate * 100:.2f} %")
+                f"[INFO] FoE candidate: {foe}, valid pixel rate: {self.validpix_rate * 100:.2f} %, inlier rate: {self.inlier_rate * 100:.2f} %")
 
     def draw_flowarrow(self, flow, img):
         '''
