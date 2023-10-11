@@ -18,7 +18,7 @@ class FoE():
         self.inlier_rate_thre = 0.9
         # if valid pixel rate is lower than this value, the camera is considered as stopping.
         self.validpix_rate_thre = 0.5
-        self.state = CameraState.STOPPING
+        self.state = CameraState.ROTATING
 
         # variables
         self.validpix_rate = 0.0
@@ -44,10 +44,6 @@ class FoE():
         self.prepare_variables()
 
         self.comp_foe_by_ransac()
-
-        if (self.state != CameraState.STOPPING and self.state != CameraState.ONLY_TRANSLATING
-                and self.inlier_rate < self.inlier_rate_thre):
-            self.state = CameraState.ROTATING
 
     def draw(self, bg_img=None):
         self.bg_img = bg_img
@@ -114,6 +110,7 @@ class FoE():
                 continue
             self.comp_inlier_rate(foe_candi)
 
+            # stop if valid pixel rate is too low
             if self.validpix_rate < self.validpix_rate_thre:
                 self.state = CameraState.STOPPING
                 self.maxinlier_mask = self.inlier_mask.copy()
@@ -196,20 +193,19 @@ class FoE():
             # skip if flow is too small
             if (u**2 + v**2) < self.flow_thre**2:
                 self.inlier_mask[row, col] = 0  # unknown
-                continue
-            num_valid_pixel += 1
-
-            # compare angle between flow and FoE to each pixel
-            estimated_angle = np.arctan2(foe[0] - col, foe[1] - row)
-            flow_angle = np.arctan2(u, v)
-            if np.abs(estimated_angle - flow_angle) < self.inlier_angle_thre:
-                num_inlier += 1
-                self.inlier_mask[row, col] = 1  # inlier
             else:
-                self.inlier_mask[row, col] = 2  # outlier
+                num_valid_pixel += 1
 
-        self.validpix_rate = num_valid_pixel / \
-            (len(nonsky_indices[0]) * len(nonsky_indices[1]))
+                # compare angle between flow and FoE to each pixel
+                estimated_angle = np.arctan2(foe[0] - col, foe[1] - row)
+                flow_angle = np.arctan2(u, v)
+                if np.abs(estimated_angle - flow_angle) < self.inlier_angle_thre:
+                    num_inlier += 1
+                    self.inlier_mask[row, col] = 1  # inlier
+                else:
+                    self.inlier_mask[row, col] = 2  # outlier
+
+        self.validpix_rate = num_valid_pixel / len(nonsky_indices)
 
         if num_valid_pixel == 0:
             self.inlier_rate = 0
