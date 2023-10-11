@@ -18,6 +18,7 @@ class FoE():
         self.inlier_rate_thre = 0.9
         # if valid pixel rate is lower than this value, the camera is considered as stopping.
         self.validpix_rate_thre = 0.5
+        self.num_ransac = 10
         self.state = CameraState.ROTATING
 
         # variables
@@ -52,7 +53,7 @@ class FoE():
         self.draw_state()
 
     def prepare_variables(self):
-        self.state = CameraState.STOPPING
+        self.state = CameraState.ROTATING
         self.inlier_mask = np.zeros(
             (self.flow.shape[0], self.flow.shape[1]), dtype=np.uint8)
         self.maxinlier_mask = np.zeros(
@@ -104,7 +105,7 @@ class FoE():
         '''
         max_inlier_rate = 0.0
 
-        for _ in range(20):
+        for _ in range(self.num_ransac):
             foe_candi = self.comp_foe_candidate()
             if foe_candi is None:
                 continue
