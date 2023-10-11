@@ -11,18 +11,18 @@ class FoE():
         # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
         self.loglevel = loglevel
         # if flow length is lower than this value, the flow is ignored.
-        self.flow_thre = 1.0
+        self.thre_flowlength = 1.0
         # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
         self.inlier_angle_thre = 10 * np.pi / 180
         # if inlier rate is higher than this value, the foe is accepted.
-        self.inlier_rate_thre = 0.9
+        self.thre_inlier_rate = 0.9
         # if valid pixel rate is lower than this value, the camera is considered as stopping.
-        self.validpix_rate_thre = 0.5
+        self.thre_flow_existing_rate = 0.5
         self.num_ransac = 10
         self.state = CameraState.ROTATING  # most unkown movement.
 
         # variables
-        self.validpix_rate = 0.0
+        self.flow_existing_rate = 0.0  # except sky mask
         self.inlier_rate = 0.0
         self.foe = None
         self.result_img = None
@@ -44,7 +44,13 @@ class FoE():
 
         self.prepare_variables()
 
-        self.comp_foe_by_ransac()
+        self.comp_flow_existing_rate()
+
+        if self.flow_existing_rate < self.thre_flow_existing_rate:
+            self.state = CameraState.STOPPING
+            self.maxinlier_mask = self.inlier_mask.copy()
+        else:
+            self.comp_foe_by_ransac()
 
     def draw(self, bg_img=None):
         self.bg_img = bg_img
@@ -59,45 +65,30 @@ class FoE():
         self.maxinlier_mask = np.zeros(
             (self.flow.shape[0], self.flow.shape[1]), dtype=np.uint8)
 
-    def prepare_canvas(self):
-        if self.bg_img is None:
-            self.result_img = np.zeros(
-                (self.flow.shape[0], self.flow.shape[1], 3), dtype=np.uint8)
-        else:
-            self.result_img = self.bg_img.copy()
-            if self.loglevel > 1:
-                self.draw_flowarrow(self.flow, self.result_img)
-            if self.loglevel > 2:
-                self.debug_img = self.bg_img.copy()
+    def comp_flow_existing_rate(self):
+        num_flow_existing_pixel = 0
 
-    def comp_flowline(self, row: int, col: int) -> np.ndarray:
-        '''
-        compute flow line from flow at (row, col)
-        args:
-            row: row index of flow
-            col: column index of flow
-        return:
-            line: flow line in 3D homogeneous coordinate. if flow is too small, return None.
-        '''
-        x = [col, row, 1]
+        # check pixels inside non sky mask
+        nonsky_indices = np.where(self.sky_mask == False)
+        for i in range(len(nonsky_indices[0])):
+            row = nonsky_indices[0][i]
+            col = nonsky_indices[1][i]
 
-        # flow
-        u = self.flow[row, col, 0]
-        v = self.flow[row, col, 1]
+            # get flow
+            u = self.flow[row, col, 0]
+            v = self.flow[row, col, 1]
 
-        # if flow is too small, return zero line
-        if (u**2 + v**2) < self.flow_thre**2:
-            return None
+            # skip if flow is too small
+            if (u**2 + v**2) > self.thre_flowlength**2:
+                self.inlier_mask[row, col] = 2  # outlier = moving object
+                num_flow_existing_pixel += 1
 
-        x_prev = [col - u, row - v, 1]
+        self.flow_existing_rate = num_flow_existing_pixel / \
+            len(nonsky_indices[0])
 
-        if self.loglevel > 2:
-            cv2.arrowedLine(self.debug_img, tuple(
-                map(int, x_prev[0:2])), tuple(x[0:2]), (0, 0, 255), 3)
-
-        # no rotation correction version
-        line = np.cross(x, x_prev)
-        return line
+        if self.loglevel > 0:
+            print(
+                f"[INFO] flow existing pixel rate: {self.flow_existing_rate * 100:.2f} %")
 
     def comp_foe_by_ransac(self):
         '''
@@ -109,13 +100,8 @@ class FoE():
             foe_candi = self.comp_foe_candidate()
             if foe_candi is None:
                 continue
-            self.comp_inlier_rate(foe_candi)
 
-            # stop if valid pixel (flow existing) rate is too low.
-            if self.validpix_rate < self.validpix_rate_thre:
-                self.state = CameraState.STOPPING
-                self.maxinlier_mask = self.inlier_mask.copy()
-                break
+            self.comp_inlier_rate(foe_candi)
 
             if self.inlier_rate > max_inlier_rate:
                 # update by the current best
@@ -125,7 +111,7 @@ class FoE():
                 self.foe = foe_candi
 
                 # stop if inlier rate is high enough
-                if self.inlier_rate > self.inlier_rate_thre:
+                if self.inlier_rate > self.thre_inlier_rate:
                     self.state = CameraState.ONLY_TRANSLATING
                     break
 
@@ -159,6 +145,35 @@ class FoE():
 
         return foe
 
+    def comp_flowline(self, row: int, col: int) -> np.ndarray:
+        '''
+        compute flow line from flow at (row, col)
+        args:
+            row: row index of flow
+            col: column index of flow
+        return:
+            line: flow line in 3D homogeneous coordinate. if flow is too small, return None.
+        '''
+        x = [col, row, 1]
+
+        # flow
+        u = self.flow[row, col, 0]
+        v = self.flow[row, col, 1]
+
+        # if flow is too small, return zero line
+        if (u**2 + v**2) < self.thre_flowlength**2:
+            return None
+
+        x_prev = [col - u, row - v, 1]
+
+        if self.loglevel > 2:
+            cv2.arrowedLine(self.debug_img, tuple(
+                map(int, x_prev[0:2])), tuple(x[0:2]), (0, 0, 255), 3)
+
+        # no rotation correction version
+        line = np.cross(x, x_prev)
+        return line
+
     def random_point_in_static_mask(self):
         # Find the indices of all pixels in the static mask that have a value of 1
         indices = np.where(self.static_mask == 1)
@@ -179,24 +194,21 @@ class FoE():
             foe: FoE in 3D homogeneous coordinate
         '''
         num_inlier = 0
-        num_valid_pixel = 0
+        num_flow_existingpix = 0
 
-        # check pixels inside static mask
-        nonsky_indices = np.where(self.sky_mask == False)
-        for i in range(len(nonsky_indices[0])):
-            row = nonsky_indices[0][i]
-            col = nonsky_indices[1][i]
-
+        # check pixels inside flow existing area.
+        for row, col in zip(*np.where(self.inlier_mask != 0)):
             # get flow
             u = self.flow[row, col, 0]
             v = self.flow[row, col, 1]
 
             # skip if flow is too small
-            if (u**2 + v**2) < self.flow_thre**2:
+            if (u**2 + v**2) < self.thre_flowlength**2:
                 self.inlier_mask[row, col] = 0  # unknown
+                print(
+                    f"[WARN] flow is too small at ({row}, {col}). IMPOSSIBLE!!")
             else:
-                num_valid_pixel += 1
-
+                num_flow_existingpix += 1
                 # compare angle between flow and FoE to each pixel
                 estimated_angle = np.arctan2(foe[0] - col, foe[1] - row)
                 flow_angle = np.arctan2(u, v)
@@ -206,16 +218,25 @@ class FoE():
                 else:
                     self.inlier_mask[row, col] = 2  # outlier
 
-        self.validpix_rate = num_valid_pixel / len(nonsky_indices[0])
-
-        if num_valid_pixel == 0:
+        if self.flow_existing_rate == 0:
             self.inlier_rate = 0
         else:
-            self.inlier_rate = num_inlier / num_valid_pixel
+            self.inlier_rate = num_inlier / num_flow_existingpix
 
         if self.loglevel > 0:
             print(
-                f"[INFO] FoE candidate: {foe}, valid pixel rate: {self.validpix_rate * 100:.2f} %, inlier rate: {self.inlier_rate * 100:.2f} %")
+                f"[INFO] FoE candidate: {foe}, inlier rate: {self.inlier_rate * 100:.2f} %")
+
+    def prepare_canvas(self):
+        if self.bg_img is None:
+            self.result_img = np.zeros(
+                (self.flow.shape[0], self.flow.shape[1], 3), dtype=np.uint8)
+        else:
+            self.result_img = self.bg_img.copy()
+            if self.loglevel > 1:
+                self.draw_flowarrow(self.flow, self.result_img)
+            if self.loglevel > 2:
+                self.debug_img = self.bg_img.copy()
 
     def draw_flowarrow(self, flow, img):
         '''
