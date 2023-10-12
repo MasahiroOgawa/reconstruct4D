@@ -19,7 +19,7 @@ class Segmentator():
         self.THRE_STATIC_PROB = 0.1
         self.comp_static_ids()
         self.sky_mask = None
-        self.static_mask = None
+        self.static_mask = None  # exclusive with sky_mask.
 
     def compute(self, img_name):
         pass
