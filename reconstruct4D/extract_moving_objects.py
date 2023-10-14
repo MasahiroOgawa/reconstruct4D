@@ -30,14 +30,15 @@ class MovingObjectExtractor:
     def compute(self):
         # process each image
         for self.cur_imgname in self.imgfiles:
-            self.cur_img = cv2.imread(
-                os.path.join(args.input_dir, self.cur_imgname))
             self.process_image()
-            self.draw_result()
+            self.draw()
 
         cv2.destroyAllWindows()
 
     def process_image(self):
+        self.cur_img = cv2.imread(
+            os.path.join(args.input_dir, self.cur_imgname))
+
         if self.prev_img is None:
             self.prev_imgname = self.cur_imgname
             self.prev_img = self.cur_img
@@ -65,7 +66,7 @@ class MovingObjectExtractor:
             self.flow_analyzer.compute(self.optflow.flow)
             self.foe.maxinlier_mask = self.flow_analyzer.flow_mask
 
-    def draw_result(self) -> None:
+    def draw(self) -> None:
         if self.foe.maxinlier_mask is None:
             return
         flow_mask_img = opticalflow.flow_mask_img(self.foe.maxinlier_mask)
