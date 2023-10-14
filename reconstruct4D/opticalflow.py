@@ -1,4 +1,7 @@
 # system import
+import main_flow
+import unimatch
+import utils
 import os
 import sys
 import inspect
@@ -11,9 +14,6 @@ import torch
 # local import
 # for import dataloader
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]), 'ext', 'unimatch'))
-import utils
-import unimatch
-import main_flow
 
 
 class UnimatchFlow():
@@ -41,7 +41,7 @@ class UnimatchFlow():
         self.flow_img = utils.flow_viz.flow_to_image(self.flow)
 
 
-class FlowAnalyzer():
+class UndominantFlowAngleExtractor():
     def __init__(self, angle_thre=10 * np.pi / 180, loglevel=0) -> None:
         self.loglevel = loglevel
         self.angle_thre = angle_thre  # radian
@@ -60,6 +60,8 @@ class FlowAnalyzer():
 
         # extract median angle
         median_angle = np.median(flow_angle)
+
+        # TODO: set sky and static mask to 0, and compute median angle from remaining flow.
 
         # compute mask from median angle.
         self.flow_mask = np.zeros(

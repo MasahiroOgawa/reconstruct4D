@@ -18,7 +18,7 @@ class MovingObjectExtractor:
             args.input_dir) if file.endswith('.jpg') or file.endswith('.png')])
         print(f"[INFO] reading input image files: {self.imgfiles}")
         self.optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
-        self.flow_analyzer = opticalflow.FlowAnalyzer(
+        self.undominantflow = opticalflow.UndominantFlowAngleExtractor(
             10*np.pi/180, args.loglevel)
         self.segm = segmentator.InternImageSegmentator(args.segment_result_dir)
         self.foe = FoE(loglevel=args.loglevel)
@@ -60,11 +60,9 @@ class MovingObjectExtractor:
                          self.segm.sky_mask, self.segm.static_mask)
 
         # stopping erea is defined as foe.inlier_mask[row, col] = 0
-        if self.foe.state == CameraState.STOPPING:
-            self.foe.maxinlier_mask = self.foe.inlier_mask
-        elif self.foe.state == CameraState.ROTATING:
-            self.flow_analyzer.compute(self.optflow.flow)
-            self.foe.maxinlier_mask = self.flow_analyzer.flow_mask
+        if self.foe.state == CameraState.ROTATING:
+            self.undominantflow.compute(self.optflow.flow)
+            self.foe.maxinlier_mask = self.undominantflow.flow_mask
 
     def draw(self) -> None:
         if self.foe.maxinlier_mask is None:

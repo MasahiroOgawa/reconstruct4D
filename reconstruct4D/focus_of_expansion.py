@@ -7,7 +7,7 @@ CameraState = Enum('CameraState', ['STOPPING', 'ROTATING', 'ONLY_TRANSLATING'])
 
 class FoE():
     def __init__(self, loglevel=0) -> None:
-        # fixed parameters
+        # constants
         # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
         self.loglevel = loglevel
         # if flow length is lower than this value, the flow is ignored.
