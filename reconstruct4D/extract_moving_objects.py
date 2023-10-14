@@ -9,91 +9,109 @@ import sys
 import numpy as np
 
 
-def main(args):
-    # preparation
-    imgfiles = sorted([file for file in os.listdir(
-        args.input_dir) if file.endswith('.jpg') or file.endswith('.png')])
-    print(f"[INFO] reading input image files: {imgfiles}")
-    optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
-    flow_analyzer = opticalflow.FlowAnalyzer(10*np.pi/180, args.loglevel)
-    segm = segmentator.InternImageSegmentator(args.segment_result_dir)
-    prev_img = None
-    foe = FoE(loglevel=args.loglevel)
-    result_imgw = 1280
+class MovingObjectExtractor:
+    def __init__(self, args) -> None:
+        # constants
+        self.result_imgw = 1280
+        # variables
+        self.imgfiles = sorted([file for file in os.listdir(
+            args.input_dir) if file.endswith('.jpg') or file.endswith('.png')])
+        print(f"[INFO] reading input image files: {self.imgfiles}")
+        self.optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
+        self.flow_analyzer = opticalflow.FlowAnalyzer(
+            10*np.pi/180, args.loglevel)
+        self.segm = segmentator.InternImageSegmentator(args.segment_result_dir)
+        self.foe = FoE(loglevel=args.loglevel)
+        self.prev_imgname = None
+        self.prev_img = None
+        self.cur_imgname = None
+        self.cur_img = None
 
-    # process each image
-    for img_name in imgfiles:
-        img = cv2.imread(os.path.join(args.input_dir, img_name))
+    def compute(self):
+        # process each image
+        for self.cur_imgname in self.imgfiles:
+            self.cur_img = cv2.imread(
+                os.path.join(args.input_dir, self.cur_imgname))
+            self.process_image()
+            self.draw_result()
 
-        if prev_img is None:
-            prev_imgname = img_name
-            prev_img = img
-            continue
+        cv2.destroyAllWindows()
+
+    def process_image(self):
+        if self.prev_img is None:
+            self.prev_imgname = self.cur_imgname
+            self.prev_img = self.cur_img
+            return
 
         if args.loglevel > 0:
-            print(f"[INFO] processing {img_name} : {img.shape}")
+            print(
+                f"[INFO] processing {self.cur_imgname} : {self.cur_img.shape}")
 
         # currently just read flow from corresponding image file name.
         # unimatch flow at time t is t to t+1 flow, which is different from what we expect, which is t-1 to t flow.
-        optflow.compute(prev_imgname)
+        self.optflow.compute(self.prev_imgname)
 
         # currently jusr read regmentation result from corresponding image file name.
-        segm.compute(img_name)
+        self.segm.compute(self.cur_imgname)
 
         # compute focus of expansion
-        foe.compute(optflow.flow, segm.sky_mask, segm.static_mask)
+        self.foe.compute(self.optflow.flow,
+                         self.segm.sky_mask, self.segm.static_mask)
 
         # stopping erea is defined as foe.inlier_mask[row, col] = 0
-        if foe.state == CameraState.STOPPING:
-            foe.maxinlier_mask = foe.inlier_mask
-        elif (foe.state == CameraState.STOPPING) or (foe.state == CameraState.ROTATING):
-            flow_analyzer.compute(optflow.flow)
-            foe.maxinlier_mask = flow_analyzer.flow_mask
+        if self.foe.state == CameraState.STOPPING:
+            self.foe.maxinlier_mask = self.foe.inlier_mask
+        elif self.foe.state == CameraState.ROTATING:
+            self.flow_analyzer.compute(self.optflow.flow)
+            self.foe.maxinlier_mask = self.flow_analyzer.flow_mask
 
-        flow_mask_img = opticalflow.flow_mask_img(foe.maxinlier_mask)
+    def draw_result(self) -> None:
+        if self.foe.maxinlier_mask is None:
+            return
+        flow_mask_img = opticalflow.flow_mask_img(self.foe.maxinlier_mask)
 
         # overlay tranparently outlier_mask(moving object mask) into input image
-        overlay_img = img.copy()//2
-        if foe.state == CameraState.STOPPING:
-            # increase the green channel for inlier_mask != 0 (moving)
-            overlay_img[foe.maxinlier_mask != 0, 2] += 128
+        overlay_img = self.cur_img.copy()//2
+        if self.foe.state == CameraState.STOPPING:
+            # increase the red channel for inlier_mask != 0 (moving)
+            overlay_img[self.foe.maxinlier_mask != 0, 2] += 128
         else:
             # increase the red channel for outlier_mask == 2(outlier)
-            overlay_img[foe.maxinlier_mask == 2, 2] += 128
+            overlay_img[self.foe.maxinlier_mask == 2, 2] += 128
         result_img = overlay_img
 
-        # display the result
         if args.loglevel > 1:
-            foe.draw(bg_img=optflow.flow_img)
-            segm.draw(bg_img=img)
+            # display the result
+            self.foe.draw(bg_img=self.optflow.flow_img)
+            self.segm.draw(bg_img=self.cur_img)
 
-            row1_img = cv2.hconcat([img, optflow.flow_img, segm.seg_img])
+            row1_img = cv2.hconcat(
+                [self.cur_img, self.optflow.flow_img, self.segm.seg_img])
             row2_img = cv2.hconcat(
-                [segm.result_movingobj_img, foe.result_img, flow_mask_img])
-            row3_img = cv2.hconcat([foe.result_img, flow_mask_img, result_img])
+                [self.segm.result_movingobj_img, self.foe.result_img, flow_mask_img])
+            row3_img = cv2.hconcat(
+                [self.foe.result_img, flow_mask_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img, row3_img])
             # resize keeping combined image aspect ratio
-            save_imgsize = (result_imgw, int(
-                result_imgw*result_img.shape[0]/result_img.shape[1]))
-            print(f"imgshape={img.shape}")
+            save_imgsize = (self.result_imgw, int(
+                self.result_imgw*result_img.shape[0]/result_img.shape[1]))
+            print(f"imgshape={self.cur_img.shape}")
             print(f"save_imgsize={save_imgsize}")
             result_img = cv2.resize(
                 result_img, save_imgsize)
             cv2.imshow('result', result_img)
             key = cv2.waitKey(1)
             if key == ord('q'):
-                break
+                return
 
         # create the result image and save it.
         # change file extension to png
-        save_imgname = img_name.replace('.jpg', '.png')
+        save_imgname = self.cur_imgname.replace('.jpg', '.png')
         cv2.imwrite(f"{args.output_dir}/{save_imgname}", result_img)
 
         # prepare for the next frame
-        prev_imgname = img_name
-        prev_img = img
-
-    cv2.destroyAllWindows()
+        self.prev_imgname = self.cur_imgname
+        self.prev_img = self.cur_img
 
 
 if __name__ == '__main__':
@@ -110,4 +128,5 @@ if __name__ == '__main__':
                         help='log level:0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image')
     args = parser.parse_args()
 
-    main(args)
+    moe = MovingObjectExtractor(args)
+    moe.compute()
