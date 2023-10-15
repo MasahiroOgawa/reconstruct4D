@@ -33,4 +33,7 @@ git submodule update --init --recursive
 git add .
 git commit -m "<any comments>"
 git push --recurse-submodules=on-demand
+(for the first time push, you need to run below;
+git push --recurse-submodules=on-demand --set-upstream origin <your branch name>
+)
 ```
