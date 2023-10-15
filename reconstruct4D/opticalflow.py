@@ -1,19 +1,12 @@
-# system import
-import main_flow
-import unimatch
-import utils
-import os
-import sys
 import inspect
-
-# 3rd party import
+import sys
+import os
 import cv2
 import numpy as np
 import torch
-
-# local import
-# for import dataloader
-sys.path.append(os.path.join(os.path.dirname(sys.path[0]), 'ext', 'unimatch'))
+from ext.unimatch import utils
+from ext.unimatch.utils import frame_utils
+from ext.unimatch.utils import flow_viz
 
 
 class UnimatchFlow():

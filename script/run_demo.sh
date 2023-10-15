@@ -28,10 +28,10 @@ if [ -d ${OUTPUT_FLOW_DIR} ]; then
 else
        mkdir -p ${OUTPUT_FLOW_DIR}
        export OMP_NUM_THREADS=1
-       CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/ext/unimatch/main_flow.py \
+       CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
        --inference_dir ${INPUT_IMAGE_DIR} \
        --output_path ${OUTPUT_FLOW_DIR} \
-       --resume ${ROOT_DIR}/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth \
+       --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth \
        --padding_factor 32 \
        --upsample_factor 4 \
        --num_scales 2 \
@@ -59,10 +59,10 @@ if [ -d ${OUTPUT_SEG_DIR} ]; then
        echo "[INFO] ${OUTPUT_SEG_DIR} already exists. Skip running segmentation."
 else
        mkdir -p ${OUTPUT_SEG_DIR}
-       CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/ext/InternImage/segmentation/image_demo.py \
+       CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py \
               ${INPUT_IMAGE_DIR} \
-              ${ROOT_DIR}/ext/InternImage/segmentation/configs/ade20k/upernet_internimage_t_512_160k_ade20k.py  \
-              ${ROOT_DIR}/ext/InternImage/segmentation/checkpoint_dir/seg/upernet_internimage_t_512_160k_ade20k.pth  \
+              ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/upernet_internimage_t_512_160k_ade20k.py  \
+              ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/seg/upernet_internimage_t_512_160k_ade20k.pth  \
                --palette ade20k --out ${OUTPUT_SEG_DIR}
 
        # if you have strong GPU, you can use the following model.
