@@ -63,10 +63,6 @@ class UndominantFlowAngleExtractor():
         self.flow_mask[np.abs(flow_angle - median_angle)
                        <= self.angle_thre] = 1
 
-        if self.loglevel > 2:
-            cv2.imshow('flow analyzer', self.flow_mask.numpy())
-            cv2.waitKey(1)
-
 
 def flow_mask_img(flow_mask):
     '''

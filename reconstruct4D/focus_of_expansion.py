@@ -71,11 +71,7 @@ class FoE():
         num_flow_existing_pixel = 0
 
         # set non sky mask as outlier, that is a moving object.
-        nonsky_indices = np.where(self.sky_mask == False)
-        for i in range(len(nonsky_indices[0])):
-            row = nonsky_indices[0][i]
-            col = nonsky_indices[1][i]
-            self.inlier_mask[row, col] = 2
+        self.inlier_mask[self.sky_mask == False] = 2
 
         # check pixels inside static mask
         staticpix_indices = np.where(self.static_mask == True)
@@ -100,6 +96,16 @@ class FoE():
         if self.loglevel > 0:
             print(
                 f"[INFO] flow existing pixel rate: {self.flow_existing_rate_in_static * 100:.2f} %")
+
+        if self.loglevel > 2:
+            inlier_mask_img = np.zeros(
+                (self.inlier_mask.shape[0], self.inlier_mask.shape[1], 3), dtype=np.uint8)
+            inlier_mask_img[self.inlier_mask == 1] = [0, 255, 0]
+            inlier_mask_img[self.inlier_mask == 2] = [0, 0, 255]
+            cv2.imshow('non sky mask', inlier_mask_img)
+            key = cv2.waitKey(1)
+            if key == ord('q'):
+                exit()
 
     def comp_foe_by_ransac(self):
         '''
@@ -208,7 +214,12 @@ class FoE():
         num_flow_existingpix = 0
 
         # check pixels inside flow existing area.
-        for row, col in zip(*np.where(self.inlier_mask != 0)):
+        for row, col in zip(*np.nonzero(self.inlier_mask)):
+            # debug
+            if self.inlier_mask[row, col] == 0:
+                print(
+                    f"[DEBUG] self.inlier_mask[{row}, {col}]={self.inlier_mask[row, col]} should be 0 !!!")
+
             # get flow
             u = self.flow[row, col, 0]
             v = self.flow[row, col, 1]

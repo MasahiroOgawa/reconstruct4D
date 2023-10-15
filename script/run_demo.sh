@@ -9,7 +9,7 @@ ROOT_DIR=$(dirname "$0")/..
 # variables. You can change this.
 INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
 # INPUT_IMAGE_DIR=${ROOT_DIR}/data/todaiura
-LOG_LEVEL=2 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
+LOG_LEVEL=3 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
 
 # automatically defined from INPUT_IMAGE_DIR
 OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})
