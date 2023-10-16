@@ -7,7 +7,6 @@ flowchart LR
     seg --> foe
     foe --> cam(camera motion)
     cam --> movpix(moving pixel)
-    movpix --> mov[moving object region]
 
     style flow fill:#3390FF
     style foe fill:#098739
