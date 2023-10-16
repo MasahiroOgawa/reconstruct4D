@@ -21,6 +21,10 @@ flowchart TD
     T --> K(compute dominant flow angle in ground/building):::movpix
     N --> Q(extract flow existing pixels as high probability moving pixels):::movpix
     K --> L(extract undominant flow angles \n as high probability moving pixels):::movpix
+    Q --> U(multiply moving pixel probability with prior probability):::movpix
+    L --> U
+    J --> U
+    U --> V[final moving pixel probability]:::movpix
 
     style A fill:#3390FF
     classDef seg fill:#FF9633 
