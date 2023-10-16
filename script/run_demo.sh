@@ -20,7 +20,7 @@ OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 ####################
 
 
-echo "[INFO] compute optical flow"        outlier_indices = np.where()
+echo "[INFO] compute optical flow"
 eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV" 
 if [ -d ${OUTPUT_FLOW_DIR} ]; then
