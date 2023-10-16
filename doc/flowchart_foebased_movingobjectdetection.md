@@ -14,7 +14,7 @@ flowchart TD
     F --> |2 flow arrows| G(compute FoE as cross point of 2 arrows):::foe
     H --> F
     G --> H(update FoE by RANSAC):::foe
-    H --> |FoE, inliers, outliers, unkown| I{inlier > 90% of ground/building?}:::cam
+    H --> |FoE, inliers, outliers, no flow| I{inlier > 90% of ground/building?}:::cam
     I --> |Yes| S(camera is going forwarding without rotation):::cam
     S --> J(extract outliers as moving pixels):::movpix
     I --> |No| T(camera is rotating):::cam
