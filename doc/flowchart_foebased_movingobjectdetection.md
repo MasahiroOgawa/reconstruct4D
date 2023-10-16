@@ -16,11 +16,11 @@ flowchart TD
     G --> H(update FoE by RANSAC):::foe
     H --> |FoE, inliers, outliers, no flow| I{inlier > 90% of ground/building?}:::cam
     I --> |Yes| S(camera is going forwarding without rotation):::cam
-    S --> J(extract outliers as moving pixels):::movpix
+    S --> J(extract outliers as high probability moving pixels):::movpix
     I --> |No| T(camera is rotating):::cam
     T --> K(compute dominant flow angle in ground/building):::movpix
-    N --> Q(extract flow existing pixels as moving pixels):::movpix
-    K --> L(extract undominant flow angles as moving pixels):::movpix
+    N --> Q(extract flow existing pixels as high probability moving pixels):::movpix
+    K --> L(extract undominant flow angles \n as high probability moving pixels):::movpix
 
     style A fill:#3390FF
     classDef seg fill:#FF9633 
