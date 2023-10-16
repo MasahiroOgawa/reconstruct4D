@@ -11,14 +11,14 @@ class FoE():
         # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
         self.loglevel = loglevel
         # if flow length is lower than this value, the flow is ignored.
-        self.thre_flowlength = 3.0
+        self.thre_flowlength = 2.0
         # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
         self.inlier_angle_thre = 30 * np.pi / 180
         # if inlier rate is higher than this value, the foe is accepted.
         self.thre_inlier_rate = 0.9
-        # if valid pixel rate is lower than this value, the camera is considered as stopping.
+        # if flow existing pixel rate is lower than this value, the camera is considered as stopping.
         # the flow existing rate will be computed only inside static mask.
-        self.thre_flow_existing_rate = 0.5
+        self.thre_flow_existing_rate = 0.1
         self.num_ransac = 10
         self.state = CameraState.ROTATING  # most unkown movement.
 
