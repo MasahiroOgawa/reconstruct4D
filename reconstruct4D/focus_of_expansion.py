@@ -156,7 +156,7 @@ class FoE():
             self.draw_line(l2, self.debug_img)
             self.draw_homogeneous_point(foe, self.debug_img)
             cv2.imshow('Debug', self.debug_img)
-            key = cv2.waitKey(0)
+            key = cv2.waitKey(1)
             if key == ord('q'):
                 exit()
 
