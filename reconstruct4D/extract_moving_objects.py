@@ -57,7 +57,7 @@ class MovingObjectExtractor:
 
         # compute focus of expansion
         self.foe.compute(self.optflow.flow,
-                         self.segm.sky_mask, self.segm.static_mask)
+                         self.segm.sky_mask, self.segm.nonsky_static_mask)
 
     def draw(self) -> None:
         if self.foe.maxinlier_mask is None:

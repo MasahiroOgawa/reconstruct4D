@@ -8,9 +8,9 @@ class Segmentator():
     def __init__(self, result_dir):
         self.this_dir = os.path.dirname(os.path.abspath(__file__))
         self.result_dir = result_dir
-        self.seg_img = None  # segmentation image
+        self.seg_img = None
         self.seg_mask = None  # segmentation result
-        self.result_movingobj_img = None  # moving object image
+        self.result_movingobj_img = None
         self.classes = None
         self.load_classes()
         self.sky_id = None
@@ -19,7 +19,7 @@ class Segmentator():
         self.THRE_STATIC_PROB = 0.1
         self.comp_static_ids()
         self.sky_mask = None
-        self.static_mask = None  # exclusive with sky_mask.
+        self.nonsky_static_mask = None
 
     def compute(self, img_name):
         pass
@@ -92,10 +92,10 @@ class InternImageSegmentator(Segmentator):
 
         # comput static mask
         if len(self.static_ids) > 0:
-            self.static_mask = np.zeros_like(self.seg_mask, dtype=bool)
+            self.nonsky_static_mask = np.zeros_like(self.seg_mask, dtype=bool)
             for static_id in self.static_ids:
-                self.static_mask = np.logical_or(
-                    self.static_mask, (self.seg_mask == static_id))
+                self.nonsky_static_mask = np.logical_or(
+                    self.nonsky_static_mask, (self.seg_mask == static_id))
 
     def draw(self, bg_img=None):
         self.bg_img = bg_img
@@ -110,5 +110,5 @@ class InternImageSegmentator(Segmentator):
 
         # draw moving object mask as gray in result_movingobj_img
         moving_obj_mask = np.logical_not(
-            np.logical_or(self.sky_mask, self.static_mask))
+            np.logical_or(self.sky_mask, self.nonsky_static_mask))
         self.result_movingobj_img[moving_obj_mask, :] += 128
