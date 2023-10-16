@@ -11,9 +11,9 @@ class FoE():
         # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
         self.loglevel = loglevel
         # if flow length is lower than this value, the flow is ignored.
-        self.thre_flowlength = 1.0
+        self.thre_flowlength = 3.0
         # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
-        self.inlier_angle_thre = 10 * np.pi / 180
+        self.inlier_angle_thre = 30 * np.pi / 180
         # if inlier rate is higher than this value, the foe is accepted.
         self.thre_inlier_rate = 0.9
         # if valid pixel rate is lower than this value, the camera is considered as stopping.
@@ -213,7 +213,7 @@ class FoE():
         num_inlier = 0
         num_flow_existingpix = 0
 
-        # check pixels inside non-static & moving static object area.
+        # check pixels inside "non-static" & "moving static" object area.
         for row, col in zip(*np.nonzero(self.inlier_mask)):
             # get flow
             u = self.flow[row, col, 0]
