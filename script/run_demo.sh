@@ -7,8 +7,8 @@ set -eu
 ROOT_DIR=$(dirname "$0")/..
 
 # variables. You can change this.
-INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
-# INPUT_IMAGE_DIR=${ROOT_DIR}/data/todaiura
+# INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
+INPUT_IMAGE_DIR=${ROOT_DIR}/data/todaiura
 LOG_LEVEL=3 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
 
 # automatically defined from INPUT_IMAGE_DIR
@@ -20,7 +20,7 @@ OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 ####################
 
 
-echo "[INFO] compute optical flow"
+echo "[INFO] compute optical flow"        outlier_indices = np.where()
 eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV" 
 if [ -d ${OUTPUT_FLOW_DIR} ]; then

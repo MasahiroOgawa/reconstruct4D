@@ -59,6 +59,12 @@ class MovingObjectExtractor:
         self.foe.compute(self.optflow.flow,
                          self.segm.sky_mask, self.segm.nonsky_static_mask)
 
+        # stopping erea is defined as foe.inlier_mask[row, col] = 0
+        if self.foe.state == CameraState.ROTATING:
+            self.undominantflow.compute(
+                self.optflow.flow, self.segm.nonsky_static_mask)
+            self.foe.maxinlier_mask = self.undominantflow.flow_mask
+
     def draw(self) -> None:
         if self.foe.maxinlier_mask is None:
             return

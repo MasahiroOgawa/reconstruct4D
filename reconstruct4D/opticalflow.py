@@ -36,11 +36,16 @@ class UnimatchFlow():
 
 class UndominantFlowAngleExtractor():
     def __init__(self, angle_thre=10 * np.pi / 180, loglevel=0) -> None:
+        # constants
+        # if flow length is lower than this value, the flow is ignored.
+        self.thre_flowlength = 2.0
+
+        # variables
         self.loglevel = loglevel
         self.angle_thre = angle_thre  # radian
         pass
 
-    def compute(self, flow: np.ndarray):
+    def compute(self, flow: np.ndarray, nonsky_static_mask: np.ndarray):
         '''
         compute undominant orientation mask from optical flow.
         args:
@@ -48,20 +53,23 @@ class UndominantFlowAngleExtractor():
         result:
             self.flow_mask: size = h x w. mask value: 0: unknown, 1: inlier, 2: outlier
         '''
-        # compute flow angle
+        # compute flow angle and length
         flow_angle = np.arctan2(flow[:, :, 1], flow[:, :, 0])
+        flow_length = np.sqrt(flow[:, :, 0]**2 + flow[:, :, 1]**2)
+
+        # TODO: compute rotation center and extract different moving area.
 
         # extract median angle
-        median_angle = np.median(flow_angle)
-
-        # TODO: set sky and static mask to 0, and compute median angle from remaining flow.
+        median_angle = np.median(flow_angle[nonsky_static_mask])
 
         # compute mask from median angle.
         self.flow_mask = np.zeros(
             (flow.shape[0], flow.shape[1]), dtype=np.uint8)
-        self.flow_mask[np.abs(flow_angle - median_angle) > self.angle_thre] = 2
-        self.flow_mask[np.abs(flow_angle - median_angle)
-                       <= self.angle_thre] = 1
+
+        self.flow_mask[(flow_length > self.thre_flowlength) & (
+            np.abs(flow_angle - median_angle) > self.angle_thre)] = 2
+        self.flow_mask[(flow_length > self.thre_flowlength) & (np.abs(flow_angle - median_angle)
+                       <= self.angle_thre)] = 1
 
 
 def flow_mask_img(flow_mask):
