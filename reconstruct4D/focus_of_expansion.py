@@ -68,7 +68,7 @@ class FoE():
             (self.flow.shape[0], self.flow.shape[1]), dtype=np.uint8)
 
     def comp_flow_existing_rate(self):
-        num_flow_existing_pixel = 0
+        num_flow_existing_pix_in_static = 0
 
         # set non sky mask as outlier, that is a moving object.
         self.inlier_mask[self.sky_mask == False] = 2
@@ -88,9 +88,9 @@ class FoE():
                 self.inlier_mask[row, col] = 0  # unknown and stop.
             else:
                 # inlier_mask is already set as outlier;2.
-                num_flow_existing_pixel += 1
+                num_flow_existing_pix_in_static += 1
 
-        self.flow_existing_rate_in_static = num_flow_existing_pixel / \
+        self.flow_existing_rate_in_static = num_flow_existing_pix_in_static / \
             len(staticpix_indices[0])
 
         if self.loglevel > 0:
@@ -102,7 +102,7 @@ class FoE():
                 (self.inlier_mask.shape[0], self.inlier_mask.shape[1], 3), dtype=np.uint8)
             inlier_mask_img[self.inlier_mask == 1] = [0, 255, 0]
             inlier_mask_img[self.inlier_mask == 2] = [0, 0, 255]
-            cv2.imshow('non sky mask', inlier_mask_img)
+            cv2.imshow('non sky & stopping static mask', inlier_mask_img)
             key = cv2.waitKey(1)
             if key == ord('q'):
                 exit()
@@ -213,23 +213,17 @@ class FoE():
         num_inlier = 0
         num_flow_existingpix = 0
 
-        # check pixels inside flow existing area.
+        # check pixels inside non-static & moving static object area.
         for row, col in zip(*np.nonzero(self.inlier_mask)):
-            # debug
-            if self.inlier_mask[row, col] == 0:
-                print(
-                    f"[DEBUG] self.inlier_mask[{row}, {col}]={self.inlier_mask[row, col]} should be 0 !!!")
-
             # get flow
             u = self.flow[row, col, 0]
             v = self.flow[row, col, 1]
 
             # skip if flow is too small
             if (u**2 + v**2) < self.thre_flowlength**2:
-                self.inlier_mask[row, col] = 0  # unknown
-                # TODO. 2023/10/12 debug code goes to here.
-                print(
-                    f"[WARN] flow is too small at ({row}, {col}). IMPOSSIBLE!!")
+                # this means nonstatic object which moves with camera.
+                # camera is not stopping, so the object must be moving.
+                self.inlier_mask[row, col] = 2
             else:
                 num_flow_existingpix += 1
                 # compare angle between flow and FoE to each pixel
