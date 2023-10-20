@@ -12,7 +12,7 @@ import numpy as np
 class MovingObjectExtractor:
     def __init__(self, args) -> None:
         # constants
-        self.result_imgw = 1280
+        self.result_imgw = args.result_imgw
         # variables
         self.imgfiles = sorted([file for file in os.listdir(
             args.input_dir) if file.endswith('.jpg') or file.endswith('.png')])
@@ -126,6 +126,8 @@ if __name__ == '__main__':
                         default='../output/sample/final', help='output image directory')
     parser.add_argument('--loglevel', type=int, default=3,
                         help='log level:0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image')
+    parser.add_argument('--result_imgw', type=int,
+                        default=1280, help='result image width.[pix]')
     args = parser.parse_args()
 
     moe = MovingObjectExtractor(args)
