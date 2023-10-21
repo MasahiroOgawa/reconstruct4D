@@ -74,8 +74,8 @@ class Segmentator():
 
 class InternImageSegmentator(Segmentator):
     # currenly just load the result from already processd directory.
-    def __init__(self, result_dir):
-        super().__init__(result_dir)
+    def __init__(self, result_dir, loglevel=0):
+        super().__init__(result_dir, loglevel)
 
     def compute(self, img_name):
         if self.loglevel > 0:
