@@ -20,7 +20,8 @@ class MovingObjectExtractor:
         self.optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
         self.undominantflow = opticalflow.UndominantFlowAngleExtractor(
             10*np.pi/180, args.loglevel)
-        self.segm = segmentator.InternImageSegmentator(args.segment_result_dir)
+        self.segm = segmentator.InternImageSegmentator(
+            args.segment_result_dir, args.loglevel)
         self.foe = FoE(loglevel=args.loglevel)
         self.prev_imgname = None
         self.prev_img = None

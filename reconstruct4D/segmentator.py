@@ -5,7 +5,7 @@ import json
 
 
 class Segmentator():
-    def __init__(self, result_dir):
+    def __init__(self, result_dir, loglevel=0):
         self.this_dir = os.path.dirname(os.path.abspath(__file__))
         self.result_dir = result_dir
         self.seg_img = None
@@ -20,6 +20,7 @@ class Segmentator():
         self.comp_static_ids()
         self.sky_mask = None
         self.nonsky_static_mask = None
+        self.loglevel = loglevel
 
     def compute(self, img_name):
         pass
@@ -77,12 +78,15 @@ class InternImageSegmentator(Segmentator):
         super().__init__(result_dir)
 
     def compute(self, img_name):
-        imgnum = img_name.split('.')[0]
+        if self.loglevel > 0:
+            print(f"[INFO] InternImageSegmentator.compute({img_name})")
+
         # get segmentation image
-        seg_imgfile = os.path.join(self.result_dir, f"{imgnum}.jpg")
+        seg_imgfile = os.path.join(self.result_dir, img_name)
         self.seg_img = cv2.imread(seg_imgfile)
 
         # get segmentation result
+        imgnum = img_name.split('.')[0]
         seg_resultfile = os.path.join(self.result_dir, f"{imgnum}.npy")
         self.seg_mask = np.load(seg_resultfile)
 

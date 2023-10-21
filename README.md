@@ -37,3 +37,11 @@ git push --recurse-submodules=on-demand
 git push --recurse-submodules=on-demand --set-upstream origin <your branch name>
 )
 ```
+
+## To import submodule upstream update
+```
+cd ext/<some submodule>
+git fetch upstream
+git switch main
+git merge upstream/main
+```

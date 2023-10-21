@@ -6,19 +6,35 @@ set -eu
 # set root directory
 ROOT_DIR=$(dirname "$0")/..
 
-# variables. You can change this.
-# INPUT_IMAGE_DIR=${ROOT_DIR}/data/sample
-INPUT_IMAGE_DIR=${ROOT_DIR}/data/todaiura
+# input image directory or video variables. You can change this.
+# INPUT=${ROOT_DIR}/data/sample
+# INPUT=${ROOT_DIR}/data/todaiura
+INPUT="/home/mas/Downloads/reirun2"
 LOG_LEVEL=3 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
+IMG_HEIGHT=480
 
-# automatically defined from INPUT_IMAGE_DIR
-OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_IMAGE_DIR})
-OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
-OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
-OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 
 ####################
 
+echo "[INFO] check input is whether a directory or movie."
+if [ -d ${INPUT} ]; then
+       echo "[INFO] input is a directory."
+elif [ -f ${INPUT} ]; then
+       echo "[INFO] input is a movie."
+       echo "[INFO] convert movie to images"
+       INPUT_DIR=$(dirname ${INPUT})
+       ffmpeg -i ${INPUT} -r 30 -vf scale=-1:${IMG_HEIGHT} ${INPUT_DIR}/%06d.png
+       INPUT="${INPUT_DIR}"
+else
+       echo "[ERROR] input is neither a directory nor a movie."
+       exit 1
+fi
+
+# automatically defined from INPUT
+OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT})
+OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
+OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
+OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 
 echo "[INFO] compute optical flow"
 eval "$(conda shell.bash activate reconstruct4D)"
@@ -29,7 +45,7 @@ else
        mkdir -p ${OUTPUT_FLOW_DIR}
        export OMP_NUM_THREADS=1
        CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
-       --inference_dir ${INPUT_IMAGE_DIR} \
+       --inference_dir ${INPUT} \
        --output_path ${OUTPUT_FLOW_DIR} \
        --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth \
        --padding_factor 32 \
@@ -60,14 +76,14 @@ if [ -d ${OUTPUT_SEG_DIR} ]; then
 else
        mkdir -p ${OUTPUT_SEG_DIR}
        CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py \
-              ${INPUT_IMAGE_DIR} \
+              ${INPUT} \
               ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/upernet_internimage_t_512_160k_ade20k.py  \
               ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/seg/upernet_internimage_t_512_160k_ade20k.pth  \
                --palette ade20k --out ${OUTPUT_SEG_DIR}
 
        # if you have strong GPU, you can use the following model.
        # CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/ext/InternImage/segmentation/image_demo.py \
-       #        ${INPUT_IMAGE_DIR} \
+       #        ${INPUT} \
        #        ${ROOT_DIR}/ext/InternImage/segmentation/configs/ade20k/mask2former_internimage_h_896_80k_cocostuff2ade20k_ss.py  \
        #        ${ROOT_DIR}/ext/InternImage/segmentation/checkpoint_dir/seg/mask2former_internimage_h_896_80k_cocostuff2ade20k.pth \
        #         --palette ade20k --out ${OUTPUT_SEG_DIR}
@@ -79,7 +95,7 @@ eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
 mkdir -p ${OUTPUT_MOVOBJ_DIR}
 python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
-       --input_dir ${INPUT_IMAGE_DIR} \
+       --input_dir ${INPUT} \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
        --segment_result_dir ${OUTPUT_SEG_DIR} \
        --output_dir ${OUTPUT_MOVOBJ_DIR} \
