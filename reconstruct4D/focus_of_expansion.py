@@ -264,8 +264,8 @@ class FoE():
             for col in range(0, flow.shape[1], self.flowarrow_step):
                 u = flow[row, col, 0]
                 v = flow[row, col, 1]
-                cv2.arrowedLine(img, (int(col-u), int(row-v)),
-                                (col, row), (0, 0, 255), 1)
+                cv2.arrowedLine(img, pt1=(int(col-u), int(row-v)),
+                                pt2=(col, row), color=(0, 0, 255), thickness=3)
 
     def draw_homogeneous_point(self, hom_pt, out_img):
         if hom_pt[2] == 0:
