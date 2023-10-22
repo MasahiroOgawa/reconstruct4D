@@ -27,8 +27,6 @@ git submodule update --init --recursive
 (in case you change submodule,
  commit in ext/* directory, and
  cd ../../..
- git add ext/
- git submodule update --remote --rebase
 )
 git add .
 git commit -m "<any comments>"
