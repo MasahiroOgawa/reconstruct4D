@@ -13,7 +13,7 @@ class FoE():
         # if flow length is lower than this value, the flow is ignored.
         self.thre_flowlength = 2.0
         # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
-        self.inlier_angle_thre = 30 * np.pi / 180
+        self.thre_inlier_angle = 30 * np.pi / 180
         # if inlier rate is higher than this value, the foe is accepted.
         self.thre_inlier_rate = 0.9
         # if flow existing pixel rate is lower than this value, the camera is considered as stopping.
@@ -21,6 +21,7 @@ class FoE():
         self.thre_flow_existing_rate = 0.1
         self.num_ransac = 10
         self.state = CameraState.ROTATING  # most unkown movement.
+        self.flowarrow_step = 20  # every this pixel, draw flow arrow.
 
         # variables
         self.flow_existing_rate_in_static = 0.0
@@ -227,9 +228,9 @@ class FoE():
             else:
                 num_flow_existingpix += 1
                 # compare angle between flow and FoE to each pixel
-                estimated_angle = np.arctan2(foe[0] - col, foe[1] - row)
-                flow_angle = np.arctan2(u, v)
-                if np.abs(estimated_angle - flow_angle) < self.inlier_angle_thre:
+                estimated_angle = np.arctan2(row - foe[1], col - foe[0])
+                flow_angle = np.arctan2(v, u)
+                if np.abs(estimated_angle - flow_angle) < self.thre_inlier_angle:
                     num_inlier += 1
                     self.inlier_mask[row, col] = 1  # inlier
                 else:
@@ -259,8 +260,8 @@ class FoE():
         '''
         draw flow as arrow
         '''
-        for row in range(0, flow.shape[0], 10):
-            for col in range(0, flow.shape[1], 10):
+        for row in range(0, flow.shape[0], self.flowarrow_step):
+            for col in range(0, flow.shape[1], self.flowarrow_step):
                 u = flow[row, col, 0]
                 v = flow[row, col, 1]
                 cv2.arrowedLine(img, (int(col-u), int(row-v)),
