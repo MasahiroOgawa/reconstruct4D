@@ -10,9 +10,9 @@ ROOT_DIR=$(dirname "$0")/..
 # INPUT=${ROOT_DIR}/data/sample
 # INPUT=${ROOT_DIR}/data/todaiura
 INPUT="/home/mas/Downloads/reirun"
-LOG_LEVEL=3 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
+LOG_LEVEL=2 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
 IMG_HEIGHT=480
-SKIP_FRAMES=80
+SKIP_FRAMES=90
 
 
 ####################

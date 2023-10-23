@@ -13,7 +13,7 @@ class FoE():
         # if flow length is lower than this value, the flow is ignored.
         self.thre_flowlength = 2.0
         # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
-        self.thre_inlier_angle = 30 * np.pi / 180
+        self.thre_inlier_angle = 10 * np.pi / 180
         # if inlier rate is higher than this value, the foe is accepted.
         self.thre_inlier_rate = 0.9
         # if flow existing pixel rate is lower than this value, the camera is considered as stopping.
@@ -236,7 +236,6 @@ class FoE():
             else:
                 num_flow_existingpix += 1
 
-                # debug
                 if self.loglevel > 2:
                     foe_flow_img = self.debug_img.copy()
                     cv2.arrowedLine(foe_flow_img, (int(foe_u), int(foe_v)),
@@ -249,8 +248,10 @@ class FoE():
                         exit()
 
                 # check the angle between flow and FoE to each pixel is lower than threshold.
-                if np.dot(
-                        (col-foe_u, row-foe_v), (u, v)) < thre_cos:
+                cos_foe_flow = np.dot((col-foe_u, row-foe_v), (u, v)) / \
+                    np.sqrt((col-foe_u)**2 + (row-foe_v)**2) / \
+                    np.sqrt(u**2 + v**2)
+                if cos_foe_flow > thre_cos:
                     num_inlier += 1
                     self.inlier_mask[row, col] = 1  # inlier
                 else:
