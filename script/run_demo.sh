@@ -8,11 +8,11 @@ ROOT_DIR=$(dirname "$0")/..
 
 # input image directory or video variables. You can change this.
 # INPUT=${ROOT_DIR}/data/sample
-# INPUT=${ROOT_DIR}/data/todaiura
-INPUT="/home/mas/Downloads/reirun"
+INPUT=${ROOT_DIR}/data/todaiura
+# INPUT="/home/mas/Downloads/reirun"
 LOG_LEVEL=2 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
 IMG_HEIGHT=480
-SKIP_FRAMES=90
+SKIP_FRAMES=0
 
 
 ####################
@@ -20,19 +20,19 @@ SKIP_FRAMES=90
 echo "[INFO] check input is whether a directory or movie."
 if [ -d ${INPUT} ]; then
        echo "[INFO] input is a directory."
+       INPUT_DIR=${INPUT}
 elif [ -f ${INPUT} ]; then
        echo "[INFO] input is a movie."
        echo "[INFO] convert movie to images"
        INPUT_DIR=$(dirname ${INPUT})
        ffmpeg -i ${INPUT} -r 30 -vf scale=-1:${IMG_HEIGHT} ${INPUT_DIR}/%06d.png
-       INPUT="${INPUT_DIR}"
 else
        echo "[ERROR] input is neither a directory nor a movie."
        exit 1
 fi
 
-# automatically defined from INPUT
-OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT})
+# automatically defined variables from INPUT
+OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_DIR})
 OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
 OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
 OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
@@ -96,7 +96,7 @@ eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
 mkdir -p ${OUTPUT_MOVOBJ_DIR}
 python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
-       --input_dir ${INPUT} \
+       --input_dir ${INPUT_DIR} \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
        --segment_result_dir ${OUTPUT_SEG_DIR} \
        --output_dir ${OUTPUT_MOVOBJ_DIR} \
