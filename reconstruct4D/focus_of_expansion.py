@@ -213,6 +213,14 @@ class FoE():
         '''
         num_inlier = 0
         num_flow_existingpix = 0
+        thre_cos = np.cos(self.thre_inlier_angle)
+
+        # treat candidate FoE is infinite case
+        if foe[2] == 0:
+            foe[2] = 1e-10
+        else:
+            foe_u = foe[0] / foe[2]
+            foe_v = foe[1] / foe[2]
 
         # check pixels inside "non-static" & "moving static" object area.
         for row, col in zip(*np.nonzero(self.inlier_mask)):
@@ -227,10 +235,22 @@ class FoE():
                 self.inlier_mask[row, col] = 2
             else:
                 num_flow_existingpix += 1
-                # compare angle between flow and FoE to each pixel
-                estimated_angle = np.arctan2(row - foe[1], col - foe[0])
-                flow_angle = np.arctan2(v, u)
-                if np.abs(estimated_angle - flow_angle) < self.thre_inlier_angle:
+
+                # debug
+                if self.loglevel > 2:
+                    foe_flow_img = self.debug_img.copy()
+                    cv2.arrowedLine(foe_flow_img, (int(foe_u), int(foe_v)),
+                                    (col, row), (0, 255, 0), 3)
+                    cv2.arrowedLine(foe_flow_img, (col, row),
+                                    (int(col+u), int(row+v)), (0, 0, 255), 3)
+                    cv2.imshow('Debug', foe_flow_img)
+                    key = cv2.waitKey(1)
+                    if key == ord('q'):
+                        exit()
+
+                # check the angle between flow and FoE to each pixel is lower than threshold.
+                if np.dot(
+                        (col-foe_u, row-foe_v), (u, v)) < thre_cos:
                     num_inlier += 1
                     self.inlier_mask[row, col] = 1  # inlier
                 else:

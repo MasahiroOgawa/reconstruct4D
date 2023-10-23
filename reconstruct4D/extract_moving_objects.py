@@ -31,6 +31,11 @@ class MovingObjectExtractor:
     def compute(self):
         # process each image
         for self.cur_imgname in self.imgfiles:
+            # skip frames at the beginning if it is specified.
+            if args.skip_frames > 0:
+                args.skip_frames -= 1
+                continue
+
             self.process_image()
             self.draw()
 
@@ -129,6 +134,8 @@ if __name__ == '__main__':
                         help='log level:0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image')
     parser.add_argument('--result_imgw', type=int,
                         default=1280, help='result image width.[pix]')
+    parser.add_argument('--skip_frames', type=int,
+                        default=0, help='skip frames at the beginning')
     args = parser.parse_args()
 
     moe = MovingObjectExtractor(args)

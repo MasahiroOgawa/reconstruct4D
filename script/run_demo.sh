@@ -12,6 +12,7 @@ ROOT_DIR=$(dirname "$0")/..
 INPUT="/home/mas/Downloads/reirun"
 LOG_LEVEL=3 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
 IMG_HEIGHT=480
+SKIP_FRAMES=80
 
 
 ####################
@@ -99,6 +100,7 @@ python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
        --segment_result_dir ${OUTPUT_SEG_DIR} \
        --output_dir ${OUTPUT_MOVOBJ_DIR} \
+       --skip_frames ${SKIP_FRAMES} \
        --loglevel ${LOG_LEVEL}
 
 echo "[INFO] creating a segmentation movie (ffmpeg in InternImage conda env doesn't support libx264, so we create it here.)"
