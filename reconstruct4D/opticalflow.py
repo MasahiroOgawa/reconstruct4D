@@ -35,14 +35,14 @@ class UnimatchFlow():
 
 
 class UndominantFlowAngleExtractor():
-    def __init__(self, angle_thre=10 * np.pi / 180, loglevel=0) -> None:
+    def __init__(self, thre_angle=10 * np.pi / 180, loglevel=0) -> None:
         # constants
         # if flow length is lower than this value, the flow is ignored.
         self.thre_flowlength = 2.0
 
         # variables
         self.loglevel = loglevel
-        self.angle_thre = angle_thre  # radian
+        self.thre_angle = thre_angle  # radian
         pass
 
     def compute(self, flow: np.ndarray, nonsky_static_mask: np.ndarray):
@@ -67,9 +67,9 @@ class UndominantFlowAngleExtractor():
             (flow.shape[0], flow.shape[1]), dtype=np.uint8)
 
         self.flow_mask[(flow_length > self.thre_flowlength) & (
-            np.abs(flow_angle - median_angle) > self.angle_thre)] = 2
+            np.abs(flow_angle - median_angle) > self.thre_angle)] = 2
         self.flow_mask[(flow_length > self.thre_flowlength) & (np.abs(flow_angle - median_angle)
-                       <= self.angle_thre)] = 1
+                       <= self.thre_angle)] = 1
 
 
 def flow_mask_img(flow_mask):

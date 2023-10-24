@@ -13,13 +13,14 @@ class MovingObjectExtractor:
     def __init__(self, args) -> None:
         # constants
         self.result_imgw = args.result_imgw
+        thre_dominantflow_angle = 10*np.pi/180
         # variables
         self.imgfiles = sorted([file for file in os.listdir(
             args.input_dir) if file.endswith('.jpg') or file.endswith('.png')])
         print(f"[INFO] reading input image files: {self.imgfiles}")
         self.optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
         self.undominantflow = opticalflow.UndominantFlowAngleExtractor(
-            10*np.pi/180, args.loglevel)
+            thre_dominantflow_angle, args.loglevel)
         self.segm = segmentator.InternImageSegmentator(
             args.segment_result_dir, args.loglevel)
         self.foe = FoE(loglevel=args.loglevel)
