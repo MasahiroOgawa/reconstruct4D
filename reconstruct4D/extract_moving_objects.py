@@ -21,7 +21,7 @@ class MovingObjectExtractor:
         self.optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
         self.undominantflow = opticalflow.UndominantFlowAngleExtractor(
             thre_dominantflow_angle, args.loglevel)
-        self.segm = segmentator.InternImageSegmentator(
+        self.seg = segmentator.InternImageSegmentator(
             args.segment_result_dir, args.loglevel)
         self.foe = FoE(loglevel=args.loglevel)
         self.prev_imgname = None
@@ -60,16 +60,16 @@ class MovingObjectExtractor:
         self.optflow.compute(self.prev_imgname)
 
         # currently jusr read regmentation result from corresponding image file name.
-        self.segm.compute(self.cur_imgname)
+        self.seg.compute(self.cur_imgname)
 
         # compute focus of expansion
         self.foe.compute(self.optflow.flow,
-                         self.segm.sky_mask, self.segm.nonsky_static_mask)
+                         self.seg.sky_mask, self.seg.nonsky_static_mask)
 
         # stopping erea is defined as foe.inlier_mask[row, col] = 0
         if self.foe.state == CameraState.ROTATING:
             self.undominantflow.compute(
-                self.optflow.flow, self.segm.nonsky_static_mask)
+                self.optflow.flow, self.seg.nonsky_static_mask)
             self.foe.maxinlier_mask = self.undominantflow.flow_mask
 
     def draw(self) -> None:
@@ -90,12 +90,12 @@ class MovingObjectExtractor:
         if args.loglevel > 1:
             # display the result
             self.foe.draw(bg_img=self.optflow.flow_img)
-            self.segm.draw(bg_img=self.cur_img)
+            self.seg.draw(bg_img=self.cur_img)
 
             row1_img = cv2.hconcat(
-                [self.cur_img, self.optflow.flow_img, self.segm.seg_img])
+                [self.cur_img, self.optflow.flow_img, self.seg.seg_img])
             row2_img = cv2.hconcat(
-                [self.segm.result_movingobj_img, self.foe.result_img, flow_mask_img])
+                [self.seg.result_movingobj_img, self.foe.result_img, flow_mask_img])
             row3_img = cv2.hconcat(
                 [self.foe.result_img, flow_mask_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img, row3_img])
