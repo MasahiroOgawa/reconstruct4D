@@ -6,21 +6,25 @@ import json
 
 class Segmentator():
     def __init__(self, result_dir, loglevel=0):
+        # constants
+        self.THRE_STATIC_PROB = 0.1
         self.this_dir = os.path.dirname(os.path.abspath(__file__))
         self.result_dir = result_dir
+        self.loglevel = loglevel
+
+        # variables
         self.seg_img = None
         self.seg_mask = None  # segmentation result
+        self.seg_moving_prob = None
         self.result_movingobj_img = None
         self.classes = None
         self.load_classes()
         self.sky_id = None
         self.comp_sky_id()
         self.static_ids = []
-        self.THRE_STATIC_PROB = 0.1
         self.comp_static_ids()
         self.sky_mask = None
         self.nonsky_static_mask = None
-        self.loglevel = loglevel
 
     def compute(self, img_name):
         pass
@@ -58,6 +62,7 @@ class Segmentator():
         self.classes_file = os.path.join(
             self.this_dir, '..', 'data', 'classes.json')
         json.dump(self.classes, open(self.classes_file, 'w'))
+        self.loglevel = loglevel
 
     def comp_sky_id(self):
         for class_dict in self.classes:
@@ -94,12 +99,21 @@ class InternImageSegmentator(Segmentator):
         if self.sky_id is not None:
             self.sky_mask = (self.seg_mask == self.sky_id)
 
-        # comput static mask
+        # compute static mask
         if len(self.static_ids) > 0:
             self.nonsky_static_mask = np.zeros_like(self.seg_mask, dtype=bool)
             for static_id in self.static_ids:
                 self.nonsky_static_mask = np.logical_or(
                     self.nonsky_static_mask, (self.seg_mask == static_id))
+                
+        self.comp_seg_moving_prob()
+                
+    def comp_seg_moving_prob(self):
+        self.seg_moving_prob = np.zeros_like(self.seg_mask, dtype=float)
+        for row in range(self.seg_mask.shape[0]):
+            for col in range(self.seg_mask.shape[1]):
+                class_id = self.seg_mask[row, col]
+                self.seg_moving_prob[row, col] = self.classes[class_id]['moving_prob']
 
     def draw(self, bg_img=None):
         self.bg_img = bg_img
