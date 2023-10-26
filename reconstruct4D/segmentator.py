@@ -13,9 +13,10 @@ class Segmentator():
         self.loglevel = loglevel
 
         # variables
-        self.seg_img = None
-        self.seg_mask = None  # segmentation result
-        self.seg_moving_prob = None
+        self.result_img = None
+        self.result_mask = None
+        self.moving_prob = None
+        self.moving_prob_img = None
         self.result_movingobj_img = None
         self.classes = None
         self.load_classes()
@@ -88,36 +89,37 @@ class InternImageSegmentator(Segmentator):
 
         # get segmentation image
         seg_imgfile = os.path.join(self.result_dir, img_name)
-        self.seg_img = cv2.imread(seg_imgfile)
+        self.result_img = cv2.imread(seg_imgfile)
 
         # get segmentation result
         imgnum = img_name.split('.')[0]
         seg_resultfile = os.path.join(self.result_dir, f"{imgnum}.npy")
-        self.seg_mask = np.load(seg_resultfile)
+        self.result_mask = np.load(seg_resultfile)
 
         # compute sky mask
         if self.sky_id is not None:
-            self.sky_mask = (self.seg_mask == self.sky_id)
+            self.sky_mask = (self.result_mask == self.sky_id)
 
         # compute static mask
         if len(self.static_ids) > 0:
-            self.nonsky_static_mask = np.zeros_like(self.seg_mask, dtype=bool)
+            self.nonsky_static_mask = np.zeros_like(self.result_mask, dtype=bool)
             for static_id in self.static_ids:
                 self.nonsky_static_mask = np.logical_or(
-                    self.nonsky_static_mask, (self.seg_mask == static_id))
+                    self.nonsky_static_mask, (self.result_mask == static_id))
                 
-        self.comp_seg_moving_prob()
+        self.comp_moving_prob()
                 
-    def comp_seg_moving_prob(self):
-        self.seg_moving_prob = np.zeros_like(self.seg_mask, dtype=float)
-        for row in range(self.seg_mask.shape[0]):
-            for col in range(self.seg_mask.shape[1]):
-                class_id = self.seg_mask[row, col]
-                self.seg_moving_prob[row, col] = self.classes[class_id]['moving_prob']
+    def comp_moving_prob(self):
+        self.moving_prob = np.zeros_like(self.result_mask, dtype=float)
+        for row in range(self.result_mask.shape[0]):
+            for col in range(self.result_mask.shape[1]):
+                class_id = self.result_mask[row, col]
+                self.moving_prob[row, col] = self.classes[class_id]['moving_prob']
 
     def draw(self, bg_img=None):
         self.bg_img = bg_img
         self.comp_movingobj_img()
+        self.comp_movingprob_img()
 
     def comp_movingobj_img(self):
         self.result_movingobj_img = self.bg_img.copy()//2
@@ -130,3 +132,10 @@ class InternImageSegmentator(Segmentator):
         moving_obj_mask = np.logical_not(
             np.logical_or(self.sky_mask, self.nonsky_static_mask))
         self.result_movingobj_img[moving_obj_mask, :] += 128
+
+    def comp_movingprob_img(self):
+        # draw moving probability as jet color in moving_prob_img.
+        self.moving_prob_img = np.zeros(
+            (self.moving_prob.shape[0], self.moving_prob.shape[1], 3), dtype=np.uint8)
+        self.moving_prob_img = cv2.applyColorMap(
+            self.moving_prob.astype(np.uint8), cv2.COLORMAP_JET)
