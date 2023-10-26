@@ -137,5 +137,6 @@ class InternImageSegmentator(Segmentator):
         # draw moving probability as jet color in moving_prob_img.
         self.moving_prob_img = np.zeros(
             (self.moving_prob.shape[0], self.moving_prob.shape[1], 3), dtype=np.uint8)
+        
         self.moving_prob_img = cv2.applyColorMap(
-            self.moving_prob.astype(np.uint8), cv2.COLORMAP_JET)
+            (self.moving_prob*255).astype(np.uint8), cv2.COLORMAP_JET)
