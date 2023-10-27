@@ -70,21 +70,17 @@ class MovingObjectExtractor:
         if self.foe.state == CameraState.ROTATING:
             self.undominantflow.compute(
                 self.optflow.flow, self.seg.nonsky_static_mask)
-            self.foe.maxinlier_mask = self.undominantflow.flow_mask
+            self.foe.moving_prob = self.undominantflow.flow_mask
 
     def draw(self) -> None:
-        if self.foe.maxinlier_mask is None:
+        if self.foe.moving_prob is None:
             return
-        flow_mask_img = opticalflow.flow_mask_img(self.foe.maxinlier_mask)
+        flow_mask_img = opticalflow.flow_mask_img(self.foe.moving_prob)
 
-        # overlay tranparently outlier_mask(moving object mask) into input image
+        # overlay transparently outlier_mask(moving object mask) into input image
         overlay_img = self.cur_img.copy()//2
-        if self.foe.state == CameraState.STOPPING:
-            # increase the red channel for inlier_mask != 0 (moving)
-            overlay_img[self.foe.maxinlier_mask != 0, 2] += 128
-        else:
-            # increase the red channel for outlier_mask == 2(outlier)
-            overlay_img[self.foe.maxinlier_mask == 2, 2] += 128
+        # increase the red channel.
+        overlay_img[self.foe.moving_prob > 0.5, 2] += 128
         result_img = overlay_img
 
         if args.loglevel > 1:

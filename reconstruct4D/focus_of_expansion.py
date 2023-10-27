@@ -28,8 +28,8 @@ class FoE():
         self.inlier_rate = 0.0
         self.foe = None
         self.result_img = None
-        self.inlier_mask = None  # 0: unknown, 1: inlier, 2: outlier
-        self.maxinlier_mask = None
+        self.tmp_moving_prob = None  # 0: inlier=stop, 1: outlier=moving
+        self.moving_prob = None
         self.debug_img = None
 
     def compute(self, flow, sky_mask, static_mask):
@@ -51,7 +51,7 @@ class FoE():
         if self.flow_existing_rate_in_static < self.thre_flow_existing_rate:
             self.state = CameraState.STOPPING
             # at this moment, all flow existing pixel is set as outlier.
-            self.maxinlier_mask = self.inlier_mask.copy()
+            self.moving_prob = self.tmp_moving_prob.copy()
         else:
             self.comp_foe_by_ransac()
 
@@ -63,16 +63,16 @@ class FoE():
 
     def prepare_variables(self):
         self.state = CameraState.ROTATING
-        self.inlier_mask = np.zeros(
-            (self.flow.shape[0], self.flow.shape[1]), dtype=np.uint8)
-        self.maxinlier_mask = np.zeros(
-            (self.flow.shape[0], self.flow.shape[1]), dtype=np.uint8)
+        self.tmp_moving_prob = np.ones(
+            (self.flow.shape[0], self.flow.shape[1]), dtype=np.float16)*0.5
+        self.moving_prob = np.ones(
+            (self.flow.shape[0], self.flow.shape[1]), dtype=np.float16)*0.5
 
     def comp_flow_existing_rate(self):
         num_flow_existing_pix_in_static = 0
 
         # set non sky mask as outlier, that is a moving object.
-        self.inlier_mask[self.sky_mask == False] = 2
+        self.tmp_moving_prob[self.sky_mask == True] = 0.0
 
         # check pixels inside static mask
         staticpix_indices = np.where(self.static_mask == True)
@@ -84,11 +84,11 @@ class FoE():
             u = self.flow[row, col, 0]
             v = self.flow[row, col, 1]
 
-            # skip if flow is too small
-            if (u**2 + v**2) < self.thre_flowlength**2:
-                self.inlier_mask[row, col] = 0  # unknown and stop.
+            flow_lentgh = np.sqrt(u**2 + v**2)
+            if flow_lentgh < self.thre_flowlength:
+                self.tmp_moving_prob[row, col] = flow_lentgh / self.thre_flowlength
             else:
-                # inlier_mask is already set as outlier;2.
+                self.tmp_moving_prob[row, col] = 1.0
                 num_flow_existing_pix_in_static += 1
 
         self.flow_existing_rate_in_static = num_flow_existing_pix_in_static / \
@@ -100,9 +100,9 @@ class FoE():
 
         if self.loglevel > 2:
             inlier_mask_img = np.zeros(
-                (self.inlier_mask.shape[0], self.inlier_mask.shape[1], 3), dtype=np.uint8)
-            inlier_mask_img[self.inlier_mask == 1] = [0, 255, 0]
-            inlier_mask_img[self.inlier_mask == 2] = [0, 0, 255]
+                (self.tmp_moving_prob.shape[0], self.tmp_moving_prob.shape[1], 3), dtype=np.uint8)
+            inlier_mask_img[self.tmp_moving_prob < 0.5] = [0, 255, 0]
+            inlier_mask_img[self.tmp_moving_prob > 0.5] = [0, 0, 255]
             cv2.imshow('non sky & stopping static mask', inlier_mask_img)
             key = cv2.waitKey(1)
             if key == ord('q'):
@@ -124,7 +124,7 @@ class FoE():
             if self.inlier_rate > max_inlier_rate:
                 # update by the current best
                 max_inlier_rate = self.inlier_rate
-                self.maxinlier_mask = self.inlier_mask.copy()
+                self.moving_prob = self.tmp_moving_prob.copy()
                 # currently we don't recompute FoE using all inliers, because our final objective is getting outlier mask.
                 self.foe = foe_candi
 
@@ -223,16 +223,16 @@ class FoE():
             foe_v = foe[1] / foe[2]
 
         # check pixels inside "non-static" & "moving static" object area.
-        for row, col in zip(*np.nonzero(self.inlier_mask)):
+        for row, col in zip(*np.nonzero(self.tmp_moving_prob)):
             # get flow
             u = self.flow[row, col, 0]
             v = self.flow[row, col, 1]
 
-            # skip if flow is too small
-            if (u**2 + v**2) < self.thre_flowlength**2:
+            flow_lentgh = np.sqrt(u**2 + v**2)
+            if flow_lentgh < self.thre_flowlength:
                 # this means nonstatic object which moves with camera.
                 # camera is not stopping, so the object must be moving.
-                self.inlier_mask[row, col] = 2
+                self.tmp_moving_prob[row, col] = 1.0
             else:
                 num_flow_existingpix += 1
 
@@ -249,13 +249,13 @@ class FoE():
 
                 # check the angle between flow and FoE to each pixel is lower than threshold.
                 cos_foe_flow = np.dot((col-foe_u, row-foe_v), (u, v)) / \
-                    np.sqrt((col-foe_u)**2 + (row-foe_v)**2) / \
-                    np.sqrt(u**2 + v**2)
+                    np.sqrt((col-foe_u)**2 + (row-foe_v)**2) / flow_lentgh
                 if cos_foe_flow > thre_cos:
                     num_inlier += 1
-                    self.inlier_mask[row, col] = 1  # inlier
+                    #TODO: how about 1- cos?
+                    self.tmp_moving_prob[row, col] = 0.1  # inlier
                 else:
-                    self.inlier_mask[row, col] = 2  # outlier
+                    self.tmp_moving_prob[row, col] = 0.9  # outlier
 
         if self.flow_existing_rate_in_static == 0:
             self.inlier_rate = 0
