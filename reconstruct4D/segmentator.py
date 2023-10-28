@@ -63,7 +63,6 @@ class Segmentator():
         self.classes_file = os.path.join(
             self.this_dir, '..', 'data', 'classes.json')
         json.dump(self.classes, open(self.classes_file, 'w'))
-        self.loglevel = loglevel
 
     def comp_sky_id(self):
         for class_dict in self.classes:
