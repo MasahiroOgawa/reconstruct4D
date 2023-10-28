@@ -70,7 +70,7 @@ class MovingObjectExtractor:
         if self.foe.state == CameraState.ROTATING:
             self.undominantflow.compute(
                 self.optflow.flow, self.seg.nonsky_static_mask)
-            self.foe.moving_prob = self.undominantflow.flow_mask
+            self.foe.moving_prob = self.undominantflow.undominant_flow_prob
 
     def draw(self) -> None:
         if self.foe.moving_prob is None:

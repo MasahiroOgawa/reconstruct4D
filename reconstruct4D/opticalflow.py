@@ -51,23 +51,21 @@ class UndominantFlowAngleExtractor():
         args:
             flow: size = h x w x 2. 2 means flow vector (u,v).
         result:
-            self.flow_mask: size = h x w. mask value: 0: unknown, 1: inlier, 2: outlier
+            self.undominant_flow_prob: size = h x w. mask value: 0: unknown, 1: inlier, 2: outlier
         '''
         # compute flow angle and length
         flow_angle = np.arctan2(flow[:, :, 1], flow[:, :, 0])
         flow_length = np.sqrt(flow[:, :, 0]**2 + flow[:, :, 1]**2)
 
-        # TODO: compute rotation center and extract different moving area.
-
         # extract median angle
         median_angle = np.median(flow_angle[nonsky_static_mask])
 
         # compute mask from median angle.
-        self.flow_mask = np.zeros(
-            (flow.shape[0], flow.shape[1]), dtype=np.uint8)
+        self.undominant_flow_prob = np.zeros(
+            (flow.shape[0], flow.shape[1]), dtype=np.float16)
 
-        self.flow_mask[(flow_length > self.thre_flowlength) & (
-            np.abs(flow_angle - median_angle) > self.thre_angle)] = 2
-        self.flow_mask[(flow_length > self.thre_flowlength) & (np.abs(flow_angle - median_angle)
-                       <= self.thre_angle)] = 1
+        self.undominant_flow_prob[(flow_length > self.thre_flowlength) & (
+            np.abs(flow_angle - median_angle) > self.thre_angle)] = 0.9 # 0.9 means outlier
+        self.undominant_flow_prob[(flow_length > self.thre_flowlength) & (np.abs(flow_angle - median_angle)
+                       <= self.thre_angle)] = 0.1  # 0.1 means inlier
 

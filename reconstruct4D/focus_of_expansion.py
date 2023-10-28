@@ -97,16 +97,6 @@ class FoE():
             print(
                 f"[INFO] flow existing pixel rate: {self.flow_existing_rate_in_static * 100:.2f} %")
 
-        if self.loglevel > 2:
-            inlier_mask_img = np.zeros(
-                (self.tmp_moving_prob.shape[0], self.tmp_moving_prob.shape[1], 3), dtype=np.uint8)
-            inlier_mask_img[self.tmp_moving_prob < 0.5] = [0, 255, 0]
-            inlier_mask_img[self.tmp_moving_prob > 0.5] = [0, 0, 255]
-            cv2.imshow('non sky & stopping static mask', inlier_mask_img)
-            key = cv2.waitKey(1)
-            if key == ord('q'):
-                exit()
-
     def comp_foe_by_ransac(self):
         '''
         compute FoE by RANSAC
