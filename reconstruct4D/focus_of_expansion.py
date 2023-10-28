@@ -33,17 +33,17 @@ class FoE():
         self.moving_prob_img = None
         self.intermediate_foe_img = None
 
-    def compute(self, flow, sky_mask, static_mask):
+    def compute(self, flow, sky_mask, nonsky_static_mask):
         '''..ext.
         compute focus of expansion from optical flow.
         args:
             flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
             sky_mask: mask of sky. shape = (height, width), dtype = bool.
-            static_mask: mask of static object like grounds. shape = (height, width), dtype = bool
+            nonsky_static_mask: mask of static object except sky like grounds. shape = (height, width), dtype = bool
         '''
         self.flow = flow
         self.sky_mask = sky_mask
-        self.static_mask = static_mask
+        self.nonsky_static_mask = nonsky_static_mask
 
         self.prepare_variables()
 
@@ -74,7 +74,7 @@ class FoE():
         num_flow_existing_pix_in_static = 0
 
         # check pixels inside static mask
-        staticpix_indices = np.where(self.static_mask == True)
+        staticpix_indices = np.where(self.nonsky_static_mask == True)
         for i in range(len(staticpix_indices[0])):
             row = staticpix_indices[0][i]
             col = staticpix_indices[1][i]
@@ -193,7 +193,7 @@ class FoE():
 
     def random_point_in_static_mask(self):
         # Find the indices of all pixels in the static mask that have a value of 1
-        indices = np.where(self.static_mask == 1)
+        indices = np.where(self.nonsky_static_mask == 1)
 
         # Randomly select one of the indices
         index = np.random.choice(len(indices[0]))
