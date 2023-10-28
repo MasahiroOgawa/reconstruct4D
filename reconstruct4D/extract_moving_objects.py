@@ -86,14 +86,13 @@ class MovingObjectExtractor:
             # display the result
             self.seg.draw(bg_img=self.cur_img)
             self.foe.draw(bg_img=self.optflow.flow_img)
-            flow_mask_img = opticalflow.flow_mask_img(self.foe.moving_prob)
 
             row1_img = cv2.hconcat(
                 [self.cur_img, self.optflow.flow_img, self.seg.result_img])
             row2_img = cv2.hconcat(
                 [self.seg.moving_prob_img, self.seg.result_movingobj_img, self.foe.foe_camstate_img])
             row3_img = cv2.hconcat(
-                [self.foe.foe_camstate_img, flow_mask_img, result_img])
+                [self.foe.foe_camstate_img, self.foe.moving_prob_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img, row3_img])
             # resize keeping combined image aspect ratio
             save_imgsize = (self.result_imgw, int(

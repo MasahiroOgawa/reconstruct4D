@@ -30,7 +30,8 @@ class FoE():
         self.foe_camstate_img = None
         self.tmp_moving_prob = None  # 0: inlier=stop, 1: outlier=moving
         self.moving_prob = None
-        self.debug_img = None
+        self.moving_prob_img = None
+        self.intermediate_foe_img = None
 
     def compute(self, flow, sky_mask, static_mask):
         '''..ext.
@@ -60,19 +61,17 @@ class FoE():
 
         self.prepare_canvas()
         self.draw_state()
+        self.draw_moving_prob()
 
     def prepare_variables(self):
         self.state = CameraState.ROTATING
         self.tmp_moving_prob = np.ones(
             (self.flow.shape[0], self.flow.shape[1]), dtype=np.float16)*0.5
-        self.moving_prob = np.ones(
-            (self.flow.shape[0], self.flow.shape[1]), dtype=np.float16)*0.5
+        self.tmp_moving_prob[self.sky_mask == True] = 0.0
+        self.moving_prob = self.tmp_moving_prob.copy()
 
     def comp_flow_existing_rate(self):
         num_flow_existing_pix_in_static = 0
-
-        # set non sky mask as outlier, that is a moving object.
-        self.tmp_moving_prob[self.sky_mask == True] = 0.0
 
         # check pixels inside static mask
         staticpix_indices = np.where(self.static_mask == True)
@@ -151,12 +150,12 @@ class FoE():
 
         # draw debug image
         if self.loglevel > 2:
-            self.debug_img = np.zeros(
+            self.intermediate_foe_img = np.zeros(
                 (self.flow.shape[0], self.flow.shape[1], 3), dtype=np.uint8)
-            self.draw_line(l1, self.debug_img)
-            self.draw_line(l2, self.debug_img)
-            self.draw_homogeneous_point(foe, self.debug_img)
-            cv2.imshow('Debug', self.debug_img)
+            self.draw_line(l1, self.intermediate_foe_img)
+            self.draw_line(l2, self.intermediate_foe_img)
+            self.draw_homogeneous_point(foe, self.intermediate_foe_img)
+            cv2.imshow('Debug', self.intermediate_foe_img)
             key = cv2.waitKey(1)
             if key == ord('q'):
                 exit()
@@ -185,7 +184,7 @@ class FoE():
         x_prev = [col - u, row - v, 1]
 
         if self.loglevel > 2:
-            cv2.arrowedLine(self.debug_img, tuple(
+            cv2.arrowedLine(self.intermediate_foe_img, tuple(
                 map(int, x_prev[0:2])), tuple(x[0:2]), (0, 0, 255), 3)
 
         # no rotation correction version
@@ -222,7 +221,7 @@ class FoE():
             foe_u = foe[0] / foe[2]
             foe_v = foe[1] / foe[2]
 
-        # check pixels inside "non-static" & "moving static" object area.
+        # check pixels inside flow existing static mask area.
         for row, col in zip(*np.nonzero(self.tmp_moving_prob)):
             # get flow
             u = self.flow[row, col, 0]
@@ -237,7 +236,7 @@ class FoE():
                 num_flow_existingpix += 1
 
                 if self.loglevel > 2:
-                    foe_flow_img = self.debug_img.copy()
+                    foe_flow_img = self.intermediate_foe_img.copy()
                     cv2.arrowedLine(foe_flow_img, (int(foe_u), int(foe_v)),
                                     (col, row), (0, 255, 0), 3)
                     cv2.arrowedLine(foe_flow_img, (col, row),
@@ -249,7 +248,7 @@ class FoE():
 
                 # check the angle between flow and FoE to each pixel is lower than threshold.
                 cos_foe_flow = np.dot((col-foe_u, row-foe_v), (u, v)) / \
-                    np.sqrt((col-foe_u)**2 + (row-foe_v)**2) / flow_lentgh
+                    (np.sqrt((col-foe_u)**2 + (row-foe_v)**2) * flow_lentgh)
                 if cos_foe_flow > thre_cos:
                     num_inlier += 1
                     #TODO: how about 1- cos?
@@ -275,7 +274,7 @@ class FoE():
             if self.loglevel > 1:
                 self.draw_flowarrow(self.flow, self.foe_camstate_img)
             if self.loglevel > 2:
-                self.debug_img = self.bg_img.copy()
+                self.intermediate_foe_img = self.bg_img.copy()
 
     def draw_flowarrow(self, flow, img):
         '''
@@ -317,3 +316,11 @@ class FoE():
         elif self.state == CameraState.ROTATING:
             cv2.putText(self.foe_camstate_img, "Camera is rotating",
                         (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
+
+    def draw_moving_prob(self):
+        if self.moving_prob is None:
+            return
+        self.moving_prob_img = np.zeros(
+            (self.moving_prob.shape[0], self.moving_prob.shape[1], 3), dtype=np.uint8)
+        self.moving_prob_img[self.moving_prob < 0.4] = (0, 255, 0)
+        self.moving_prob_img[self.moving_prob > 0.6] = (0, 0, 255)

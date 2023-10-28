@@ -71,17 +71,3 @@ class UndominantFlowAngleExtractor():
         self.flow_mask[(flow_length > self.thre_flowlength) & (np.abs(flow_angle - median_angle)
                        <= self.thre_angle)] = 1
 
-
-def flow_mask_img(flow_mask):
-    '''
-    draw flow mask image.
-    args:
-        flow_mask: size = h x w. mask value: 0: unknown, 1: inlier, 2: outlier
-    result:
-        self.result_img: size = h x w x 3. 3 means RGB channel which represents flow orientation.
-    '''
-    mask_img = np.zeros(
-        (flow_mask.shape[0], flow_mask.shape[1], 3), dtype=np.uint8)
-    mask_img[flow_mask < 0.5] = (0, 255, 0)
-    mask_img[flow_mask > 0.5] = (0, 0, 255)
-    return mask_img
