@@ -47,7 +47,7 @@ class FoE():
 
         self.prepare_variables()
 
-        self.comp_flow_existing_rate()
+        self.comp_flow_existing_rate_in_static()
 
         if self.flow_existing_rate_in_static < self.thre_flow_existing_rate:
             self.state = CameraState.STOPPING
@@ -70,7 +70,7 @@ class FoE():
         self.tmp_moving_prob[self.sky_mask == True] = 0.0
         self.moving_prob = self.tmp_moving_prob.copy()
 
-    def comp_flow_existing_rate(self):
+    def comp_flow_existing_rate_in_static(self):
         num_flow_existing_pix_in_static = 0
 
         # check pixels inside static mask
