@@ -43,7 +43,6 @@ class UndominantFlowAngleExtractor():
         # variables
         self.loglevel = loglevel
         self.thre_angle = thre_angle  # radian
-        pass
 
     def compute(self, flow: np.ndarray, nonsky_static_mask: np.ndarray):
         '''

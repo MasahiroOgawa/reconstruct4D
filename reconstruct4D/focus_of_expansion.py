@@ -51,7 +51,8 @@ class FoE():
 
         if self.flow_existing_rate_in_static < self.thre_flow_existing_rate:
             self.state = CameraState.STOPPING
-            # at this moment, all flow existing pixel is set as outlier.
+            # at this moment, all flow existing pixel ins static mask is set as moving.
+            self.comp_flow_existance_in_nonstatic()
             self.moving_prob = self.tmp_moving_prob.copy()
         else:
             self.comp_foe_by_ransac()
@@ -96,6 +97,23 @@ class FoE():
         if self.loglevel > 0:
             print(
                 f"[INFO] flow existing pixel rate: {self.flow_existing_rate_in_static * 100:.2f} %")
+
+    def comp_flow_existance_in_nonstatic(self):
+        # check pixels inside non static mask
+        nonstaticpix_indices = np.where((self.nonsky_static_mask == False) & (self.sky_mask == False))
+        for i in range(len(nonstaticpix_indices[0])):
+            row = nonstaticpix_indices[0][i]
+            col = nonstaticpix_indices[1][i]
+
+            # get flow
+            u = self.flow[row, col, 0]
+            v = self.flow[row, col, 1]
+
+            flow_lentgh = np.sqrt(u**2 + v**2)
+            if flow_lentgh < self.thre_flowlength:
+                self.tmp_moving_prob[row, col] = flow_lentgh / self.thre_flowlength
+            else:
+                self.tmp_moving_prob[row, col] = 1.0
 
     def comp_foe_by_ransac(self):
         '''
