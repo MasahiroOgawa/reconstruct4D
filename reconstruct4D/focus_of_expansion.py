@@ -27,7 +27,7 @@ class FoE():
         self.flow_existing_rate_in_static = 0.0
         self.inlier_rate = 0.0
         self.foe = None
-        self.result_img = None
+        self.foe_camstate_img = None
         self.tmp_moving_prob = None  # 0: inlier=stop, 1: outlier=moving
         self.moving_prob = None
         self.debug_img = None
@@ -268,12 +268,12 @@ class FoE():
 
     def prepare_canvas(self):
         if self.bg_img is None:
-            self.result_img = np.zeros(
+            self.foe_camstate_img = np.zeros(
                 (self.flow.shape[0], self.flow.shape[1], 3), dtype=np.uint8)
         else:
-            self.result_img = self.bg_img.copy()
+            self.foe_camstate_img = self.bg_img.copy()
             if self.loglevel > 1:
-                self.draw_flowarrow(self.flow, self.result_img)
+                self.draw_flowarrow(self.flow, self.foe_camstate_img)
             if self.loglevel > 2:
                 self.debug_img = self.bg_img.copy()
 
@@ -308,12 +308,12 @@ class FoE():
 
     def draw_state(self):
         if self.state == CameraState.STOPPING:
-            cv2.putText(self.result_img, "Camera is stopping",
+            cv2.putText(self.foe_camstate_img, "Camera is stopping",
                         (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
         elif self.state == CameraState.ONLY_TRANSLATING:
-            self.draw_homogeneous_point(self.foe, self.result_img)
-            cv2.putText(self.result_img, "Camera is only translating",
+            self.draw_homogeneous_point(self.foe, self.foe_camstate_img)
+            cv2.putText(self.foe_camstate_img, "Camera is only translating",
                         (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
         elif self.state == CameraState.ROTATING:
-            cv2.putText(self.result_img, "Camera is rotating",
+            cv2.putText(self.foe_camstate_img, "Camera is rotating",
                         (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)

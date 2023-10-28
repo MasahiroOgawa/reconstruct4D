@@ -75,7 +75,6 @@ class MovingObjectExtractor:
     def draw(self) -> None:
         if self.foe.moving_prob is None:
             return
-        flow_mask_img = opticalflow.flow_mask_img(self.foe.moving_prob)
 
         # overlay transparently outlier_mask(moving object mask) into input image
         overlay_img = self.cur_img.copy()//2
@@ -85,15 +84,16 @@ class MovingObjectExtractor:
 
         if args.loglevel > 1:
             # display the result
-            self.foe.draw(bg_img=self.optflow.flow_img)
             self.seg.draw(bg_img=self.cur_img)
+            self.foe.draw(bg_img=self.optflow.flow_img)
+            flow_mask_img = opticalflow.flow_mask_img(self.foe.moving_prob)
 
             row1_img = cv2.hconcat(
                 [self.cur_img, self.optflow.flow_img, self.seg.result_img])
             row2_img = cv2.hconcat(
-                [self.seg.moving_prob_img, self.seg.result_movingobj_img, flow_mask_img])
+                [self.seg.moving_prob_img, self.seg.result_movingobj_img, self.foe.foe_camstate_img])
             row3_img = cv2.hconcat(
-                [self.foe.result_img, flow_mask_img, result_img])
+                [self.foe.foe_camstate_img, flow_mask_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img, row3_img])
             # resize keeping combined image aspect ratio
             save_imgsize = (self.result_imgw, int(
