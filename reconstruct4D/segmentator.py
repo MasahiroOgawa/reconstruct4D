@@ -5,12 +5,12 @@ import json
 
 
 class Segmentator():
-    def __init__(self, result_dir, LOG_LEVEL=0):
+    def __init__(self, result_dir, thre_static_prob = 0.1, log_level=0):
         # constants
-        self.THRE_STATIC_PROB = 0.1
-        self.THIS_DIR = os.path.dirname(os.path.abspath(__file__))
         self.RESULT_DIR = result_dir
-        self.LOG_LEVEL = LOG_LEVEL
+        self.THRE_STATIC_PROB = thre_static_prob
+        self.LOG_LEVEL = log_level
+        self.THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
         # variables
         self.result_img = None
@@ -79,8 +79,8 @@ class Segmentator():
 
 class InternImageSegmentator(Segmentator):
     # currenly just load the result from already processd directory.
-    def __init__(self, result_dir, loglevel=0):
-        super().__init__(result_dir, loglevel)
+    def __init__(self, result_dir, thre_static_prob = 0.1, log_level=0):
+        super().__init__(result_dir, thre_static_prob,log_level)
 
     def compute(self, img_name):
         if self.LOG_LEVEL > 0:

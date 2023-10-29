@@ -12,9 +12,21 @@ import numpy as np
 class MovingObjectExtractor:
     def __init__(self, args) -> None:
         # constants
+        THRE_STATIC_PROB = 0.1
         self.RESULTIMG_WIDTH = args.resultimg_width
         THRE_DOMINANTFLOW_ANGLE = 10*np.pi/180
+        # if flow length is lower than this value, the flow is ignored.
         THRE_FLOWLENGTH = 4.0
+        # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
+        THRE_INLIER_ANGLE = 10 * np.pi / 180
+        # if inlier rate is higher than this value, the foe is accepted.
+        THRE_INLIER_RATE = 0.9
+        # if flow existing pixel rate is lower than this value, the camera is considered as stopping.
+        # the flow existing rate will be computed only inside static mask.
+        THRE_FLOW_EXISTING_RATE = 0.1
+        NUM_RANSAC = 10
+        # every this pixel, draw flow arrow.
+        FLOWARROW_STEP = 20  
 
         # variables
         self.imgfiles = sorted([file for file in os.listdir(
@@ -24,8 +36,9 @@ class MovingObjectExtractor:
         self.undominantflow = opticalflow.UndominantFlowAngleExtractor(
             THRE_FLOWLENGTH, THRE_DOMINANTFLOW_ANGLE, args.loglevel)
         self.seg = segmentator.InternImageSegmentator(
-            args.segment_result_dir, args.loglevel)
-        self.foe = FoE(THRE_FLOWLENGTH, LOG_LEVEL=args.loglevel)
+            args.segment_result_dir, THRE_STATIC_PROB, args.loglevel)
+        self.foe = FoE(THRE_FLOWLENGTH,THRE_INLIER_ANGLE,THRE_INLIER_RATE,THRE_FLOW_EXISTING_RATE,
+                    NUM_RANSAC, FLOWARROW_STEP, log_level=args.loglevel)
         self.prev_imgname = None
         self.prev_img = None
         self.cur_imgname = None

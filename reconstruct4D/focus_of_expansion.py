@@ -6,21 +6,17 @@ CameraState = Enum('CameraState', ['STOPPING', 'ROTATING', 'ONLY_TRANSLATING'])
 
 
 class FoE():
-    def __init__(self, THRE_FLOWLENGTH=4.0, LOG_LEVEL=0) -> None:
+    def __init__(self, thre_flowlength=4.0, thre_inlier_angle = 10 * np.pi / 180,
+                 thre_inlier_rate = 0.9, thre_flow_existing_rate = 0.1, num_ransac = 10, 
+                 flowarrow_step = 20, log_level=0) -> None:
         # constants
-        # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
-        self.LOG_LEVEL = LOG_LEVEL
-        # if flow length is lower than this value, the flow is ignored.
-        self.THRE_FLOWLENGTH = THRE_FLOWLENGTH
-        # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
-        self.THRE_INLIER_ANGLE = 10 * np.pi / 180
-        # if inlier rate is higher than this value, the foe is accepted.
-        self.THRE_INLIER_RATE = 0.9
-        # if flow existing pixel rate is lower than this value, the camera is considered as stopping.
-        # the flow existing rate will be computed only inside static mask.
-        self.THRE_FLOW_EXISTING_RATE = 0.1
-        self.NUM_RANSAC = 10
-        self.FLOWARROW_STEP = 20  # every this pixel, draw flow arrow.
+        self.LOG_LEVEL = log_level
+        self.THRE_FLOWLENGTH = thre_flowlength
+        self.THRE_INLIER_ANGLE = thre_inlier_angle
+        self.THRE_INLIER_RATE = thre_inlier_rate
+        self.THRE_FLOW_EXISTING_RATE = thre_flow_existing_rate
+        self.NUM_RANSAC = num_ransac
+        self.FLOWARROW_STEP = flowarrow_step
 
         # variables
         self.state = CameraState.ROTATING  # most unkown movement.
