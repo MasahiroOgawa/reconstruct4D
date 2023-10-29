@@ -14,8 +14,8 @@ class UnimatchFlow():
     compute optical flow using unimatch algorithm
     '''
 
-    def __init__(self, flow_result_dir) -> None:
-        self.flow_result_dir = flow_result_dir
+    def __init__(self, FLOW_RESULT_DIR) -> None:
+        self.FLOW_RESULT_DIR = FLOW_RESULT_DIR
 
     def compute(self, imgname):
         '''
@@ -28,7 +28,7 @@ class UnimatchFlow():
             self.flow_img: size = h x w x 3. 3 means RGB channel which represents flow orientation.
         '''
         imgnum = imgname.split('.')[0]
-        flow_file = os.path.join(self.flow_result_dir, f"{imgnum}_pred.flo")
+        flow_file = os.path.join(self.FLOW_RESULT_DIR, f"{imgnum}_pred.flo")
         self.flow = utils.frame_utils.readFlow(flow_file)
 
         self.flow_img = utils.flow_viz.flow_to_image(self.flow)
@@ -50,7 +50,7 @@ class UndominantFlowAngleExtractor():
         args:
             flow: size = h x w x 2. 2 means flow vector (u,v).
         result:
-            self.undominant_flow_prob: size = h x w. mask value: 0: unknown, 1: inlier, 2: outlier
+            self.undominant_flow_prob: size = h x w.
         '''
         # compute flow angle and length
         flow_angle = np.arctan2(flow[:, :, 1], flow[:, :, 0])

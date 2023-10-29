@@ -5,12 +5,12 @@ import json
 
 
 class Segmentator():
-    def __init__(self, result_dir, loglevel=0):
+    def __init__(self, result_dir, LOG_LEVEL=0):
         # constants
         self.THRE_STATIC_PROB = 0.1
-        self.this_dir = os.path.dirname(os.path.abspath(__file__))
-        self.result_dir = result_dir
-        self.loglevel = loglevel
+        self.THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+        self.RESULT_DIR = result_dir
+        self.LOG_LEVEL = LOG_LEVEL
 
         # variables
         self.result_img = None
@@ -35,7 +35,7 @@ class Segmentator():
 
     def load_classes(self):
         classes_file = os.path.join(
-            self.this_dir, '..', 'data', 'classes.json')
+            self.THIS_DIR, '..', 'data', 'classes.json')
         if os.path.exists(classes_file):
             self.classes = json.load(open(classes_file, 'r'))
         else:
@@ -51,7 +51,7 @@ class Segmentator():
         usage: Just use this function when you need class files when you change the class names.
         """
         self.class_names = json.load(
-            open(os.path.join(self.result_dir, 'class_names.json'), 'r'))
+            open(os.path.join(self.RESULT_DIR, 'class_names.json'), 'r'))
 
         # create combined struct with id, class name and moving probagilities, which is 0 as default.
         self.classes = []
@@ -61,7 +61,7 @@ class Segmentator():
 
         # save classes with mobing probability
         self.classes_file = os.path.join(
-            self.this_dir, '..', 'data', 'classes.json')
+            self.THIS_DIR, '..', 'data', 'classes.json')
         json.dump(self.classes, open(self.classes_file, 'w'))
 
     def comp_sky_id(self):
@@ -83,16 +83,16 @@ class InternImageSegmentator(Segmentator):
         super().__init__(result_dir, loglevel)
 
     def compute(self, img_name):
-        if self.loglevel > 0:
+        if self.LOG_LEVEL > 0:
             print(f"[INFO] InternImageSegmentator.compute({img_name})")
 
         # get segmentation image
-        seg_imgfile = os.path.join(self.result_dir, img_name)
+        seg_imgfile = os.path.join(self.RESULT_DIR, img_name)
         self.result_img = cv2.imread(seg_imgfile)
 
         # get segmentation result
         imgnum = img_name.split('.')[0]
-        seg_resultfile = os.path.join(self.result_dir, f"{imgnum}.npy")
+        seg_resultfile = os.path.join(self.RESULT_DIR, f"{imgnum}.npy")
         self.result_mask = np.load(seg_resultfile)
 
         # compute sky mask

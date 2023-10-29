@@ -6,24 +6,24 @@ CameraState = Enum('CameraState', ['STOPPING', 'ROTATING', 'ONLY_TRANSLATING'])
 
 
 class FoE():
-    def __init__(self, loglevel=0) -> None:
+    def __init__(self, LOG_LEVEL=0) -> None:
         # constants
         # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
-        self.loglevel = loglevel
+        self.LOG_LEVEL = LOG_LEVEL
         # if flow length is lower than this value, the flow is ignored.
-        self.thre_flowlength = 2.0
+        self.THRE_FLOWLENGTH = 2.0
         # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
-        self.thre_inlier_angle = 10 * np.pi / 180
+        self.THRE_INLIER_ANGLE = 10 * np.pi / 180
         # if inlier rate is higher than this value, the foe is accepted.
-        self.thre_inlier_rate = 0.9
+        self.THRE_INLIER_RATE = 0.9
         # if flow existing pixel rate is lower than this value, the camera is considered as stopping.
         # the flow existing rate will be computed only inside static mask.
-        self.thre_flow_existing_rate = 0.1
-        self.num_ransac = 10
-        self.state = CameraState.ROTATING  # most unkown movement.
-        self.flowarrow_step = 20  # every this pixel, draw flow arrow.
+        self.THRE_FLOW_EXISTING_RATE = 0.1
+        self.NUM_RANSAC = 10
+        self.FLOWARROW_STEP = 20  # every this pixel, draw flow arrow.
 
         # variables
+        self.state = CameraState.ROTATING  # most unkown movement.
         self.flow_existing_rate_in_static = 0.0
         self.inlier_rate = 0.0
         self.foe = None
@@ -49,7 +49,7 @@ class FoE():
 
         self.comp_flow_existing_rate_in_static()
 
-        if self.flow_existing_rate_in_static < self.thre_flow_existing_rate:
+        if self.flow_existing_rate_in_static < self.THRE_FLOW_EXISTING_RATE:
             self.state = CameraState.STOPPING
             # at this moment, all flow existing pixel ins static mask is set as moving.
             self.comp_flow_existance_in_nonstatic()
@@ -85,8 +85,8 @@ class FoE():
             v = self.flow[row, col, 1]
 
             flow_lentgh = np.sqrt(u**2 + v**2)
-            if flow_lentgh < self.thre_flowlength:
-                self.tmp_moving_prob[row, col] = flow_lentgh / self.thre_flowlength
+            if flow_lentgh < self.THRE_FLOWLENGTH:
+                self.tmp_moving_prob[row, col] = flow_lentgh / self.THRE_FLOWLENGTH
             else:
                 self.tmp_moving_prob[row, col] = 1.0
                 num_flow_existing_pix_in_static += 1
@@ -94,7 +94,7 @@ class FoE():
         self.flow_existing_rate_in_static = num_flow_existing_pix_in_static / \
             len(staticpix_indices[0])
 
-        if self.loglevel > 0:
+        if self.LOG_LEVEL > 0:
             print(
                 f"[INFO] flow existing pixel rate: {self.flow_existing_rate_in_static * 100:.2f} %")
 
@@ -110,8 +110,8 @@ class FoE():
             v = self.flow[row, col, 1]
 
             flow_lentgh = np.sqrt(u**2 + v**2)
-            if flow_lentgh < self.thre_flowlength:
-                self.tmp_moving_prob[row, col] = flow_lentgh / self.thre_flowlength
+            if flow_lentgh < self.THRE_FLOWLENGTH:
+                self.tmp_moving_prob[row, col] = flow_lentgh / self.THRE_FLOWLENGTH
             else:
                 self.tmp_moving_prob[row, col] = 1.0
 
@@ -121,7 +121,7 @@ class FoE():
         '''
         max_inlier_rate = 0.0
 
-        for _ in range(self.num_ransac):
+        for _ in range(self.NUM_RANSAC):
             foe_candi = self.comp_foe_candidate()
             if foe_candi is None:
                 continue
@@ -136,7 +136,7 @@ class FoE():
                 self.foe = foe_candi
 
                 # stop if inlier rate is high enough
-                if self.inlier_rate > self.thre_inlier_rate:
+                if self.inlier_rate > self.THRE_INLIER_RATE:
                     self.state = CameraState.ONLY_TRANSLATING
                     break
 
@@ -157,7 +157,7 @@ class FoE():
         foe = np.cross(l1, l2)
 
         # draw debug image
-        if self.loglevel > 2:
+        if self.LOG_LEVEL > 2:
             self.intermediate_foe_img = np.zeros(
                 (self.flow.shape[0], self.flow.shape[1], 3), dtype=np.uint8)
             self.draw_line(l1, self.intermediate_foe_img)
@@ -186,12 +186,13 @@ class FoE():
         v = self.flow[row, col, 1]
 
         # if flow is too small, return zero line
-        if (u**2 + v**2) < self.thre_flowlength**2:
+        flow_lentgh = np.sqrt(u**2 + v**2)
+        if flow_lentgh < self.THRE_FLOWLENGTH:
             return None
 
         x_prev = [col - u, row - v, 1]
 
-        if self.loglevel > 2:
+        if self.LOG_LEVEL > 2:
             cv2.arrowedLine(self.intermediate_foe_img, tuple(
                 map(int, x_prev[0:2])), tuple(x[0:2]), (0, 0, 255), 3)
 
@@ -220,7 +221,7 @@ class FoE():
         '''
         num_inlier = 0
         num_flow_existingpix = 0
-        thre_cos = np.cos(self.thre_inlier_angle)
+        thre_cos = np.cos(self.THRE_INLIER_ANGLE)
 
         # treat candidate FoE is infinite case
         if foe[2] == 0:
@@ -236,14 +237,14 @@ class FoE():
             v = self.flow[row, col, 1]
 
             flow_lentgh = np.sqrt(u**2 + v**2)
-            if flow_lentgh < self.thre_flowlength:
+            if flow_lentgh < self.THRE_FLOWLENGTH:
                 # this means nonstatic object which moves with camera.
                 # camera is not stopping, so the object must be moving.
                 self.tmp_moving_prob[row, col] = 1.0
             else:
                 num_flow_existingpix += 1
 
-                if self.loglevel > 2:
+                if self.LOG_LEVEL > 2:
                     foe_flow_img = self.intermediate_foe_img.copy()
                     cv2.arrowedLine(foe_flow_img, (int(foe_u), int(foe_v)),
                                     (col, row), (0, 255, 0), 3)
@@ -269,7 +270,7 @@ class FoE():
         else:
             self.inlier_rate = num_inlier / num_flow_existingpix
 
-        if self.loglevel > 0:
+        if self.LOG_LEVEL > 0:
             print(
                 f"[INFO] FoE candidate: {foe}, inlier rate: {self.inlier_rate * 100:.2f} %")
 
@@ -279,17 +280,17 @@ class FoE():
                 (self.flow.shape[0], self.flow.shape[1], 3), dtype=np.uint8)
         else:
             self.foe_camstate_img = self.bg_img.copy()
-            if self.loglevel > 1:
+            if self.LOG_LEVEL > 1:
                 self.draw_flowarrow(self.flow, self.foe_camstate_img)
-            if self.loglevel > 2:
+            if self.LOG_LEVEL > 2:
                 self.intermediate_foe_img = self.bg_img.copy()
 
     def draw_flowarrow(self, flow, img):
         '''
         draw flow as arrow
         '''
-        for row in range(0, flow.shape[0], self.flowarrow_step):
-            for col in range(0, flow.shape[1], self.flowarrow_step):
+        for row in range(0, flow.shape[0], self.FLOWARROW_STEP):
+            for col in range(0, flow.shape[1], self.FLOWARROW_STEP):
                 u = flow[row, col, 0]
                 v = flow[row, col, 1]
                 cv2.arrowedLine(img, pt1=(int(col-u), int(row-v)),

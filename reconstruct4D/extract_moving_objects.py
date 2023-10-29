@@ -12,18 +12,19 @@ import numpy as np
 class MovingObjectExtractor:
     def __init__(self, args) -> None:
         # constants
-        self.result_imgw = args.result_imgw
-        thre_dominantflow_angle = 10*np.pi/180
+        self.RESULTIMG_WIDTH = args.resultimg_width
+        THRE_DOMINANTFLOW_ANGLE = 10*np.pi/180
+
         # variables
         self.imgfiles = sorted([file for file in os.listdir(
             args.input_dir) if file.endswith('.jpg') or file.endswith('.png')])
         print(f"[INFO] reading input image files: {self.imgfiles}")
         self.optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
         self.undominantflow = opticalflow.UndominantFlowAngleExtractor(
-            thre_dominantflow_angle, args.loglevel)
+            THRE_DOMINANTFLOW_ANGLE, args.loglevel)
         self.seg = segmentator.InternImageSegmentator(
             args.segment_result_dir, args.loglevel)
-        self.foe = FoE(loglevel=args.loglevel)
+        self.foe = FoE(LOG_LEVEL=args.loglevel)
         self.prev_imgname = None
         self.prev_img = None
         self.cur_imgname = None
@@ -95,8 +96,8 @@ class MovingObjectExtractor:
                 [self.foe.foe_camstate_img, self.foe.moving_prob_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img, row3_img])
             # resize keeping combined image aspect ratio
-            save_imgsize = (self.result_imgw, int(
-                self.result_imgw*result_img.shape[0]/result_img.shape[1]))
+            save_imgsize = (self.RESULTIMG_WIDTH, int(
+                self.RESULTIMG_WIDTH*result_img.shape[0]/result_img.shape[1]))
             print(f"imgshape={self.cur_img.shape}")
             print(f"save_imgsize={save_imgsize}")
             result_img = cv2.resize(
@@ -128,7 +129,7 @@ if __name__ == '__main__':
                         default='../output/sample/final', help='output image directory')
     parser.add_argument('--loglevel', type=int, default=3,
                         help='log level:0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image')
-    parser.add_argument('--result_imgw', type=int,
+    parser.add_argument('--resultimg_width', type=int,
                         default=1280, help='result image width.[pix]')
     parser.add_argument('--skip_frames', type=int,
                         default=0, help='skip frames at the beginning')
