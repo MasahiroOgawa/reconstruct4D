@@ -12,11 +12,11 @@ import numpy as np
 class MovingObjectExtractor:
     def __init__(self, args) -> None:
         # constants
-        THRE_STATIC_PROB = 0.1
         self.RESULTIMG_WIDTH = args.resultimg_width
+        THRE_STATIC_PROB = 0.1
         THRE_DOMINANTFLOW_ANGLE = 10*np.pi/180
-        # if flow length is lower than this value, the flow is ignored.
-        THRE_FLOWLENGTH = 4.0
+        # if flow length is lower than this value, the flow orientation will be used.
+        THRE_FLOWLENGTH = 2.0
         # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
         THRE_INLIER_ANGLE = 10 * np.pi / 180
         # if inlier rate is higher than this value, the foe is accepted.
