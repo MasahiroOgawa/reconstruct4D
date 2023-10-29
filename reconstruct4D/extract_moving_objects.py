@@ -57,8 +57,10 @@ class MovingObjectExtractor:
                 f"[INFO] processing {self.cur_imgname} : {self.cur_img.shape}")
 
         # currently just read flow from corresponding image file name.
-        # unimatch flow at time t is t to t+1 flow, which is different from what we expect, which is t-1 to t flow.
-        self.optflow.compute(self.prev_imgname)
+        # unimatch flow at time t is t to t+1 flow.
+        # That is different from what we expect, which is t-1 to t flow.
+        # So in the future, we need to compute flow from t-1 to t and overlap it with the current image.
+        self.optflow.compute(self.cur_imgname)
 
         # currently jusr read regmentation result from corresponding image file name.
         self.seg.compute(self.cur_imgname)
