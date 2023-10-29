@@ -35,10 +35,10 @@ class UnimatchFlow():
 
 
 class UndominantFlowAngleExtractor():
-    def __init__(self, THRE_ANGLE=10 * np.pi / 180, LOG_LEVEL=0) -> None:
+    def __init__(self, THRE_FLOWLENGTH=4.0, THRE_ANGLE=10 * np.pi / 180, LOG_LEVEL=0) -> None:
         # constants
         # if flow length is lower than this value, the flow is ignored.
-        self.THRE_FLOWLENGTH = 4.0
+        self.THRE_FLOWLENGTH = THRE_FLOWLENGTH
         self.LOG_LEVEL = LOG_LEVEL
         self.THRE_ANGLE = THRE_ANGLE  # radian
 

@@ -6,12 +6,12 @@ CameraState = Enum('CameraState', ['STOPPING', 'ROTATING', 'ONLY_TRANSLATING'])
 
 
 class FoE():
-    def __init__(self, LOG_LEVEL=0) -> None:
+    def __init__(self, THRE_FLOWLENGTH=4.0, LOG_LEVEL=0) -> None:
         # constants
         # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
         self.LOG_LEVEL = LOG_LEVEL
         # if flow length is lower than this value, the flow is ignored.
-        self.THRE_FLOWLENGTH = 4.0
+        self.THRE_FLOWLENGTH = THRE_FLOWLENGTH
         # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
         self.THRE_INLIER_ANGLE = 10 * np.pi / 180
         # if inlier rate is higher than this value, the foe is accepted.
