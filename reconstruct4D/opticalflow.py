@@ -35,14 +35,12 @@ class UnimatchFlow():
 
 
 class UndominantFlowAngleExtractor():
-    def __init__(self, thre_angle=10 * np.pi / 180, loglevel=0) -> None:
+    def __init__(self, THRE_ANGLE=10 * np.pi / 180, LOG_LEVEL=0) -> None:
         # constants
         # if flow length is lower than this value, the flow is ignored.
-        self.thre_flowlength = 2.0
-
-        # variables
-        self.loglevel = loglevel
-        self.thre_angle = thre_angle  # radian
+        self.THRE_FLOWLENGTH = 4.0
+        self.LOG_LEVEL = LOG_LEVEL
+        self.THRE_ANGLE = THRE_ANGLE  # radian
 
     def compute(self, flow: np.ndarray, nonsky_static_mask: np.ndarray):
         '''
@@ -63,8 +61,8 @@ class UndominantFlowAngleExtractor():
         self.undominant_flow_prob = np.zeros(
             (flow.shape[0], flow.shape[1]), dtype=np.float16)
 
-        self.undominant_flow_prob[(flow_length > self.thre_flowlength) & (
-            np.abs(flow_angle - median_angle) > self.thre_angle)] = 0.9 # 0.9 means outlier
-        self.undominant_flow_prob[(flow_length > self.thre_flowlength) & (np.abs(flow_angle - median_angle)
-                       <= self.thre_angle)] = 0.1  # 0.1 means inlier
+        self.undominant_flow_prob[(flow_length > self.THRE_FLOWLENGTH) & (
+            np.abs(flow_angle - median_angle) > self.THRE_ANGLE)] = 0.9 # 0.9 means outlier
+        self.undominant_flow_prob[(flow_length > self.THRE_FLOWLENGTH) & (np.abs(flow_angle - median_angle)
+                       <= self.THRE_ANGLE)] = 0.1  # 0.1 means inlier
 
