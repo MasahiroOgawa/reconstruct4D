@@ -254,12 +254,9 @@ class FoE():
                 # check the angle between flow and FoE to each pixel is lower than threshold.
                 cos_foe_flow = np.dot((col-foe_u, row-foe_v), (u, v)) / \
                     (np.sqrt((col-foe_u)**2 + (row-foe_v)**2) * flow_lentgh)
+                self.tmp_moving_prob[row, col] = 1 - cos_foe_flow
                 if cos_foe_flow > thre_cos:
-                    num_inlier += 1
-                    #TODO: how about 1- cos?
-                    self.tmp_moving_prob[row, col] = 0.1  # inlier
-                else:
-                    self.tmp_moving_prob[row, col] = 0.9  # outlier
+                    num_inlier += 1                    
 
         if self.flow_existing_rate_in_static == 0:
             self.inlier_rate = 0

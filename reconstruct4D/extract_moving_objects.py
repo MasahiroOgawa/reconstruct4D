@@ -15,15 +15,15 @@ class MovingObjectExtractor:
         self.RESULTIMG_WIDTH = args.resultimg_width
         THRE_STATIC_PROB = 0.1
         THRE_DOMINANTFLOW_ANGLE = 10*np.pi/180
-        # if flow length is lower than this value, the flow orientation will be used.
+        # if flow length is lower than this value, the flow orientation will be ignored.
         THRE_FLOWLENGTH = 2.0
         # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
-        THRE_INLIER_ANGLE = 10 * np.pi / 180
+        THRE_INLIER_ANGLE = 10*np.pi/180
         # if inlier rate is higher than this value, the foe is accepted.
         THRE_INLIER_RATE = 0.9
         # if flow existing pixel rate is lower than this value, the camera is considered as stopping.
         # the flow existing rate will be computed only inside static mask.
-        THRE_FLOW_EXISTING_RATE = 0.1
+        THRE_FLOW_EXISTING_RATE = 0.01
         NUM_RANSAC = 10
         # every this pixel, draw flow arrow.
         FLOWARROW_STEP = 20  
