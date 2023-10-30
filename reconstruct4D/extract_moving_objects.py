@@ -13,6 +13,8 @@ class MovingObjectExtractor:
     def __init__(self, args) -> None:
         # constants
         self.RESULTIMG_WIDTH = args.resultimg_width
+        # if moving probability is lower than this value, the pixel is considered as static.
+        self.THRE_MOVING_PROB = 0.5
         THRE_STATIC_PROB = 0.1
         THRE_DOMINANTFLOW_ANGLE = 10*np.pi/180
         # if flow length is lower than this value, the flow orientation will be ignored.
@@ -43,6 +45,7 @@ class MovingObjectExtractor:
         self.prev_img = None
         self.cur_imgname = None
         self.cur_img = None
+        self.posterior_moving_prob = None
 
     def compute(self):
         # process each image
@@ -89,14 +92,20 @@ class MovingObjectExtractor:
                 self.optflow.flow, self.seg.nonsky_static_mask)
             self.foe.moving_prob = self.undominantflow.undominant_flow_prob
 
+        # compute posterior probability of moving objects
+        self.posterior_moving_prob = self.seg.moving_prob * self.foe.moving_prob
+
     def draw(self) -> None:
-        if self.foe.moving_prob is None:
+        if self.posterior_moving_prob is None:
             return
+        
+        posterior_moving_prob_img = cv2.applyColorMap(
+            np.uint8(self.posterior_moving_prob * 255), cv2.COLORMAP_JET)
 
         # overlay transparently outlier_mask(moving object mask) into input image
         overlay_img = self.cur_img.copy()//2
         # increase the red channel.
-        overlay_img[self.foe.moving_prob > 0.5, 2] += 128
+        overlay_img[self.posterior_moving_prob > self.THRE_MOVING_PROB, 2] += 128
         result_img = overlay_img
 
         if args.loglevel > 1:
@@ -109,7 +118,7 @@ class MovingObjectExtractor:
             row2_img = cv2.hconcat(
                 [self.seg.moving_prob_img, self.seg.result_movingobj_img, self.foe.foe_camstate_img])
             row3_img = cv2.hconcat(
-                [self.foe.foe_camstate_img, self.foe.moving_prob_img, result_img])
+                [self.foe.moving_prob_img, posterior_moving_prob_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img, row3_img])
             # resize keeping combined image aspect ratio
             save_imgsize = (self.RESULTIMG_WIDTH, int(
