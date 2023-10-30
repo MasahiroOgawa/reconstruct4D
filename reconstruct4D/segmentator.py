@@ -141,3 +141,5 @@ class InternImageSegmentator(Segmentator):
         
         self.moving_prob_img = cv2.applyColorMap(
             (self.moving_prob*255).astype(np.uint8), cv2.COLORMAP_JET)
+        cv2.putText(self.moving_prob_img, "prior",
+            (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2) 

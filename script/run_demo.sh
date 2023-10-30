@@ -12,7 +12,7 @@ INPUT=${ROOT_DIR}/data/todaiura
 # INPUT="/home/mas/Downloads/reirun"
 LOG_LEVEL=2 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
 IMG_HEIGHT=480
-SKIP_FRAMES=65
+SKIP_FRAMES=0
 
 
 ####################
