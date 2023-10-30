@@ -121,16 +121,18 @@ class InternImageSegmentator(Segmentator):
         self.comp_movingprob_img()
 
     def comp_movingobj_img(self):
-        self.result_movingobj_img = self.bg_img.copy()//2
+        self.result_movingmask_img = self.bg_img.copy()//2
 
         # draw sky mask as light blue in result_movingobj_img
-        self.result_movingobj_img[self.sky_mask,
+        self.result_movingmask_img[self.sky_mask,
                                   0] += 128  # 0 means blue channel
 
         # draw moving object mask as gray in result_movingobj_img
         moving_obj_mask = np.logical_not(
             np.logical_or(self.sky_mask, self.nonsky_static_mask))
-        self.result_movingobj_img[moving_obj_mask, :] += 128
+        self.result_movingmask_img[moving_obj_mask, :] += 128
+        cv2.putText(self.result_movingmask_img, "moving mask",
+            (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
 
     def comp_movingprob_img(self):
         # draw moving probability as jet color in moving_prob_img.

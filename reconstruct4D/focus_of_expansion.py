@@ -324,3 +324,5 @@ class FoE():
             return
         self.moving_prob_img = cv2.applyColorMap(
             np.uint8(self.moving_prob * 255), cv2.COLORMAP_JET)
+        cv2.putText(self.moving_prob_img, "FoE based likelihood",
+            (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
