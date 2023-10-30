@@ -322,7 +322,6 @@ class FoE():
     def draw_moving_prob(self):
         if self.moving_prob is None:
             return
-        self.moving_prob_img = np.zeros(
-            (self.moving_prob.shape[0], self.moving_prob.shape[1], 3), dtype=np.uint8)
-        self.moving_prob_img[self.moving_prob < 0.4] = (0, 255, 0)
-        self.moving_prob_img[self.moving_prob > 0.6] = (0, 0, 255)
+        # draw self.moving_prob_img as jet color
+        self.moving_prob_img = cv2.applyColorMap(
+            np.uint8(self.moving_prob * 255), cv2.COLORMAP_JET)
