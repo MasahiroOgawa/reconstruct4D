@@ -29,6 +29,8 @@ class UnimatchFlow():
         '''
         imgnum = imgname.split('.')[0]
         flow_file = os.path.join(self.FLOW_RESULT_DIR, f"{imgnum}_pred.flo")
+        if flow_file is None:
+            raise ValueError(f"flow file {flow_file} does not exist.")
         self.flow = utils.frame_utils.readFlow(flow_file)
 
         self.flow_img = utils.flow_viz.flow_to_image(self.flow)

@@ -11,7 +11,7 @@ ROOT_DIR=$(dirname "$0")/..
 INPUT=${ROOT_DIR}/data/todaiura
 LOG_LEVEL=2 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
 IMG_HEIGHT=480
-SKIP_FRAMES=0
+SKIP_FRAMES=380
 
 
 ####################
@@ -105,7 +105,7 @@ python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
 echo "[INFO] creating a segmentation movie (ffmpeg in InternImage conda env doesn't support libx264, so we create it here.)"
 # for segmentation, the image file format is jpg or png. so detect it first.
 IMG_EXT=
-if [ `ls -1 ${OUTPUT_SEG_DIR}/ls -1 "${OUTPUT_SEG_DIR}/*.png" 2>/dev/null*.jpg 2>/dev/null | wc -l` != 0 ]; then
+if [ `ls -1 ${OUTPUT_SEG_DIR}/*.jpg 2>/dev/null | wc -l` != 0 ]; then
        IMG_EXT=jpg
 elif [ `ls -1 ${OUTPUT_SEG_DIR}/*.png 2>/dev/null | wc -l` != 0 ]; then
        IMG_EXT=png
@@ -113,7 +113,7 @@ else
        echo "[ERROR] no jpg or png image file in ${OUTPUT_SEG_DIR}"
        exit 1
 fi
-ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_MOVOBJ_DIR}/*.${IMG_EXT}" \
+ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_SEG_DIR}/*.${IMG_EXT}" \
        -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_SEG_DIR}/segmentation.mp4
 
 echo "[INFO] creating a final movie"

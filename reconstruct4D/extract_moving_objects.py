@@ -33,6 +33,8 @@ class MovingObjectExtractor:
         # variables
         self.imgfiles = sorted([file for file in os.listdir(
             args.input_dir) if file.endswith('.jpg') or file.endswith('.png')])
+        # remove last frame because currently optical flow is computed from t and t+1, so there is no optical flow file for the last frame.
+        self.imgfiles.pop()
         print(f"[INFO] reading input image files: {self.imgfiles}")
         self.optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
         self.undominantflow = opticalflow.UndominantFlowAngleExtractor(
@@ -41,8 +43,6 @@ class MovingObjectExtractor:
             args.segment_result_dir, THRE_STATIC_PROB, args.loglevel)
         self.foe = FoE(THRE_FLOWLENGTH,THRE_INLIER_ANGLE,THRE_INLIER_RATE,THRE_FLOW_EXISTING_RATE,
                     NUM_RANSAC, FLOWARROW_STEP, log_level=args.loglevel)
-        self.prev_imgname = None
-        self.prev_img = None
         self.cur_imgname = None
         self.cur_img = None
         self.posterior_moving_prob = None
@@ -63,11 +63,6 @@ class MovingObjectExtractor:
     def process_image(self):
         self.cur_img = cv2.imread(
             os.path.join(args.input_dir, self.cur_imgname))
-
-        if self.prev_img is None:
-            self.prev_imgname = self.cur_imgname
-            self.prev_img = self.cur_img
-            return
 
         if args.loglevel > 0:
             print(
@@ -138,10 +133,6 @@ class MovingObjectExtractor:
         # change file extension to png
         save_imgname = self.cur_imgname.replace('.jpg', '.png')
         cv2.imwrite(f"{args.output_dir}/{save_imgname}", result_img)
-
-        # prepare for the next frame
-        self.prev_imgname = self.cur_imgname
-        self.prev_img = self.cur_img
 
 
 if __name__ == '__main__':
