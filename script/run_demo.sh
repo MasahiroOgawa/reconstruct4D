@@ -11,7 +11,7 @@ ROOT_DIR=$(dirname "$0")/..
 INPUT=${ROOT_DIR}/data/todaiura
 LOG_LEVEL=2 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
 IMG_HEIGHT=480
-SKIP_FRAMES=380
+SKIP_FRAMES=0
 
 
 ####################

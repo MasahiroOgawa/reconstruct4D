@@ -111,9 +111,9 @@ class MovingObjectExtractor:
             self.foe.draw(bg_img=self.optflow.flow_img)
 
             row1_img = cv2.hconcat(
-                [self.cur_img, self.optflow.flow_img, self.seg.result_img])
+                [self.cur_img, self.seg.result_img, self.seg.result_movingmask_img])
             row2_img = cv2.hconcat(
-                [self.seg.moving_prob_img, self.seg.result_movingmask_img, self.foe.foe_camstate_img])
+                [self.seg.moving_prob_img, self.optflow.flow_img, self.foe.foe_camstate_img])
             row3_img = cv2.hconcat(
                 [self.foe.moving_prob_img, posterior_moving_prob_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img, row3_img])
