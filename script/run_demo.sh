@@ -9,7 +9,9 @@ ROOT_DIR=$(dirname "$0")/..
 # input image directory or video variables. You can change this.
 # INPUT=${ROOT_DIR}/data/sample
 INPUT=${ROOT_DIR}/data/todaiura
-LOG_LEVEL=2 # 0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image
+ # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
+ # 3: debug with detailed image, 4: slow (1min/frame) debug image
+LOG_LEVEL=4
 IMG_HEIGHT=480
 SKIP_FRAMES=0
 

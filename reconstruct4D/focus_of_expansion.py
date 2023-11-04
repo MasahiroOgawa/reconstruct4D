@@ -240,13 +240,14 @@ class FoE():
             else:
                 num_flow_existingpix += 1
 
-                if self.LOG_LEVEL > 2:
+                if self.LOG_LEVEL > 3:
+                    LENGTH_FACTOR=10
                     foe_flow_img = self.intermediate_foe_img.copy()
                     cv2.arrowedLine(foe_flow_img, (int(foe_u), int(foe_v)),
                                     (col, row), (0, 255, 0), 3)
                     cv2.arrowedLine(foe_flow_img, (col, row),
-                                    (int(col+u), int(row+v)), (0, 0, 255), 3)
-                    cv2.imshow('Debug', foe_flow_img)
+                                    (int(col+u*LENGTH_FACTOR), int(row+v*LENGTH_FACTOR)), (0, 0, 255), 3)
+                    cv2.imshow('FoE and flow', foe_flow_img)
                     key = cv2.waitKey(1)
                     if key == ord('q'):
                         exit()
