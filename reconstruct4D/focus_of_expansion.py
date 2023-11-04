@@ -13,6 +13,7 @@ class FoE():
         self.LOG_LEVEL = log_level
         self.THRE_FLOWLENGTH = thre_flowlength
         self.THRE_INLIER_ANGLE = thre_inlier_angle
+        self.THRE_COS_INLIER = np.cos(self.THRE_INLIER_ANGLE)
         self.THRE_INLIER_RATE = thre_inlier_rate
         self.THRE_FLOW_EXISTING_RATE = thre_flow_existing_rate
         self.NUM_RANSAC = num_ransac
@@ -217,7 +218,6 @@ class FoE():
         '''
         num_inlier = 0
         num_flow_existingpix = 0
-        thre_cos = np.cos(self.THRE_INLIER_ANGLE)
 
         # treat candidate FoE is infinite case
         if foe[2] == 0:
@@ -255,8 +255,8 @@ class FoE():
                 # check the angle between flow and FoE to each pixel is lower than threshold.
                 cos_foe_flow = np.dot((col-foe_u, row-foe_v), (u, v)) / \
                     (np.sqrt((col-foe_u)**2 + (row-foe_v)**2) * flow_lentgh)
-                self.tmp_moving_prob[row, col] = 1 - cos_foe_flow
-                if cos_foe_flow > thre_cos:
+                self.tmp_moving_prob[row, col] = min(1 - cos_foe_flow, 1.0)
+                if cos_foe_flow > self.THRE_COS_INLIER:
                     num_inlier += 1                    
 
         if self.flow_existing_rate_in_static == 0:
