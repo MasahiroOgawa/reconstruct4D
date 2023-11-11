@@ -19,9 +19,9 @@ class MovingObjectExtractor:
         THRE_DOMINANTFLOW_ANGLE = 10*np.pi/180
         # if flow length is lower than this value, the flow orientation will be ignored.
         THRE_FLOWLENGTH = 0.2
-        # if angle between flow and foe is lower than this value, the flow is inlier.[radian]
+        # if angle between flow and foe-pos is lower than this value, the flow considered as an inlier.[radian]
         THRE_INLIER_ANGLE = 10*np.pi/180
-        # if inlier rate is higher than this value, the foe is accepted.
+        # if inlier rate is higher than this value, RANSAC will be stopped.
         THRE_INLIER_RATE = 0.9
         # if flow existing pixel rate is lower than this value, the camera is considered as stopping.
         # the flow existing rate will be computed only inside static mask.
@@ -81,11 +81,11 @@ class MovingObjectExtractor:
         self.foe.compute(self.optflow.flow,
                          self.seg.sky_mask, self.seg.nonsky_static_mask)
 
-        # stopping erea is defined as foe.inlier_mask[row, col] = 0
-        if self.foe.state == CameraState.ROTATING: 
-            self.undominantflow.compute(
-                self.optflow.flow, self.seg.nonsky_static_mask)
-            self.foe.moving_prob = self.undominantflow.undominant_flow_prob
+        # # stopping erea is defined as foe.inlier_mask[row, col] = 0
+        # if self.foe.state == CameraState.ROTATING: 
+        #     self.undominantflow.compute(
+        #         self.optflow.flow, self.seg.nonsky_static_mask)
+        #     self.foe.moving_prob = self.undominantflow.undominant_flow_prob
 
         # compute posterior probability of moving objects
         self.posterior_moving_prob = self.seg.moving_prob * self.foe.moving_prob
