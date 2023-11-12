@@ -8,7 +8,7 @@ CameraState = Enum('CameraState', ['STOPPING', 'ROTATING', 'ONLY_TRANSLATING'])
 class FoE():
     def __init__(self, thre_flowlength=4.0, thre_inlier_angle = 10 * np.pi / 180,
                  thre_inlier_rate = 0.9, thre_flow_existing_rate = 0.1, num_ransac = 10, 
-                 flowarrow_step = 20, log_level=0) -> None:
+                 base_moving_prob = 0.1, flowarrow_step = 20, log_level=0) -> None:
         # constants
         self.LOG_LEVEL = log_level
         self.THRE_FLOWLENGTH = thre_flowlength
@@ -18,6 +18,7 @@ class FoE():
         self.THRE_FLOW_EXISTING_RATE = thre_flow_existing_rate
         self.NUM_RANSAC = num_ransac
         self.FLOWARROW_STEP = flowarrow_step
+        self.BASE_MOVING_PROB = base_moving_prob
 
         # variables
         self.state = CameraState.ROTATING  # most unkown movement.
@@ -241,7 +242,7 @@ class FoE():
 
             flow_length = np.sqrt(u**2 + v**2)
             # TODO: I need to check thid definition is OK. probably, 100 times difference should be moure exaggerate.
-            length_diff = min(1.0, abs(flow_length - self.mean_flow_length_in_static))
+            length_diff = min(1.0, abs(flow_length - self.mean_flow_length_in_static) + self.BASE_MOVING_PROB)
             if flow_length < self.THRE_FLOWLENGTH:
                 # this means nonstatic object which moves with camera.
                 # camera is not stopping, so the object must be moving.
@@ -264,7 +265,7 @@ class FoE():
                 # check the angle between flow and FoE to each pixel is lower than threshold.
                 cos_foe_flow = np.dot((col-foe_u, row-foe_v), (u, v)) / \
                     (np.sqrt((col-foe_u)**2 + (row-foe_v)**2) * flow_length)
-                angle_diff = min(1 - cos_foe_flow, 1.0)
+                angle_diff = min(1.0, 1 - cos_foe_flow + self.BASE_MOVING_PROB)
                 self.tmp_moving_prob[row, col] = angle_diff * length_diff
                 if cos_foe_flow > self.THRE_COS_INLIER:
                     num_inlier += 1                    
