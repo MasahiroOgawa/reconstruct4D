@@ -22,6 +22,7 @@ class FoE():
         # variables
         self.state = CameraState.ROTATING  # most unkown movement.
         self.flow_existing_rate_in_static = 0.0
+        self.mean_flow_length_in_static = 0.0
         self.inlier_rate = 0.0
         self.foe = None
         self.foe_camstate_img = None
@@ -73,6 +74,7 @@ class FoE():
 
         # check pixels inside static mask
         staticpix_indices = np.where(self.nonsky_static_mask == True)
+        sum_flow_length = 0.0
         for i in range(len(staticpix_indices[0])):
             row = staticpix_indices[0][i]
             col = staticpix_indices[1][i]
@@ -81,17 +83,22 @@ class FoE():
             u = self.flow[row, col, 0]
             v = self.flow[row, col, 1]
 
-            flow_lentgh = np.sqrt(u**2 + v**2)
-            if flow_lentgh < self.THRE_FLOWLENGTH:
-                self.tmp_moving_prob[row, col] = flow_lentgh / self.THRE_FLOWLENGTH
+            flow_length = np.sqrt(u**2 + v**2)
+            sum_flow_length += flow_length
+            if flow_length < self.THRE_FLOWLENGTH:
+                self.tmp_moving_prob[row, col] = flow_length / self.THRE_FLOWLENGTH
             else:
                 self.tmp_moving_prob[row, col] = 1.0
                 num_flow_existing_pix_in_static += 1
+
+        self.mean_flow_length_in_static = sum_flow_length / \
+            len(staticpix_indices[0])
 
         self.flow_existing_rate_in_static = num_flow_existing_pix_in_static / \
             len(staticpix_indices[0])
 
         if self.LOG_LEVEL > 0:
+            print(f"[INFO] mean flow length in static: {self.mean_flow_length_in_static}")
             print(
                 f"[INFO] flow existing pixel rate: {self.flow_existing_rate_in_static * 100:.2f} %")
 
@@ -236,6 +243,7 @@ class FoE():
             if flow_lentgh < self.THRE_FLOWLENGTH:
                 # this means nonstatic object which moves with camera.
                 # camera is not stopping, so the object must be moving.
+                # TODO: use flow lenth as moving probability like; moving prob = (length diff against mean flow)*(orientation diff)
                 self.tmp_moving_prob[row, col] = 1.0
             else:
                 num_flow_existingpix += 1
@@ -255,7 +263,8 @@ class FoE():
                 # check the angle between flow and FoE to each pixel is lower than threshold.
                 cos_foe_flow = np.dot((col-foe_u, row-foe_v), (u, v)) / \
                     (np.sqrt((col-foe_u)**2 + (row-foe_v)**2) * flow_lentgh)
-                self.tmp_moving_prob[row, col] = min(1 - cos_foe_flow, 1.0)
+                angle_diff = min(1 - cos_foe_flow, 1.0)
+                self.tmp_moving_prob[row, col] = angle_diff
                 if cos_foe_flow > self.THRE_COS_INLIER:
                     num_inlier += 1                    
 
