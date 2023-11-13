@@ -13,8 +13,8 @@ class MovingObjectExtractor:
     def __init__(self, args) -> None:
         # constants
         self.RESULTIMG_WIDTH = args.resultimg_width
-        # if moving probability is lower than this value, the pixel is considered as static.
-        self.THRE_MOVING_PROB = 0.5
+        # if moving probability is lower than this value, the pixel is considered as static. default value = prior=0.5 * likelihood=0.5.
+        self.THRE_MOVING_PROB = 0.5**2
         THRE_STATIC_PROB = 0.1
         THRE_DOMINANTFLOW_ANGLE = 10*np.pi/180
         # if flow length is lower than this value, the flow orientation will be ignored.
