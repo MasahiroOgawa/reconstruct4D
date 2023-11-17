@@ -30,7 +30,9 @@ class MovingObjectExtractor:
         # every this pixel, draw flow arrow.
         FLOWARROW_STEP = 20  
         # minimum moving probability even when the angle is totally the same with FoE-position angle, or the flow length is the same with background.
-        BASE_MOVING_PROB = 0.1
+        SAME_FLOWANGLE_MOVING_PROB = 0.1
+        # minimum moving probability even when the flow length is the same with background.
+        SAME_FLOWLENGTH_MOVING_PROB = 0.5        
 
         # variables
         self.imgfiles = sorted([file for file in os.listdir(
@@ -44,7 +46,7 @@ class MovingObjectExtractor:
         self.seg = segmentator.InternImageSegmentator(
             args.segment_result_dir, THRE_STATIC_PROB, args.loglevel)
         self.foe = FoE(THRE_FLOWLENGTH,THRE_INLIER_ANGLE,THRE_INLIER_RATE,THRE_FLOW_EXISTING_RATE,
-                    NUM_RANSAC, BASE_MOVING_PROB, FLOWARROW_STEP, log_level=args.loglevel)
+                    NUM_RANSAC, SAME_FLOWANGLE_MOVING_PROB, SAME_FLOWLENGTH_MOVING_PROB, FLOWARROW_STEP, log_level=args.loglevel)
         self.cur_imgname = None
         self.cur_img = None
         self.posterior_moving_prob = None
