@@ -243,7 +243,7 @@ class FoE():
 
             flow_length = np.sqrt(u**2 + v**2)
             # TODO: I need to check thid definition is OK. probably, 100 times difference should be moure exaggerate.
-            length_diff_prob = min(1.0, np.tanh(abs(flow_length/self.mean_flow_length_in_static - 1)) + self.SAME_FLOWLENGTH_MOVING_PROB)
+            length_diff_prob = min(1.0, max(np.tanh(abs(flow_length/self.mean_flow_length_in_static - 1)), self.SAME_FLOWLENGTH_MOVING_PROB))
             if flow_length < self.THRE_FLOWLENGTH:
                 # this means nonstatic object which moves with camera.
                 # camera is not stopping, so the object must be moving.
@@ -266,7 +266,7 @@ class FoE():
                 # check the angle between flow and FoE to each pixel is lower than threshold.
                 cos_foe_flow = np.dot((col-foe_u, row-foe_v), (u, v)) / \
                     (np.sqrt((col-foe_u)**2 + (row-foe_v)**2) * flow_length)
-                angle_diff_prob = min(1.0, 1 - cos_foe_flow + self.SAME_FLOWANGLE_MOVING_PROB)
+                angle_diff_prob = min(1.0, max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MOVING_PROB))
                 self.tmp_moving_prob[row, col] = angle_diff_prob * length_diff_prob
                 if cos_foe_flow > self.THRE_COS_INLIER:
                     num_inlier += 1                    

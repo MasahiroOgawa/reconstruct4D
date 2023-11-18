@@ -13,7 +13,7 @@ INPUT=${ROOT_DIR}/data/todaiura
  # 3: debug with detailed image, 4: slow (1min/frame) debug image
 LOG_LEVEL=2
 IMG_HEIGHT=480
-SKIP_FRAMES=0 #279
+SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians 
 
 
 ####################
