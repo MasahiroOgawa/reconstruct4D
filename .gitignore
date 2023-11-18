@@ -162,6 +162,7 @@ cython_debug/
 # Editor
 *~
 .vscode/
+*.orig
 
 # Results
 output/
