@@ -13,8 +13,8 @@ class MovingObjectExtractor:
     def __init__(self, args) -> None:
         # constants
         self.RESULTIMG_WIDTH = args.resultimg_width
-        # if moving probability is lower than this value, the pixel is considered as static. default value = prior=0.5 * likelihood=0.5.
-        self.THRE_MOVING_PROB = 0.5**2
+        # if moving probability is lower than this value, the pixel is considered as static. default value = prior(0.5) * angle likelihood(0.5) * length likelihood(0.5).
+        self.THRE_MOVING_PROB = 0.5**3
         THRE_STATIC_PROB = 0.1
         THRE_DOMINANTFLOW_ANGLE = 10*np.pi/180
         # if flow length is lower than this value, the flow orientation will be ignored.
@@ -30,9 +30,9 @@ class MovingObjectExtractor:
         # every this pixel, draw flow arrow.
         FLOWARROW_STEP = 20  
         # minimum moving probability even when the angle is totally the same with FoE-position angle, or the flow length is the same with background.
-        SAME_FLOWANGLE_MOVING_PROB = 0.1
+        SAME_FLOWANGLE_MOVING_PROB = 0.2
         # minimum moving probability even when the flow length is the same with background.
-        SAME_FLOWLENGTH_MOVING_PROB = 0.5        
+        SAME_FLOWLENGTH_MOVING_PROB = 0.4        
 
         # variables
         self.imgfiles = sorted([file for file in os.listdir(
