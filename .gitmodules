@@ -7,3 +7,6 @@
 [submodule "ext/cityscapesScripts"]
 	path = reconstruct4D/ext/cityscapesScripts
 	url = https://github.com/mcordts/cityscapesScripts.git
+[submodule "reconstruct4D/ext/davis"]
+	path = reconstruct4D/ext/davis
+	url = git@github.com:davisvideochallenge/davis.git
