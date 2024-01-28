@@ -7,3 +7,6 @@
 [submodule "ext/cityscapesScripts"]
 	path = reconstruct4D/ext/cityscapesScripts
 	url = https://github.com/mcordts/cityscapesScripts.git
+[submodule "reconstruct4D/ext/unsupervised_detection"]
+	path = reconstruct4D/ext/unsupervised_detection
+	url = git@github.com:MasahiroOgawa/unsupervised_detection.git
