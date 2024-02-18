@@ -154,7 +154,7 @@ class MovingObjectExtractor:
             print(f"loaded_mask_img.shape={loaded_mask_img.shape}")
             print(f"loaded_mask_img.dtype={loaded_mask_img.dtype}")
             cv2.imshow('loaded_mask_img', loaded_mask_img)
-            cv2.waitKey(0)
+            cv2.waitKey(1)
 
 
 if __name__ == '__main__':

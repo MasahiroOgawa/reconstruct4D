@@ -8,10 +8,11 @@ ROOT_DIR=$(dirname "$0")/..
 
 # input image directory or video variables. You can change this.
 # INPUT=${ROOT_DIR}/data/sample
-INPUT=${ROOT_DIR}/data/todaiura
+# INPUT=${ROOT_DIR}/data/todaiura
+INPUT=${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/download/DAVIS/JPEGImages/480p/blackswan
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
- # 3: debug with detailed image, 4: slow (1min/frame) debug image
-LOG_LEVEL=2
+ # 3: debug with detailed image but without stopping, 4: slow (1min/frame) debug image
+LOG_LEVEL=3
 IMG_HEIGHT=480
 SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians 
 
