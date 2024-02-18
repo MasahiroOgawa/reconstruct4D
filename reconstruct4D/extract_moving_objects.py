@@ -146,14 +146,14 @@ class MovingObjectExtractor:
         mask_imgfname = f"{args.output_dir}/{save_imgname.replace('.png', '_mask.png')}"
         cv2.imwrite(mask_imgfname, mask_img)
 
-        # debug.
-        # check loaded image type.
-        loaded_mask_img = cv2.imread(mask_imgfname, cv2.IMREAD_UNCHANGED) * 255
-        cv2.imshow('loaded_mask_img', loaded_mask_img)
-        print(f"loaded_mask_img.shape={loaded_mask_img.shape}")
-        print(f"loaded_mask_img.dtype={loaded_mask_img.dtype}")
-        print(f"loaded_mask_img={loaded_mask_img}")
-        cv2.waitKey(0)
+        if args.loglevel > 2:
+            # check loaded image type.
+            loaded_mask_img = cv2.imread(
+                mask_imgfname, cv2.IMREAD_UNCHANGED) * 255
+            print(f"loaded_mask_img.shape={loaded_mask_img.shape}")
+            print(f"loaded_mask_img.dtype={loaded_mask_img.dtype}")
+            cv2.imshow('loaded_mask_img', loaded_mask_img)
+            cv2.waitKey(0)
 
 
 if __name__ == '__main__':
