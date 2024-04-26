@@ -3,7 +3,8 @@
 USAGE="Usage: $0 [input_image_dir_or_movie (default: data/sample)]"
 echo $USAGE
 
-# stop immediately when error occurred
+# -e: stop immediately when error occurred
+# -u: stop immediately when undefined variable is used
 set -eu
 
 # set root directory
