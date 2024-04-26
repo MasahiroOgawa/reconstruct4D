@@ -40,10 +40,16 @@ OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_DIR})
 OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
 OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
 OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
+FLOW_MODEL_NAME=gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
 
 echo "[INFO] compute optical flow"
 eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV" 
+if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth ]; then
+       echo "[INFO] download pretrained model"
+       mkdir -p ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
+       wget https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME} -P ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
+fi
 if [ -d ${OUTPUT_FLOW_DIR} ]; then
        echo "[INFO] ${OUTPUT_FLOW_DIR} already exists. Skip computing optical flow."
 else
@@ -52,7 +58,7 @@ else
        CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
        --inference_dir ${INPUT} \
        --output_path ${OUTPUT_FLOW_DIR} \
-       --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth \
+       --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME} \
        --padding_factor 32 \
        --upsample_factor 4 \
        --num_scales 2 \
