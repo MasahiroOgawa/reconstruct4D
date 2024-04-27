@@ -50,8 +50,8 @@ if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regref
        mkdir -p ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
        wget https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME} -P ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
 fi
-if [ -d ${OUTPUT_FLOW_DIR} ]; then
-       echo "[INFO] ${OUTPUT_FLOW_DIR} already exists. Skip computing optical flow."
+if [ -n "$(ls -A ${OUTPUT_FLOW_DIR})" ]; then
+       echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
        mkdir -p ${OUTPUT_FLOW_DIR}
        export OMP_NUM_THREADS=1
@@ -82,8 +82,8 @@ set +eu
 eval "$(conda shell.bash activate internimage)"
 set -eu
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
-if [ -d ${OUTPUT_SEG_DIR} ]; then
-       echo "[INFO] ${OUTPUT_SEG_DIR} already exists. Skip running segmentation."
+if [ -n "$(ls -A ${OUTPUT_SEG_DIR})" ]; then
+       echo "[INFO] segmentation output files already exist. Skip running segmentation."
 else
        mkdir -p ${OUTPUT_SEG_DIR}
        CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py \
@@ -104,8 +104,8 @@ fi
 echo "[INFO] run extract moving objects"
 eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
-if [ -d ${OUTPUT_MOVOBJ_DIR} ]; then
-       echo "[INFO] ${OUTPUT_MOVOBJ_DIR} already exists."
+if [ -n "$(ls -A ${OUTPUT_MOVOBJ_DIR})" ]; then
+       echo "[INFO] moving objects output files already exist."
        read -p "Do you want to run anyway? (y/n): " yn
        if [ $yn != "y" ]; then
               echo "[INFO] skip running extract moving objects."
