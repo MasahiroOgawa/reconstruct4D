@@ -1,0 +1,21 @@
+{
+    // IntelliSense を使用して利用可能な属性を学べます。
+    // 既存の属性の説明をホバーして表示します。
+    // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "test_movobjextractor for DAVIS2016 and Foels",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/reconstruct4D/ext/unsupervised_detection/test_movobjextractor.py",
+            "console": "integratedTerminal",
+            "args": ["--dataset=DAVIS2016", "--batch_size=1", "--test_crop=0.9" 
+            ,"--test_temporal_shift=1"
+            ,"--root_dir=${workspaceFolder}/reconstruct4D/ext/unsupervised_detection/download/DAVIS" 
+            ,"--generate_visualization=True" 
+            ,"--test_save_dir=${workspaceFolder}/reconstruct4D/ext/unsupervised_detection/results/Foels/DAVIS2016"
+            ,"--log_level=4"]
+        }
+    ]
+}

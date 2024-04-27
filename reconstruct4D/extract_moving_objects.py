@@ -28,11 +28,11 @@ class MovingObjectExtractor:
         THRE_FLOW_EXISTING_RATE = 0.01
         NUM_RANSAC = 10
         # every this pixel, draw flow arrow.
-        FLOWARROW_STEP = 20  
+        FLOWARROW_STEP = 20
         # minimum moving probability even when the angle is totally the same with FoE-position angle, or the flow length is the same with background.
         SAME_FLOWANGLE_MOVING_PROB = 0.2
         # minimum moving probability even when the flow length is the same with background.
-        SAME_FLOWLENGTH_MOVING_PROB = 0.4        
+        SAME_FLOWLENGTH_MOVING_PROB = 0.4
 
         # variables
         self.imgfiles = sorted([file for file in os.listdir(
@@ -45,8 +45,8 @@ class MovingObjectExtractor:
             THRE_FLOWLENGTH, THRE_DOMINANTFLOW_ANGLE, args.loglevel)
         self.seg = segmentator.InternImageSegmentator(
             args.segment_result_dir, THRE_STATIC_PROB, args.loglevel)
-        self.foe = FoE(THRE_FLOWLENGTH,THRE_INLIER_ANGLE,THRE_INLIER_RATE,THRE_FLOW_EXISTING_RATE,
-                    NUM_RANSAC, SAME_FLOWANGLE_MOVING_PROB, SAME_FLOWLENGTH_MOVING_PROB, FLOWARROW_STEP, log_level=args.loglevel)
+        self.foe = FoE(THRE_FLOWLENGTH, THRE_INLIER_ANGLE, THRE_INLIER_RATE, THRE_FLOW_EXISTING_RATE,
+                       NUM_RANSAC, SAME_FLOWANGLE_MOVING_PROB, SAME_FLOWLENGTH_MOVING_PROB, FLOWARROW_STEP, log_level=args.loglevel)
         self.cur_imgname = None
         self.cur_img = None
         self.posterior_moving_prob = None
@@ -86,7 +86,7 @@ class MovingObjectExtractor:
                          self.seg.sky_mask, self.seg.nonsky_static_mask)
 
         # # stopping erea is defined as foe.inlier_mask[row, col] = 0
-        # if self.foe.state == CameraState.ROTATING: 
+        # if self.foe.state == CameraState.ROTATING:
         #     self.undominantflow.compute(
         #         self.optflow.flow, self.seg.nonsky_static_mask)
         #     self.foe.moving_prob = self.undominantflow.undominant_flow_prob
@@ -97,16 +97,17 @@ class MovingObjectExtractor:
     def draw(self) -> None:
         if self.posterior_moving_prob is None:
             return
-        
+
         posterior_moving_prob_img = cv2.applyColorMap(
             np.uint8(self.posterior_moving_prob * 255), cv2.COLORMAP_JET)
         cv2.putText(posterior_moving_prob_img, "posterior",
-            (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
         # overlay transparently outlier_mask(moving object mask) into input image
         overlay_img = self.cur_img.copy()//2
         # increase the red channel.
-        overlay_img[self.posterior_moving_prob > self.THRE_MOVING_PROB, 2] += 128
+        overlay_img[self.posterior_moving_prob >
+                    self.THRE_MOVING_PROB, 2] += 128
         result_img = overlay_img
 
         if args.loglevel > 1:
@@ -137,6 +138,23 @@ class MovingObjectExtractor:
         # change file extension to png
         save_imgname = self.cur_imgname.replace('.jpg', '.png')
         cv2.imwrite(f"{args.output_dir}/{save_imgname}", result_img)
+
+        # save mask image
+        mask_img = np.zeros(self.posterior_moving_prob.shape, dtype=np.float32)
+        # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
+        mask_img[self.posterior_moving_prob >
+                 self.THRE_MOVING_PROB] = 255.0
+        mask_imgfname = f"{args.output_dir}/{save_imgname.replace('.png', '_mask.png')}"
+        cv2.imwrite(mask_imgfname, mask_img)
+
+        if args.loglevel > 2:
+            # check loaded image type.
+            loaded_mask_img = cv2.imread(
+                mask_imgfname, cv2.IMREAD_UNCHANGED)
+            print(f"loaded_mask_img.shape={loaded_mask_img.shape}")
+            print(f"loaded_mask_img.dtype={loaded_mask_img.dtype}")
+            cv2.imshow('loaded_mask_img', loaded_mask_img)
+            cv2.waitKey(1)
 
 
 if __name__ == '__main__':

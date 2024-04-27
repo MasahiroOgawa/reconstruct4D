@@ -1,19 +1,22 @@
 #!/bin/bash
+###
+USAGE="Usage: $0 [input_image_dir_or_movie (default: data/sample)]"
+echo $USAGE
 
-# stop immediately when error occurred
+# -e: stop immediately when error occurred
+# -u: stop immediately when undefined variable is used
 set -eu
 
 # set root directory
 ROOT_DIR=$(dirname "$0")/..
 
 # input image directory or video variables. You can change this.
-# INPUT=${ROOT_DIR}/data/sample
-INPUT=${ROOT_DIR}/data/todaiura
+INPUT=${1:-${ROOT_DIR}/data/sample}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
- # 3: debug with detailed image, 4: slow (1min/frame) debug image
-LOG_LEVEL=2
+ # 3: debug with detailed image but without stopping, 4: slow (1min/frame) debug image
+LOG_LEVEL=1
 IMG_HEIGHT=480
-SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians 
+SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
 
 
 ####################
@@ -37,19 +40,25 @@ OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_DIR})
 OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
 OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
 OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
+FLOW_MODEL_NAME=gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
 
 echo "[INFO] compute optical flow"
 eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV" 
-if [ -d ${OUTPUT_FLOW_DIR} ]; then
-       echo "[INFO] ${OUTPUT_FLOW_DIR} already exists. Skip computing optical flow."
+if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth ]; then
+       echo "[INFO] download pretrained model"
+       mkdir -p ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
+       wget https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME} -P ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
+fi
+if [ -n "$(ls -A ${OUTPUT_FLOW_DIR})" ]; then
+       echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
        mkdir -p ${OUTPUT_FLOW_DIR}
        export OMP_NUM_THREADS=1
        CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
        --inference_dir ${INPUT} \
        --output_path ${OUTPUT_FLOW_DIR} \
-       --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth \
+       --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME} \
        --padding_factor 32 \
        --upsample_factor 4 \
        --num_scales 2 \
@@ -73,8 +82,8 @@ set +eu
 eval "$(conda shell.bash activate internimage)"
 set -eu
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
-if [ -d ${OUTPUT_SEG_DIR} ]; then
-       echo "[INFO] ${OUTPUT_SEG_DIR} already exists. Skip running segmentation."
+if [ -n "$(ls -A ${OUTPUT_SEG_DIR})" ]; then
+       echo "[INFO] segmentation output files already exist. Skip running segmentation."
 else
        mkdir -p ${OUTPUT_SEG_DIR}
        CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py \
@@ -95,6 +104,14 @@ fi
 echo "[INFO] run extract moving objects"
 eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
+if [ -n "$(ls -A ${OUTPUT_MOVOBJ_DIR})" ]; then
+       echo "[INFO] moving objects output files already exist."
+       read -p "Do you want to run anyway? (y/n): " yn
+       if [ $yn != "y" ]; then
+              echo "[INFO] skip running extract moving objects."
+              exit 0
+       fi
+fi
 mkdir -p ${OUTPUT_MOVOBJ_DIR}
 python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
        --input_dir ${INPUT_DIR} \
