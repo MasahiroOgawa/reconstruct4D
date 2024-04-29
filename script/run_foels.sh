@@ -41,7 +41,8 @@ OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
 OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
 OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 FLOW_MODEL_NAME=gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
-SEG_MODEL_NAME=upernet_internimage_t_512_160k_ade20k.pth
+# SEG_MODEL_NAME=upernet_internimage_t_512_160k_ade20k.pth
+SEG_MODEL_NAME=upernet_internimage_h_896_160k_ade20k.pth
 
 echo "[INFO] compute optical flow"
 eval "$(conda shell.bash activate reconstruct4D)"
