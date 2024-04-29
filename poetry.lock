@@ -397,6 +397,32 @@ optional = ["ninja", "psutil"]
 tests = ["PyTurboJPEG", "coverage", "lmdb", "onnx", "onnxoptimizer", "onnxruntime", "pytest", "scipy", "tifffile"]
 
 [[package]]
+name = "mmcv-full"
+version = "1.7.2"
+description = "OpenMMLab Computer Vision Foundation"
+optional = false
+python-versions = "*"
+files = [
+    {file = "mmcv-full-1.7.2.tar.gz", hash = "sha256:aa276a2c68fa84db9bbcdcf6ae941e30f0cb4a7f175bd283516669e00bab3759"},
+]
+
+[package.dependencies]
+addict = "*"
+numpy = "*"
+opencv-python = ">=3"
+packaging = "*"
+Pillow = "*"
+pyyaml = "*"
+regex = {version = "*", markers = "sys_platform == \"win32\""}
+yapf = "*"
+
+[package.extras]
+all = ["Pillow", "PyTurboJPEG", "addict", "coverage", "lmdb", "ninja", "numpy", "onnx", "onnxoptimizer", "onnxruntime (>=1.8.0)", "packaging", "protobuf (>=3.19.0,<3.20.0)", "psutil", "pytest", "pytest-runner", "pyyaml", "regex", "scipy", "tifffile", "yapf"]
+build = ["pytest-runner"]
+optional = ["ninja", "psutil"]
+tests = ["PyTurboJPEG", "coverage", "lmdb", "onnx", "onnxoptimizer", "onnxruntime (>=1.8.0)", "protobuf (>=3.19.0,<3.20.0)", "pytest", "scipy", "tifffile"]
+
+[[package]]
 name = "mmengine"
 version = "0.10.4"
 description = "Engine of OpenMMLab projects"
@@ -895,4 +921,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "54065dcba79ef65e93952fccb1b73e5cd4ae0353e47d88fd18c2fc5081eea0b7"
+content-hash = "332260560ad8d093d6202e425d423b70a098ea0c62041b78d5c7f2d78262048c"
