@@ -4,6 +4,8 @@ This is a 4D reconstruction project.
 # setup
 ```
 conda env create -f script/environment.yml
+conda env create -f reconstruct4D/ext/InternImage/environment.yml
+conda env create -f reconstruct4D/ext/unsupervised_detection/environment.yml
 conda activate reconstruct4D
 ```
 
