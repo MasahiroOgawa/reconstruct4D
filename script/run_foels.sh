@@ -1,6 +1,6 @@
 #!/bin/bash
 ###
-USAGE="Usage: $0 [input_image_dir_or_movie (default: data/sample)]"
+USAGE="Usage: $0 [input image directory or movie (default: data/sample)] [output directory (default: output)]"
 echo $USAGE
 
 # -e: stop immediately when error occurred
@@ -12,6 +12,7 @@ ROOT_DIR=$(dirname "$0")/..
 
 # input image directory or video variables. You can change this.
 INPUT=${1:-${ROOT_DIR}/data/sample}
+OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: debug with detailed image but without stopping, 4: slow (1min/frame) debug image
 LOG_LEVEL=1
@@ -36,13 +37,13 @@ else
 fi
 
 # automatically defined variables from INPUT
-OUTPUT_PARENT_DIR=${ROOT_DIR}/output/$(basename ${INPUT_DIR})
+OUTPUT_PARENT_DIR=${OUTPUT_PARENT_DIR}/$(basename ${INPUT_DIR})
 OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
 OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
 OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 FLOW_MODEL_NAME=gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
-# SEG_MODEL_NAME=upernet_internimage_t_512_160k_ade20k.pth
-SEG_MODEL_NAME=upernet_internimage_h_896_160k_ade20k.pth
+SEG_MODEL_NAME=upernet_internimage_t_512_160k_ade20k.pth
+# SEG_MODEL_NAME=upernet_internimage_h_896_160k_ade20k.pth
 
 echo "[INFO] compute optical flow"
 eval "$(conda shell.bash activate reconstruct4D)"
