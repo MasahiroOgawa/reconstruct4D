@@ -113,7 +113,6 @@ class MovingObjectExtractor:
         # combine intermediate images
         self.seg.draw(bg_img=self.cur_img)
         self.foe.draw(bg_img=self.optflow.flow_img)
-
         row1_img = cv2.hconcat(
             [self.cur_img, self.seg.result_img, self.seg.result_movingmask_img])
         row2_img = cv2.hconcat(
@@ -132,7 +131,7 @@ class MovingObjectExtractor:
             print(f"comb_imgsize={comb_imgsize}")
 
         # display the result image
-        if args.loglevel > 2:
+        if args.loglevel > 1:
             cv2.imshow('result', result_comb_img)
             key = cv2.waitKey(1)
             if key == ord('q'):

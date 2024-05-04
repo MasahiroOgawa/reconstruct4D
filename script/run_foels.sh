@@ -15,7 +15,7 @@ INPUT=${1:-${ROOT_DIR}/data/sample}
 OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
-LOG_LEVEL=0
+LOG_LEVEL=2
 IMG_HEIGHT=480
 SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
 
