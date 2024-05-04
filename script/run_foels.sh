@@ -43,7 +43,9 @@ OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
 OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 FLOW_MODEL_NAME=gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
 SEG_MODEL_NAME=upernet_internimage_t_512_160k_ade20k.pth
+SEG_MODEL_NAME=upernet_internimage_xl_640_160k_ade20k.pth
 # SEG_MODEL_NAME=upernet_internimage_h_896_160k_ade20k.pth
+
 
 echo "[INFO] compute optical flow"
 eval "$(conda shell.bash activate reconstruct4D)"
@@ -93,9 +95,11 @@ if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/
        case ${SEG_MODEL_NAME} in
               "upernet_internimage_t_512_160k_ade20k.pth")
                      wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_t_512_160k_ade20k.pth?download=true -P ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/seg;;
+              "upernet_internimage_xl_640_160k_ade20k.pth")
+                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_xl_640_160k_ade20k.pth -P ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/seg;; 
               "upernet_internimage_h_896_160k_ade20k.pth")
                      wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_h_896_160k_ade20k.pth?download=true -P ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/seg;;
-              *) echo "[ERROR] unknown segmentation model name: ${SEG_MODEL_NAME}"; exit 1;;
+           *) echo "[ERROR] unknown segmentation model name: ${SEG_MODEL_NAME}"; exit 1;;
        esac
 fi
 if [ -n "$(ls -A ${OUTPUT_SEG_DIR})" ]; then
