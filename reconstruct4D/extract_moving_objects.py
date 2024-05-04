@@ -111,28 +111,29 @@ class MovingObjectExtractor:
         result_img = overlay_img
 
         # combine intermediate images
-        if args.loglevel > 2:
-            self.seg.draw(bg_img=self.cur_img)
-            self.foe.draw(bg_img=self.optflow.flow_img)
+        self.seg.draw(bg_img=self.cur_img)
+        self.foe.draw(bg_img=self.optflow.flow_img)
 
-            row1_img = cv2.hconcat(
-                [self.cur_img, self.seg.result_img, self.seg.result_movingmask_img])
-            row2_img = cv2.hconcat(
-                [self.seg.moving_prob_img, self.optflow.flow_img, self.foe.foe_camstate_img])
-            row3_img = cv2.hconcat(
-                [self.foe.moving_prob_img, posterior_moving_prob_img, result_img])
-            result_img = cv2.vconcat([row1_img, row2_img, row3_img])
-            # resize keeping result image aspect ratio
-            save_imgsize = (self.RESULTIMG_WIDTH, int(
-                self.RESULTIMG_WIDTH*result_img.shape[0]/result_img.shape[1]))
+        row1_img = cv2.hconcat(
+            [self.cur_img, self.seg.result_img, self.seg.result_movingmask_img])
+        row2_img = cv2.hconcat(
+            [self.seg.moving_prob_img, self.optflow.flow_img, self.foe.foe_camstate_img])
+        row3_img = cv2.hconcat(
+            [self.foe.moving_prob_img, posterior_moving_prob_img, result_img])
+        result_comb_img = cv2.vconcat([row1_img, row2_img, row3_img])
+        # resize keeping result image aspect ratio
+        comb_imgsize = (self.RESULTIMG_WIDTH, int(
+            self.RESULTIMG_WIDTH*result_img.shape[0]/result_img.shape[1]))
+        result_comb_img = cv2.resize(
+            result_comb_img, comb_imgsize)
+
+        if args.loglevel > 0:
             print(f"imgshape={self.cur_img.shape}")
-            print(f"save_imgsize={save_imgsize}")
-            result_img = cv2.resize(
-                result_img, save_imgsize)
+            print(f"comb_imgsize={comb_imgsize}")
 
         # display the result image
-        if args.loglevel > 1:
-            cv2.imshow('result', result_img)
+        if args.loglevel > 2:
+            cv2.imshow('result', result_comb_img)
             key = cv2.waitKey(1)
             if key == ord('q'):
                 return
@@ -141,6 +142,9 @@ class MovingObjectExtractor:
         # change file extension to png
         save_imgname = self.cur_imgname.replace('.jpg', '_result.png')
         cv2.imwrite(f"{args.output_dir}/{save_imgname}", result_img)
+        save_comb_imgname = self.cur_imgname.replace(
+            '.jpg', '_result_comb.png')
+        cv2.imwrite(f"{args.output_dir}/{save_comb_imgname}", result_comb_img)
 
         # save mask image
         mask_img = np.zeros(self.posterior_moving_prob.shape, dtype=np.float32)
