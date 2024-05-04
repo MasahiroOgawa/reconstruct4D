@@ -110,8 +110,8 @@ class MovingObjectExtractor:
                     self.THRE_MOVING_PROB, 2] += 128
         result_img = overlay_img
 
-        if args.loglevel > 1:
-            # display the result
+        # combine intermediate images
+        if args.loglevel > 2:
             self.seg.draw(bg_img=self.cur_img)
             self.foe.draw(bg_img=self.optflow.flow_img)
 
@@ -122,13 +122,16 @@ class MovingObjectExtractor:
             row3_img = cv2.hconcat(
                 [self.foe.moving_prob_img, posterior_moving_prob_img, result_img])
             result_img = cv2.vconcat([row1_img, row2_img, row3_img])
-            # resize keeping combined image aspect ratio
+            # resize keeping result image aspect ratio
             save_imgsize = (self.RESULTIMG_WIDTH, int(
                 self.RESULTIMG_WIDTH*result_img.shape[0]/result_img.shape[1]))
             print(f"imgshape={self.cur_img.shape}")
             print(f"save_imgsize={save_imgsize}")
             result_img = cv2.resize(
                 result_img, save_imgsize)
+
+        # display the result image
+        if args.loglevel > 1:
             cv2.imshow('result', result_img)
             key = cv2.waitKey(1)
             if key == ord('q'):
@@ -136,7 +139,7 @@ class MovingObjectExtractor:
 
         # create the result image and save it.
         # change file extension to png
-        save_imgname = self.cur_imgname.replace('.jpg', '.png')
+        save_imgname = self.cur_imgname.replace('.jpg', '_result.png')
         cv2.imwrite(f"{args.output_dir}/{save_imgname}", result_img)
 
         # save mask image
@@ -144,7 +147,7 @@ class MovingObjectExtractor:
         # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
         mask_img[self.posterior_moving_prob >
                  self.THRE_MOVING_PROB] = 255.0
-        mask_imgfname = f"{args.output_dir}/{save_imgname.replace('.png', '_mask.png')}"
+        mask_imgfname = f"{args.output_dir}/{self.cur_imgname.replace('.jpg', '_mask.png')}"
         cv2.imwrite(mask_imgfname, mask_img)
 
         if args.loglevel > 2:

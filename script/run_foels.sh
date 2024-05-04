@@ -14,7 +14,7 @@ ROOT_DIR=$(dirname "$0")/..
 INPUT=${1:-${ROOT_DIR}/data/sample}
 OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
- # 3: debug with detailed image but without stopping, 4: slow (1min/frame) debug image
+ # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
 LOG_LEVEL=1
 IMG_HEIGHT=480
 SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
@@ -156,5 +156,5 @@ ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_SEG_DIR}/*.${IMG_EXT}" \
        -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_SEG_DIR}/segmentation.mp4
 
 echo "[INFO] creating a final movie"
-ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_MOVOBJ_DIR}/*.png" \
+ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_MOVOBJ_DIR}/*_result.png" \
        -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_MOVOBJ_DIR}/moving_object.mp4
