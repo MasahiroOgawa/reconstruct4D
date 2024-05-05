@@ -15,7 +15,7 @@ INPUT=${1:-${ROOT_DIR}/data/sample}
 OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
-LOG_LEVEL=2
+LOG_LEVEL=1
 IMG_HEIGHT=480
 SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
 
@@ -125,12 +125,8 @@ echo "[INFO] run extract moving objects"
 eval "$(conda shell.bash activate reconstruct4D)"
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
 if [ -n "$(ls -A ${OUTPUT_MOVOBJ_DIR})" ]; then
-       echo "[INFO] moving objects output files already exist."
-       read -p "Do you want to run anyway? (y/n): " yn
-       if [ $yn != "y" ]; then
-              echo "[INFO] skip running extract moving objects."
-              exit 0
-       fi
+       echo "[INFO] moving objects output files already exist. So skip running extract moving objects."
+       exit 0
 fi
 mkdir -p ${OUTPUT_MOVOBJ_DIR}
 python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
