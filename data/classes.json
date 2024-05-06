@@ -2,62 +2,62 @@
     {
         "class_id": 0,
         "class_name": "wall",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 1,
         "class_name": "building",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 2,
         "class_name": "sky",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 3,
         "class_name": "floor",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 4,
         "class_name": "tree",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 5,
         "class_name": "ceiling",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 6,
         "class_name": "road",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 7,
         "class_name": "bed ",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 8,
         "class_name": "windowpane",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 9,
         "class_name": "grass",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 10,
         "class_name": "cabinet",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 11,
         "class_name": "sidewalk",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 12,
@@ -67,27 +67,27 @@
     {
         "class_id": 13,
         "class_name": "earth",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 14,
         "class_name": "door",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 15,
         "class_name": "table",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 16,
         "class_name": "mountain",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 17,
         "class_name": "plant",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 18,
@@ -107,52 +107,52 @@
     {
         "class_id": 21,
         "class_name": "water",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 22,
         "class_name": "painting",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 23,
         "class_name": "sofa",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 24,
         "class_name": "shelf",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 25,
         "class_name": "house",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 26,
         "class_name": "sea",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 27,
         "class_name": "mirror",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 28,
         "class_name": "rug",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 29,
         "class_name": "field",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 30,
         "class_name": "armchair",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 31,
@@ -162,42 +162,42 @@
     {
         "class_id": 32,
         "class_name": "fence",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 33,
         "class_name": "desk",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 34,
         "class_name": "rock",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 35,
         "class_name": "wardrobe",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 36,
         "class_name": "lamp",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 37,
         "class_name": "bathtub",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 38,
         "class_name": "railing",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 39,
         "class_name": "cushion",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 40,
@@ -207,107 +207,107 @@
     {
         "class_id": 41,
         "class_name": "box",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 42,
         "class_name": "column",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 43,
         "class_name": "signboard",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 44,
         "class_name": "chest of drawers",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 45,
         "class_name": "counter",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 46,
         "class_name": "sand",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 47,
         "class_name": "sink",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 48,
         "class_name": "skyscraper",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 49,
         "class_name": "fireplace",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 50,
         "class_name": "refrigerator",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 51,
         "class_name": "grandstand",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 52,
         "class_name": "path",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 53,
         "class_name": "stairs",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 54,
         "class_name": "runway",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 55,
         "class_name": "case",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 56,
         "class_name": "pool table",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 57,
         "class_name": "pillow",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 58,
         "class_name": "screen door",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 59,
         "class_name": "stairway",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 60,
         "class_name": "river",
-        "moving_prob": 1.0
+        "moving_prob": 0.99
     },
     {
         "class_id": 61,
         "class_name": "bridge",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 62,
@@ -317,47 +317,47 @@
     {
         "class_id": 63,
         "class_name": "blind",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 64,
         "class_name": "coffee table",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 65,
         "class_name": "toilet",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 66,
         "class_name": "flower",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 67,
         "class_name": "book",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 68,
         "class_name": "hill",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 69,
         "class_name": "bench",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 70,
         "class_name": "countertop",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 71,
         "class_name": "stove",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 72,
@@ -367,17 +367,17 @@
     {
         "class_id": 73,
         "class_name": "kitchen island",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 74,
         "class_name": "computer",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 75,
         "class_name": "swivel chair",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 76,
@@ -387,17 +387,17 @@
     {
         "class_id": 77,
         "class_name": "bar",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 78,
         "class_name": "arcade machine",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 79,
         "class_name": "hovel",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 80,
@@ -407,12 +407,12 @@
     {
         "class_id": 81,
         "class_name": "towel",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 82,
         "class_name": "light",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 83,
@@ -422,32 +422,32 @@
     {
         "class_id": 84,
         "class_name": "tower",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 85,
         "class_name": "chandelier",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 86,
         "class_name": "awning",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 87,
         "class_name": "streetlight",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 88,
         "class_name": "booth",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 89,
         "class_name": "television receiver",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 90,
@@ -457,7 +457,7 @@
     {
         "class_id": 91,
         "class_name": "dirt track",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 92,
@@ -467,47 +467,47 @@
     {
         "class_id": 93,
         "class_name": "pole",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 94,
         "class_name": "land",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 95,
         "class_name": "bannister",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 96,
         "class_name": "escalator",
-        "moving_prob": 0.05
+        "moving_prob": 0.1
     },
     {
         "class_id": 97,
         "class_name": "ottoman",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 98,
         "class_name": "bottle",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 99,
         "class_name": "buffet",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 100,
         "class_name": "poster",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 101,
         "class_name": "stage",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 102,
@@ -522,7 +522,7 @@
     {
         "class_id": 104,
         "class_name": "fountain",
-        "moving_prob": 1.0
+        "moving_prob": 0.99
     },
     {
         "class_id": 105,
@@ -532,52 +532,52 @@
     {
         "class_id": 106,
         "class_name": "canopy",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 107,
         "class_name": "washer",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 108,
         "class_name": "plaything",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 109,
         "class_name": "swimming pool",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 110,
         "class_name": "stool",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 111,
         "class_name": "barrel",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 112,
         "class_name": "basket",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 113,
         "class_name": "waterfall",
-        "moving_prob": 1.0
+        "moving_prob": 0.99
     },
     {
         "class_id": 114,
         "class_name": "tent",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 115,
         "class_name": "bag",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 116,
@@ -592,7 +592,7 @@
     {
         "class_id": 118,
         "class_name": "oven",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 119,
@@ -602,32 +602,32 @@
     {
         "class_id": 120,
         "class_name": "food",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 121,
         "class_name": "step",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 122,
         "class_name": "tank",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 123,
         "class_name": "trade name",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 124,
         "class_name": "microwave",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 125,
         "class_name": "pot",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 126,
@@ -647,52 +647,52 @@
     {
         "class_id": 129,
         "class_name": "dishwasher",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 130,
         "class_name": "screen",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 131,
         "class_name": "blanket",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 132,
         "class_name": "sculpture",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 133,
         "class_name": "hood",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 134,
         "class_name": "sconce",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 135,
         "class_name": "vase",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 136,
         "class_name": "traffic light",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 137,
         "class_name": "tray",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 138,
         "class_name": "ashcan",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 139,
@@ -702,7 +702,7 @@
     {
         "class_id": 140,
         "class_name": "pier",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 141,
@@ -712,7 +712,7 @@
     {
         "class_id": 142,
         "class_name": "plate",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 143,
@@ -722,17 +722,17 @@
     {
         "class_id": 144,
         "class_name": "bulletin board",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 145,
         "class_name": "shower",
-        "moving_prob": 0.01
+        "moving_prob": 0.05
     },
     {
         "class_id": 146,
         "class_name": "radiator",
-        "moving_prob": 0.0
+        "moving_prob": 0.01
     },
     {
         "class_id": 147,
