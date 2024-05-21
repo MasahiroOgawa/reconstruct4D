@@ -2,6 +2,8 @@
     // IntelliSense を使用して利用可能な属性を学べます。
     // 既存の属性の説明をホバーして表示します。
     // 詳細情報は次を確認してください: https://go.microsoft.com/fwlink/?linkid=830387
+    // You need to activate conda environment by following way.
+    //  ctrl+shift+p -> interpreter -> select contextual-information-separation.
     "version": "0.2.0",
     "configurations": [
         {
@@ -10,12 +12,16 @@
             "request": "launch",
             "program": "${workspaceFolder}/reconstruct4D/ext/unsupervised_detection/test_movobjextractor.py",
             "console": "integratedTerminal",
-            "args": ["--dataset=DAVIS2016", "--batch_size=1", "--test_crop=0.9" 
-            ,"--test_temporal_shift=1"
-            ,"--root_dir=${workspaceFolder}/reconstruct4D/ext/unsupervised_detection/download/DAVIS" 
-            ,"--generate_visualization=True" 
-            ,"--test_save_dir=${workspaceFolder}/reconstruct4D/ext/unsupervised_detection/results/Foels/DAVIS2016"
-            ,"--log_level=4"]
+            "args": [
+                "--dataset=DAVIS2016",
+                "--batch_size=1",
+                "--test_crop=1.0",
+                "--test_temporal_shift=1",
+                "--root_dir=${workspaceFolder}/reconstruct4D/ext/unsupervised_detection/download/DAVIS",
+                "--generate_visualization=True",
+                "--test_save_dir=${workspaceFolder}/reconstruct4D/ext/unsupervised_detection/results/Foels/DAVIS2016",
+                "--log_level=4"
+            ]
         }
     ]
 }
