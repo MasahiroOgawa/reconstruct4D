@@ -10,6 +10,9 @@ set -eu
 # set root directory
 ROOT_DIR=$(dirname "$0")/..
 
+
+# parameters
+####################
 # input image directory or video variables. You can change this.
 INPUT=${1:-${ROOT_DIR}/data/sample}
 OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
@@ -18,8 +21,9 @@ OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
 LOG_LEVEL=1
 IMG_HEIGHT=480
 SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
-
-
+# SEG_MODEL_NAME=upernet_internimage_t_512_160k_ade20k.pth
+SEG_MODEL_NAME=upernet_internimage_xl_640_160k_ade20k.pth
+# SEG_MODEL_NAME=upernet_internimage_h_896_160k_ade20k.pth
 ####################
 
 echo "[INFO] check input is whether a directory or movie."
@@ -42,9 +46,6 @@ OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
 OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
 OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 FLOW_MODEL_NAME=gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
-SEG_MODEL_NAME=upernet_internimage_t_512_160k_ade20k.pth
-SEG_MODEL_NAME=upernet_internimage_xl_640_160k_ade20k.pth
-# SEG_MODEL_NAME=upernet_internimage_h_896_160k_ade20k.pth
 
 
 echo "[INFO] compute optical flow"
