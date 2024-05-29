@@ -21,9 +21,8 @@ OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
 LOG_LEVEL=1
 IMG_HEIGHT=480
 SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
-# SEG_MODEL_NAME=upernet_internimage_t_512_160k_ade20k.pth
+# SEG_MODEL_NAME options = {upernet_internimage_t_512_160k_ade20k.pth, upernet_internimage_xl_640_160k_ade20k.pth, upernet_internimage_h_896_160k_ade20k.pth}
 SEG_MODEL_NAME=upernet_internimage_xl_640_160k_ade20k.pth
-# SEG_MODEL_NAME=upernet_internimage_h_896_160k_ade20k.pth
 ####################
 
 echo "[INFO] check input is whether a directory or movie."
@@ -112,13 +111,6 @@ else
               ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/${SEG_MODEL_NAME%.*}.py  \
               ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/seg/${SEG_MODEL_NAME} \
                --palette ade20k --out ${OUTPUT_SEG_DIR}
-
-       # if you have strong GPU, you can use the following model.
-       # CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/ext/InternImage/segmentation/image_demo.py \
-       #        ${INPUT} \
-       #        ${ROOT_DIR}/ext/InternImage/segmentation/configs/ade20k/mask2former_internimage_h_896_80k_cocostuff2ade20k_ss.py  \
-       #        ${ROOT_DIR}/ext/InternImage/segmentation/checkpoint_dir/seg/mask2former_internimage_h_896_80k_cocostuff2ade20k.pth \
-       #         --palette ade20k --out ${OUTPUT_SEG_DIR}
 fi
 
 
