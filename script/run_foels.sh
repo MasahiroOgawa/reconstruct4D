@@ -21,8 +21,8 @@ OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
 LOG_LEVEL=1
 IMG_HEIGHT=480
 SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
-# SEG_MODEL_NAME options = {upernet_internimage_t_512_160k_ade20k.pth, upernet_internimage_xl_640_160k_ade20k.pth, upernet_internimage_h_896_160k_ade20k.pth}
-SEG_MODEL_NAME=upernet_internimage_xl_640_160k_ade20k.pth
+# SEG_MODEL_NAME options = {upernet_internimage_t_512_160k_ade20k.pth, upernet_internimage_xl_640_160k_ade20k.pth, upernet_internimage_h_896_160k_ade20k.pth, mask_rcnn_internimage_t_fpn_1x_coco.pth}
+SEG_MODEL_NAME=upernet_internimage_t_512_160k_ade20k.pth
 ####################
 
 echo "[INFO] check input is whether a directory or movie."
@@ -45,6 +45,11 @@ OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
 OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
 OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 FLOW_MODEL_NAME=gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
+if SEG_MODEL_NAME=mask_rcnn_internimage_t_fpn_1x_coco.pth; then
+       SEG_CHECKPOINT_DIR=${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det
+else SEG_CHECKPOINT_DIR=${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg
+fi
+
 
 
 echo "[INFO] compute optical flow"
@@ -87,18 +92,20 @@ set +eu
 eval "$(conda shell.bash activate internimage)"
 set -eu
 echo "[INFO] env: $CONDA_DEFAULT_ENV"
-if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/seg/${SEG_MODEL_NAME} ]; then
+if [ ! -f ${SEG_CHECKPOINT_DIR}/${SEG_MODEL_NAME} ]; then
        echo "[INFO] download pretrained model"
-       mkdir -p ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/seg
+       mkdir -p ${SEG_CHECKPOINT_DIR}
        # swith download link by the segmentation model
        # add --content-disposition to prevent adding download=true in the downloded file name.
        case ${SEG_MODEL_NAME} in
               "upernet_internimage_t_512_160k_ade20k.pth")
-                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_t_512_160k_ade20k.pth?download=true -P ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/seg;;
+                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_t_512_160k_ade20k.pth?download=true -P ${SEG_CHECKPOINT_DIR};;
               "upernet_internimage_xl_640_160k_ade20k.pth")
-                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_xl_640_160k_ade20k.pth -P ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/seg;; 
+                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_xl_640_160k_ade20k.pth -P ${SEG_CHECKPOINT_DIR};; 
               "upernet_internimage_h_896_160k_ade20k.pth")
-                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_h_896_160k_ade20k.pth?download=true -P ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/checkpoint_dir/seg;;
+                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_h_896_160k_ade20k.pth?download=true -P ${SEG_CHECKPOINT_DIR};;
+              "mask_rcnn_internimage_t_fpn_1x_coco.pth")
+                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/main/mask_rcnn_internimage_t_fpn_1x_coco.pth?download=true -P ${SEG_CHECKPOINT_DIR};;
            *) echo "[ERROR] unknown segmentation model name: ${SEG_MODEL_NAME}"; exit 1;;
        esac
 fi
