@@ -169,4 +169,5 @@ output/
 output 
 
 # Input data
-data/todaiura
+data/
+!data/sample
