@@ -6,7 +6,7 @@ flowchart LR
     flow --> foe(FoE)
     seg --> foe
     foe --> cam(camera motion)
-    cam --> movpix(moving pixel probability)
+    cam --> movpix(moving object probability)
 
     style flow fill:#3390FF
     style foe fill:#098739

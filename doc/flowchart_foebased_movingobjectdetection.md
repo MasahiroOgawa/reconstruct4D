@@ -14,21 +14,16 @@ flowchart TD
     F --> |2 flow arrows| G(compute FoE as cross point of 2 arrows):::foe
     H --> F
     G --> H(update FoE by RANSAC):::foe
-    H --> |FoE, inliers, outliers, no flow| I{inlier > 90% of ground/building?}:::cam
-    I --> |Yes| S(camera is going forwarding without rotation):::cam
-    S --> J(extract outliers as high probability moving pixels):::movpix
-    I --> |No| T(camera is rotating):::cam
-    T --> K(compute dominant flow angle in ground/building):::movpix
-    N --> Q(extract flow existing pixels as high probability moving pixels):::movpix
-    K --> L(extract undominant flow angle areas \n as high probability moving pixels):::movpix
-    Q --> U(multiply moving pixel probability with prior probability):::movpix
-    L --> U
+    H --> |FoE, inliers, outliers, no flow|J(extract outliers as high probability moving pixels):::movobj
+    N --> Q(extract flow existing pixels as high probability moving pixels):::movobj
+    Q --> U(multiply moving pixel probability with prior probability):::movobj
     J --> U
-    U --> V[final moving pixel probability]:::movpix
+    U --> V[moving pixel probability]:::movobj
+    V --> S[check intersection of semantic segmentation and Instance segmentation]:::movobj
+    S --> T[moving object detection]:::movobj
 
     style A fill:#3390FF
     classDef seg fill:#FF9633 
     classDef foe fill:#098739
     classDef cam fill: #8EA928
-    classDef movpix fill: #3DA98C
-```
+    classDef movobj fill: #3DA98C
