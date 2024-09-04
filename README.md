@@ -13,7 +13,7 @@ poetry install
 
 # run demo
 ```
-./script/run_demo.sh
+./script/run_foels.sh
 ```
 
 # update code
