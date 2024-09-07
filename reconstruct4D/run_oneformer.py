@@ -5,6 +5,7 @@ import requests
 import matplotlib.pyplot as plt
 import torch
 import sys
+import argparse
 
 
 def run_segmentation(image, task_type="panoptic", model_name="shi-labs/oneformer_ade20k_dinat_large"):
@@ -85,16 +86,19 @@ def show_image_comparison(image, predicted_map, segmentation_title):
 
 # run below sample if this file is called as main
 if __name__ == "__main__":
-    # read argument as an input image name. If there is no argument, use default.
-    if len(sys.argv) > 1:
-        # print help message
-        if sys.argv[1] == "-h" or sys.argv[1] == "--help":
-            print("Usage: python run_oneformer.py [your image_path]")
-            print("If no image_path is given, a default image is used.")
-            sys.exit(0)
-        else:
-            image_path = sys.argv[1]
-            image = Image.open(image_path)
+    parser = argparse.ArgumentParser(description="Process an image/image directory with oneFormer.")
+    parser.add_argument("image_path", type=str, nargs="?", default=None, help="Path to the image to process. If not provided, a default image will be used")
+    parser.add_argument("--model_name", type=str, default="shi-labs/oneformer_coco_swin_large", help="The model name to use for segmentation")
+    # model_name = "shi-labs/oneformer_ade20k_swin_tiny"
+    # model_name = "shi-labs/oneformer_coco_swin_large"
+    # model_name = "shi-labs/oneformer_ade20k_swin_large"
+    # model_name = "shi-labs/oneformer_coco_dinat_large"
+    # model_name = "shi-labs/oneformer_ade20k_dinat_large"
+    parser.add_argument("--segmentation_type", type=str, default="panoptic", help="The type of segmentation to perform ('semantic', 'instance', or 'panoptic')")
+    args = parser.parse_args()
+            
+    if args.image_path is not None:
+        image = args.image_path
     else:
         url = "https://huggingface.co/datasets/shi-labs/oneformer_demo/resolve/main/ade20k.jpeg"
         response = requests.get(url, stream=True)
@@ -102,12 +106,6 @@ if __name__ == "__main__":
         image = Image.open(response.raw)
 
     # run segmentation
-    # model_name = "shi-labs/oneformer_ade20k_swin_tiny"
-    model_name = "shi-labs/oneformer_coco_swin_large"
-    # model_name = "shi-labs/oneformer_ade20k_swin_large"
-    # model_name = "shi-labs/oneformer_coco_dinat_large"
-    # model_name = "shi-labs/oneformer_ade20k_dinat_large"
-    segmentation_type = "panoptic"
     predicted_map, segments_info = run_segmentation(
-        image, segmentation_type, model_name)
-    show_image_comparison(image, predicted_map, segmentation_type)
+        image, args.segmentation_type, args.model_name)
+    show_image_comparison(image, predicted_map, args.segmentation_type)
