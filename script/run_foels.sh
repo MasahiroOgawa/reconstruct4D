@@ -64,7 +64,7 @@ if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regref
        mkdir -p ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
        wget https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME} -P ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
 fi
-if [ -n "$(ls -A ${OUTPUT_FLOW_DIR})" ]; then
+if [ -d ${OUTPUT_FLOW_DIR} ] && [ -n "$(ls -A ${OUTPUT_FLOW_DIR})" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
        mkdir -p ${OUTPUT_FLOW_DIR}
@@ -113,7 +113,7 @@ if [ ! -f ${SEG_CHECKPOINT_DIR}/${SEG_MODEL_NAME} ]; then
            *) echo "[ERROR] unknown segmentation model name: ${SEG_MODEL_NAME}"; exit 1;;
        esac
 fi
-if [ -n "$(ls -A ${OUTPUT_SEG_DIR})" ]; then
+if [ -d ${OUTPUT_SEG_DIR} ] && [ -n "$(ls -A ${OUTPUT_SEG_DIR})" ]; then
        echo "[INFO] segmentation output files already exist. Skip running segmentation."
 else
        mkdir -p ${OUTPUT_SEG_DIR}
@@ -155,9 +155,9 @@ python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
 echo "[INFO] creating a segmentation movie (ffmpeg in InternImage conda env doesn't support libx264, so we create it here.)"
 # for segmentation, the image file format is jpg or png. so detect it first.
 IMG_EXT=
-if [ `ls -1 ${OUTPUT_SEG_DIR}/*.jpg 2>/dev/null | wc -l` != 0 ]; then
+if [ $(ls -1 ${OUTPUT_SEG_DIR}/*.jpg 2>/dev/null | wc -l) != 0 ]; then
        IMG_EXT=jpg
-elif [ `ls -1 ${OUTPUT_SEG_DIR}/*.png 2>/dev/null | wc -l` != 0 ]; then
+elif [ $(ls -1 ${OUTPUT_SEG_DIR}/*.png 2>/dev/null | wc -l) != 0 ]; then
        IMG_EXT=png
 else
        echo "[ERROR] no jpg or png image file in ${OUTPUT_SEG_DIR}"

@@ -3,5 +3,5 @@
         "editor.defaultFormatter": "ms-python.autopep8"
     },
     "python.formatting.provider": "none",
-    "cmake.sourceDirectory": "/home/mas/proj/study/u-tokyo/reconstruct4D/reconstruct4D/ext/davis"
+    "cmake.sourceDirectory": "/home/masahiro/proj/study/reconstruct4D/reconstruct4D/ext/davis"
 }
