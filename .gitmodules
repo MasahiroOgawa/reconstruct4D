@@ -1,12 +1,12 @@
 [submodule "unimatch"]
 	path = reconstruct4D/ext/unimatch
 	url = git@github.com:MasahiroOgawa/unimatch.git
-[submodule "ext/InternImage"]
+[submodule "InternImage"]
 	path = reconstruct4D/ext/InternImage
 	url = git@github.com:MasahiroOgawa/InternImage.git
-[submodule "ext/cityscapesScripts"]
+[submodule "cityscapesScripts"]
 	path = reconstruct4D/ext/cityscapesScripts
 	url = https://github.com/mcordts/cityscapesScripts.git
-[submodule "reconstruct4D/ext/unsupervised_detection"]
+[submodule "unsupervised_detection"]
 	path = reconstruct4D/ext/unsupervised_detection
 	url = git@github.com:MasahiroOgawa/unsupervised_detection.git
