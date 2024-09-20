@@ -1,6 +1,7 @@
 {
     "[python]": {
-        "editor.defaultFormatter": "ms-python.autopep8"
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnType": true,
     },
     "python.formatting.provider": "none",
     "cmake.sourceDirectory": "/home/masahiro/proj/study/reconstruct4D/reconstruct4D/ext/davis"
