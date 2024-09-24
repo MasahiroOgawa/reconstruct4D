@@ -10,3 +10,6 @@
 [submodule "unsupervised_detection"]
 	path = reconstruct4D/ext/unsupervised_detection
 	url = git@github.com:MasahiroOgawa/unsupervised_detection.git
+[submodule "reconstruct4D/ext/InternImage"]
+	path = reconstruct4D/ext/InternImage
+	url = git@github.com:MasahiroOgawa/InternImage.git
