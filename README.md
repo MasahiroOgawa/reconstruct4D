@@ -2,13 +2,18 @@
 This is a 4D reconstruction project.
 
 # setup
+Install uv for virtual environment management
 ```
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+```
+
+Set up virtual environment
+```
+uv sync
+source .vev/bin/activate
 conda env create -f reconstruct4D/ext/InternImage/environment.yml
 conda env create -f reconstruct4D/ext/unsupervised_detection/environment.yml
-cd script
-conda env create -f environment.yml
-conda activate reconstruct4D
-poetry install
 ```
 
 # run demo
