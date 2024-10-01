@@ -57,16 +57,17 @@ echo "[INFO] segmentation type: ${SEG_TYPE}"
 
 
 echo "[INFO] compute optical flow"
-eval "$(conda shell.bash activate reconstruct4D)"
-echo "[INFO] env: $CONDA_DEFAULT_ENV" 
-if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth ]; then
-       echo "[INFO] download pretrained model"
-       mkdir -p ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
-       wget https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME} -P ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
-fi
 if [ -d ${OUTPUT_FLOW_DIR} ] && [ -n "$(ls -A ${OUTPUT_FLOW_DIR})" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
+       eval "$(conda shell.bash activate reconstruct4D)"
+       echo "[INFO] env: $CONDA_DEFAULT_ENV" 
+       if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth ]; then
+              echo "[INFO] download pretrained model"
+              mkdir -p ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
+              wget https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME} -P ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
+       fi
+
        mkdir -p ${OUTPUT_FLOW_DIR}
        export OMP_NUM_THREADS=1
        CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
@@ -90,32 +91,33 @@ fi
 
 
 echo "[INFO] run segmentation"
-# to avoid error: "anaconda3/envs/internimage/etc/conda/activate.d/libblas_mkl_activate.sh: 
-# line 1: MKL_INTERFACE_LAYER: unbound variable", we set +u.
-set +eu
-eval "$(conda shell.bash activate internimage)"
-set -eu
-echo "[INFO] env: $CONDA_DEFAULT_ENV"
-if [ ! -f ${SEG_CHECKPOINT_DIR}/${SEG_MODEL_NAME} ]; then
-       echo "[INFO] download pretrained model"
-       mkdir -p ${SEG_CHECKPOINT_DIR}
-       # swith download link by the segmentation model
-       # add --content-disposition to prevent adding download=true in the downloded file name.
-       case ${SEG_MODEL_NAME} in
-              "upernet_internimage_t_512_160k_ade20k.pth")
-                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_t_512_160k_ade20k.pth?download=true -P ${SEG_CHECKPOINT_DIR};;
-              "upernet_internimage_xl_640_160k_ade20k.pth")
-                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_xl_640_160k_ade20k.pth -P ${SEG_CHECKPOINT_DIR};; 
-              "upernet_internimage_h_896_160k_ade20k.pth")
-                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_h_896_160k_ade20k.pth?download=true -P ${SEG_CHECKPOINT_DIR};;
-              "mask_rcnn_internimage_t_fpn_1x_coco.pth")
-                     wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/main/mask_rcnn_internimage_t_fpn_1x_coco.pth?download=true -P ${SEG_CHECKPOINT_DIR};;
-           *) echo "[ERROR] unknown segmentation model name: ${SEG_MODEL_NAME}"; exit 1;;
-       esac
-fi
 if [ -d ${OUTPUT_SEG_DIR} ] && [ -n "$(ls -A ${OUTPUT_SEG_DIR})" ]; then
        echo "[INFO] segmentation output files already exist. Skip running segmentation."
 else
+       # to avoid error: "anaconda3/envs/internimage/etc/conda/activate.d/libblas_mkl_activate.sh: 
+       # line 1: MKL_INTERFACE_LAYER: unbound variable", we set +u.
+       set +eu
+       eval "$(conda shell.bash activate internimage)"
+       set -eu
+       echo "[INFO] env: $CONDA_DEFAULT_ENV"
+       if [ ! -f ${SEG_CHECKPOINT_DIR}/${SEG_MODEL_NAME} ]; then
+              echo "[INFO] download pretrained model"
+              mkdir -p ${SEG_CHECKPOINT_DIR}
+              # swith download link by the segmentation model
+              # add --content-disposition to prevent adding download=true in the downloded file name.
+              case ${SEG_MODEL_NAME} in
+                     "upernet_internimage_t_512_160k_ade20k.pth")
+                            wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_t_512_160k_ade20k.pth?download=true -P ${SEG_CHECKPOINT_DIR};;
+                     "upernet_internimage_xl_640_160k_ade20k.pth")
+                            wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_xl_640_160k_ade20k.pth -P ${SEG_CHECKPOINT_DIR};; 
+                     "upernet_internimage_h_896_160k_ade20k.pth")
+                            wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/fc1e4e7e01c3e7a39a3875bdebb6577a7256ff91/upernet_internimage_h_896_160k_ade20k.pth?download=true -P ${SEG_CHECKPOINT_DIR};;
+                     "mask_rcnn_internimage_t_fpn_1x_coco.pth")
+                            wget --content-disposition https://huggingface.co/OpenGVLab/InternImage/resolve/main/mask_rcnn_internimage_t_fpn_1x_coco.pth?download=true -P ${SEG_CHECKPOINT_DIR};;
+              *) echo "[ERROR] unknown segmentation model name: ${SEG_MODEL_NAME}"; exit 1;;
+              esac
+       fi
+       
        mkdir -p ${OUTPUT_SEG_DIR}
        if [ "$SEG_TYPE" = "instance" ]; then
               CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/image_demo.py \
