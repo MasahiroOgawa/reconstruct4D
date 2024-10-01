@@ -60,8 +60,8 @@ echo "[INFO] compute optical flow"
 if [ -d ${OUTPUT_FLOW_DIR} ] && [ -n "$(ls -A ${OUTPUT_FLOW_DIR})" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
-       eval "$(conda shell.bash activate reconstruct4D)"
-       echo "[INFO] env: $CONDA_DEFAULT_ENV" 
+       source ${ROOT_DIR}/.venv/bin/activate
+       echo "[INFO] env: $VIRTUAL_ENV"
        if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth ]; then
               echo "[INFO] download pretrained model"
               mkdir -p ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
@@ -117,7 +117,7 @@ else
               *) echo "[ERROR] unknown segmentation model name: ${SEG_MODEL_NAME}"; exit 1;;
               esac
        fi
-       
+
        mkdir -p ${OUTPUT_SEG_DIR}
        if [ "$SEG_TYPE" = "instance" ]; then
               CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/image_demo.py \
@@ -139,8 +139,8 @@ fi
 
 
 echo "[INFO] run extract moving objects"
-eval "$(conda shell.bash activate reconstruct4D)"
-echo "[INFO] env: $CONDA_DEFAULT_ENV"
+source ${ROOT_DIR}/.venv/bin/activate
+echo "[INFO] env: $VIRTUAL_ENV"
 if [ -n "$(ls -A ${OUTPUT_MOVOBJ_DIR})" ]; then
        echo "[INFO] moving objects output files already exist. So skip running extract moving objects."
        exit 0
