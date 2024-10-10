@@ -2,6 +2,11 @@
 This is a 4D reconstruction project.
 
 # setup
+clone
+```bash
+git clone git@github.com:MasahiroOgawa/reconstruct4D.git
+git submodule update --init --recursive
+```
 Install uv for virtual environment management
 ```
 curl -LsSf https://astral.sh/uv/install.sh | sh
