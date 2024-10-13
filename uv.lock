@@ -381,6 +381,19 @@ wheels = [
 ]
 
 [[package]]
+name = "imageio"
+version = "2.35.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "pillow" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/82/bf/d0ddda79819405428f40e4bc9245c2b936a3a2b23d83b6e42d83822ef822/imageio-2.35.1.tar.gz", hash = "sha256:4952dfeef3c3947957f6d5dedb1f4ca31c6e509a476891062396834048aeed2a", size = 389686 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1e/b7/02adac4e42a691008b5cfb31db98c190e1fc348d1521b9be4429f9454ed1/imageio-2.35.1-py3-none-any.whl", hash = "sha256:6eb2e5244e7a16b85c10b5c2fe0f7bf961b40fcb9f1a9fd1bd1d2c2f8fb3cd65", size = 315378 },
+]
+
+[[package]]
 name = "importlib-resources"
 version = "6.4.5"
 source = { registry = "https://pypi.org/simple" }
@@ -1092,27 +1105,37 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "flax" },
+    { name = "imageio" },
     { name = "matplotlib" },
     { name = "opencv-python" },
+    { name = "pyyaml" },
     { name = "ruff" },
+    { name = "scipy" },
     { name = "tensorflow" },
+    { name = "termcolor" },
     { name = "torch" },
     { name = "torchaudio" },
     { name = "torchvision" },
     { name = "transformers" },
+    { name = "yacs" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "flax", specifier = ">=0.9.0" },
+    { name = "imageio", specifier = ">=2.35.1" },
     { name = "matplotlib", specifier = ">=3.9.2" },
     { name = "opencv-python", specifier = ">=4.10.0.84" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "ruff", specifier = ">=0.6.7" },
+    { name = "scipy", specifier = ">=1.14.1" },
     { name = "tensorflow", specifier = ">=2.17.0" },
+    { name = "termcolor", specifier = ">=2.4.0" },
     { name = "torch", specifier = ">=2.4.1" },
     { name = "torchaudio", specifier = ">=2.4.1" },
     { name = "torchvision", specifier = ">=0.19.1" },
     { name = "transformers", specifier = ">=4.45.1" },
+    { name = "yacs", specifier = ">=0.1.8" },
 ]
 
 [[package]]
@@ -1671,6 +1694,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/a2/5b/4660897233eb2c8c4de3dc7cefed114c61bacb3c28327e64150dc44ee2f6/wrapt-1.16.0-cp312-cp312-win32.whl", hash = "sha256:685f568fa5e627e93f3b52fda002c7ed2fa1800b50ce51f6ed1d572d8ab3e7fc", size = 35568 },
     { url = "https://files.pythonhosted.org/packages/5c/cc/8297f9658506b224aa4bd71906447dea6bb0ba629861a758c28f67428b91/wrapt-1.16.0-cp312-cp312-win_amd64.whl", hash = "sha256:dcdba5c86e368442528f7060039eda390cc4091bfd1dca41e8046af7c910dda8", size = 37653 },
     { url = "https://files.pythonhosted.org/packages/ff/21/abdedb4cdf6ff41ebf01a74087740a709e2edb146490e4d9beea054b0b7a/wrapt-1.16.0-py3-none-any.whl", hash = "sha256:6906c4100a8fcbf2fa735f6059214bb13b97f75b1a61777fcf6432121ef12ef1", size = 23362 },
+]
+
+[[package]]
+name = "yacs"
+version = "0.1.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/44/3e/4a45cb0738da6565f134c01d82ba291c746551b5bc82e781ec876eb20909/yacs-0.1.8.tar.gz", hash = "sha256:efc4c732942b3103bea904ee89af98bcd27d01f0ac12d8d4d369f1e7a2914384", size = 11100 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/38/4f/fe9a4d472aa867878ce3bb7efb16654c5d63672b86dc0e6e953a67018433/yacs-0.1.8-py3-none-any.whl", hash = "sha256:99f893e30497a4b66842821bac316386f7bd5c4f47ad35c9073ef089aa33af32", size = 14747 },
 ]
 
 [[package]]

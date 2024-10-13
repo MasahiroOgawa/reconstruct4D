@@ -17,6 +17,12 @@ Set up virtual environment
 ```
 uv sync
 source .vev/bin/activate
+```
+
+**Notice:** InternImage, and unsupervised_detection will be dropped in the future, so it still use old conda environment.
+```
+source ${HOME}/anaconda3/bin/activate
+conda init
 conda env create -f reconstruct4D/ext/InternImage/environment.yml
 conda env create -f reconstruct4D/ext/unsupervised_detection/environment.yml
 ```
