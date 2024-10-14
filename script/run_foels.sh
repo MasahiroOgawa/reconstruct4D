@@ -25,6 +25,7 @@ SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians for todai
 SEG_MODEL_NAME=upernet_internimage_xl_640_160k_ade20k.pth
 ####################
 
+# to define INPUT_DIR, we need to do below first.
 echo "[INFO] check input is whether a directory or movie."
 if [ -d ${INPUT} ]; then
        echo "[INFO] input is a directory."
