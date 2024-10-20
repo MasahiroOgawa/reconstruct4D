@@ -20,9 +20,12 @@ OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
 LOG_LEVEL=1
 IMG_HEIGHT=480
-SKIP_FRAMES=0 #279 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
-# SEG_MODEL_NAME options = {upernet_internimage_t_512_160k_ade20k.pth, upernet_internimage_xl_640_160k_ade20k.pth, upernet_internimage_h_896_160k_ade20k.pth, mask_rcnn_internimage_t_fpn_1x_coco.pth}
-SEG_MODEL_NAME=upernet_internimage_xl_640_160k_ade20k.pth
+# FRAME 79 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
+SKIP_FRAMES=0 
+# SEG_MODEL_NAME options = {upernet_internimage_t_512_160k_ade20k.pth, upernet_internimage_xl_640_160k_ade20k.pth, 
+# upernet_internimage_h_896_160k_ade20k.pth, mask_rcnn_internimage_t_fpn_1x_coco.pth}
+# "shi-labs/oneformer_coco_swin_large"
+SEG_MODEL_NAME="upernet_internimage_t_512_160k_ade20k.pth"
 ####################
 
 # to define INPUT_DIR, we need to do below first.
@@ -51,12 +54,15 @@ case ${SEG_MODEL_NAME} in
        "upernet_internimage_xl_640_160k_ade20k.pth" |\
        "upernet_internimage_h_896_160k_ade20k.pth")
               SEG_MODEL_TYPE="internimage"
-              SEG_CHECKPOINT_DIR=${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg
-              SEG_TYPE=semantic;;
+              SEG_CHECKPOINT_DIR="${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg"
+              SEG_TYPE="semantic";;
        "mask_rcnn_internimage_t_fpn_1x_coco.pth")
               SEG_MODEL_TYPE="internimage"
-              SEG_CHECKPOINT_DIR=${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det
-              SEG_TYPE=instance;;
+              SEG_CHECKPOINT_DIR="${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det"
+              SEG_TYPE="instance";;
+       "shi-labs/oneformer_coco_swin_large")
+              SEG_MODEL_TYPE="oneformer"
+              SEG_TYPE="panoptic";;
        *)
               echo "[ERROR] unknown segmentation model name: ${SEG_MODEL_NAME}"
               exit 1;;
