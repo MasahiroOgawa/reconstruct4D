@@ -46,13 +46,22 @@ OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
 OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
 OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 FLOW_MODEL_NAME=gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
-if [ "$SEG_MODEL_NAME" = "mask_rcnn_internimage_t_fpn_1x_coco.pth" ]; then
-       SEG_CHECKPOINT_DIR=${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det
-       SEG_TYPE=instance
-else 
-       SEG_CHECKPOINT_DIR=${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg
-       SEG_TYPE=semantic
-fi
+case ${SEG_MODEL_NAME} in
+       "upernet_internimage_t_512_160k_ade20k.pth" |\
+       "upernet_internimage_xl_640_160k_ade20k.pth" |\
+       "upernet_internimage_h_896_160k_ade20k.pth")
+              SEG_MODEL_TYPE="internimage"
+              SEG_CHECKPOINT_DIR=${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg
+              SEG_TYPE=semantic;;
+       "mask_rcnn_internimage_t_fpn_1x_coco.pth")
+              SEG_MODEL_TYPE="internimage"
+              SEG_CHECKPOINT_DIR=${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det
+              SEG_TYPE=instance;;
+       *)
+              echo "[ERROR] unknown segmentation model name: ${SEG_MODEL_NAME}"
+              exit 1;;
+esac
+
 echo "[INFO] segmentation type: ${SEG_TYPE}"
 
 
