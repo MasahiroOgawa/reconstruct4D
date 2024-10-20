@@ -22,8 +22,8 @@ LOG_LEVEL=1
 IMG_HEIGHT=480
 # FRAME 79 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
 SKIP_FRAMES=0 
-# SEG_MODEL_NAME options = {upernet_internimage_t_512_160k_ade20k.pth, upernet_internimage_xl_640_160k_ade20k.pth, 
-# upernet_internimage_h_896_160k_ade20k.pth, mask_rcnn_internimage_t_fpn_1x_coco.pth}
+# SEG_MODEL_NAME options = {"upernet_internimage_t_512_160k_ade20k.pth", "upernet_internimage_xl_640_160k_ade20k.pth", 
+# "upernet_internimage_h_896_160k_ade20k.pth", "mask_rcnn_internimage_t_fpn_1x_coco.pth"}
 # "shi-labs/oneformer_coco_swin_large"
 SEG_MODEL_NAME="upernet_internimage_t_512_160k_ade20k.pth"
 ####################
@@ -73,11 +73,11 @@ echo "[INFO] segmentation type: ${SEG_TYPE}"
 
 
 echo "[INFO] compute optical flow"
+source ${ROOT_DIR}/.venv/bin/activate
+echo "[INFO] env: $VIRTUAL_ENV"
 if [ -d ${OUTPUT_FLOW_DIR} ] && [ -n "$(ls -A ${OUTPUT_FLOW_DIR})" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
-       source ${ROOT_DIR}/.venv/bin/activate
-       echo "[INFO] env: $VIRTUAL_ENV"
        if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth ]; then
               echo "[INFO] download pretrained model"
               mkdir -p ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
@@ -113,6 +113,7 @@ else
        # to avoid error: "anaconda3/envs/internimage/etc/conda/activate.d/libblas_mkl_activate.sh: 
        # line 1: MKL_INTERFACE_LAYER: unbound variable", we set +u.
        set +eu
+       deactivate
        eval "$(conda shell.bash activate internimage)"
        set -eu
        echo "[INFO] env: $CONDA_DEFAULT_ENV"
@@ -151,6 +152,8 @@ else
               echo "[ERROR] unknown segmentation type: ${SEG_TYPE}"
               exit 1
        fi
+       
+       eval "$(conda shell.bash deactivate)"
 fi
 
 
