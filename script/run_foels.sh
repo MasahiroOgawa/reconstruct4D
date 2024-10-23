@@ -55,21 +55,30 @@ case ${SEG_MODEL_NAME} in
        "upernet_internimage_h_896_160k_ade20k.pth")
               SEG_MODEL_TYPE="internimage"
               SEG_CHECKPOINT_DIR="${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg"
-              SEG_TYPE="semantic";;
+              SEG_TASK_TYPE="semantic";;
        "mask_rcnn_internimage_t_fpn_1x_coco.pth")
               SEG_MODEL_TYPE="internimage"
               SEG_CHECKPOINT_DIR="${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det"
-              SEG_TYPE="instance";;
+              SEG_TASK_TYPE="instance";;
        "shi-labs/oneformer_coco_swin_large")
               SEG_MODEL_TYPE="oneformer"
-              SEG_TYPE="panoptic";;
+              SEG_TASK_TYPE="panoptic";;
        *)
               echo "[ERROR] unknown segmentation model name: ${SEG_MODEL_NAME}"
               exit 1;;
 esac
 
-echo "[INFO] segmentation type: ${SEG_TYPE}"
+deactivate_allenvs() {
+       while [ -n "$VIRTUAL_ENV" ]; do
+              echo "[INFO] deactivate env: $VIRTUAL_ENV"
+              deactivate || conda deactivate
+       done
+       echo "[INFO] deactivate all envs. current env: $VIRTUAL_ENV"
 
+       # remove .venv from PATH
+       PATH=$(echo $PATH | tr ':' '\n' | grep -v "\.venv" | tr '\n' ':' | sed 's/:$//')
+       echo "[INFO] PATH: $PATH"
+}
 
 
 echo "[INFO] compute optical flow"
@@ -110,13 +119,20 @@ echo "[INFO] run segmentation"
 if [ -d ${OUTPUT_SEG_DIR} ] && [ -n "$(ls -A ${OUTPUT_SEG_DIR})" ]; then
        echo "[INFO] segmentation output files already exist. Skip running segmentation."
 else
+       echo "[INFO] activate InternImage conda env"
        # to avoid error: "anaconda3/envs/internimage/etc/conda/activate.d/libblas_mkl_activate.sh: 
        # line 1: MKL_INTERFACE_LAYER: unbound variable", we set +u.
        set +eu
-       deactivate
-       eval "$(conda shell.bash activate internimage)"
+       deactivate_allenvs
+       source $(conda info --base)/etc/profile.d/conda.sh
+       conda activate internimage
+       # eval "$(conda shell.bash activate internimage)"
        set -eu
        echo "[INFO] env: $CONDA_DEFAULT_ENV"
+       # swith python interpretor to the one in the conda env.       
+       PYTHON_INTERPRETER=$(which python)
+       echo "[INFO] python interpretor: $PYTHON_INTERPRETER"
+
        if [ ! -f ${SEG_CHECKPOINT_DIR}/${SEG_MODEL_NAME} ]; then
               echo "[INFO] download pretrained model"
               mkdir -p ${SEG_CHECKPOINT_DIR}
@@ -135,21 +151,22 @@ else
               esac
        fi
 
+       echo "[INFO] run segmentation using: ${SEG_MODEL_TYPE} ${SEG_TASK_TYPE}"
        mkdir -p ${OUTPUT_SEG_DIR}
-       if [ "$SEG_TYPE" = "instance" ]; then
+       if [ "$SEG_TASK_TYPE" = "instance" ]; then
               CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/image_demo.py \
               ${INPUT} \
               ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/configs/coco/${SEG_MODEL_NAME%.*}.py  \
               ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det/${SEG_MODEL_NAME} \
               --out ${OUTPUT_SEG_DIR}
-       elif [ "$SEG_TYPE" = "semantic" ]; then
+       elif [ "$SEG_TASK_TYPE" = "semantic" ]; then
               CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py \
                      ${INPUT} \
                      ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/${SEG_MODEL_NAME%.*}.py  \
                      ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg/${SEG_MODEL_NAME} \
                      --palette ade20k --out ${OUTPUT_SEG_DIR}
        else
-              echo "[ERROR] unknown segmentation type: ${SEG_TYPE}"
+              echo "[ERROR] unknown segmentation task type: ${SEG_TASK_TYPE}"
               exit 1
        fi
        
