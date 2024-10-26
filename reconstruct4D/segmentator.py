@@ -30,8 +30,59 @@ class Segmentator:
     def compute(self, img_name):
         pass
 
+
+    def comp_moving_prob(self):
+        self.moving_prob = np.zeros_like(self.result_mask, dtype=float)
+        for row in range(self.result_mask.shape[0]):
+            for col in range(self.result_mask.shape[1]):
+                class_id = self.result_mask[row, col]
+                self.moving_prob[row, col] = self.classes[class_id]["moving_prob"]
+
     def draw(self, bg_img=None):
-        pass
+        self.bg_img = bg_img
+        self.draw_movingobj_img()
+        self.draw_movingprob_img()
+
+    def draw_movingobj_img(self):
+        self.result_movingmask_img = self.bg_img.copy() // 2
+
+        # draw sky mask as light blue in result_movingobj_img
+        self.result_movingmask_img[self.sky_mask, 0] += 128  # 0 means blue channel
+
+        # draw moving object mask as blighter in result_movingobj_img
+        moving_obj_mask = np.logical_not(
+            np.logical_or(self.sky_mask, self.nonsky_static_mask)
+        )
+        self.result_movingmask_img[moving_obj_mask, :] += 128
+        cv2.putText(
+            self.result_movingmask_img,
+            "moving mask",
+            (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (255, 255, 255),
+            2,
+        )
+
+    def draw_movingprob_img(self):
+        # draw moving probability as jet color in moving_prob_img.
+        self.moving_prob_img = np.zeros(
+            (self.moving_prob.shape[0], self.moving_prob.shape[1], 3), dtype=np.uint8
+        )
+
+        self.moving_prob_img = cv2.applyColorMap(
+            (self.moving_prob * 255).astype(np.uint8), cv2.COLORMAP_JET
+        )
+        cv2.putText(
+            self.moving_prob_img,
+            "prior",
+            (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (255, 255, 255),
+            2,
+        )
+
 
     def load_classes(self):
         classes_file = os.path.join(self.THIS_DIR, "..", "data", "classes.json")
@@ -48,7 +99,7 @@ class Segmentator:
     def dump_classes_with_moving_prob(self):
         """
         name: dump classes with moving probability.
-        usage: Just use this function when you need class files when you change the class names.
+        usage: Just use this function when you need to change the class names in the class file.
         """
         self.class_names = json.load(
             open(os.path.join(self.RESULT_DIR, "class_names.json"), "r")
@@ -110,55 +161,3 @@ class InternImageSegmentator(Segmentator):
                 )
 
         self.comp_moving_prob()
-
-    def comp_moving_prob(self):
-        self.moving_prob = np.zeros_like(self.result_mask, dtype=float)
-        for row in range(self.result_mask.shape[0]):
-            for col in range(self.result_mask.shape[1]):
-                class_id = self.result_mask[row, col]
-                self.moving_prob[row, col] = self.classes[class_id]["moving_prob"]
-
-    def draw(self, bg_img=None):
-        self.bg_img = bg_img
-        self.comp_movingobj_img()
-        self.comp_movingprob_img()
-
-    def comp_movingobj_img(self):
-        self.result_movingmask_img = self.bg_img.copy() // 2
-
-        # draw sky mask as light blue in result_movingobj_img
-        self.result_movingmask_img[self.sky_mask, 0] += 128  # 0 means blue channel
-
-        # draw moving object mask as gray in result_movingobj_img
-        moving_obj_mask = np.logical_not(
-            np.logical_or(self.sky_mask, self.nonsky_static_mask)
-        )
-        self.result_movingmask_img[moving_obj_mask, :] += 128
-        cv2.putText(
-            self.result_movingmask_img,
-            "moving mask",
-            (10, 30),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (255, 255, 255),
-            2,
-        )
-
-    def comp_movingprob_img(self):
-        # draw moving probability as jet color in moving_prob_img.
-        self.moving_prob_img = np.zeros(
-            (self.moving_prob.shape[0], self.moving_prob.shape[1], 3), dtype=np.uint8
-        )
-
-        self.moving_prob_img = cv2.applyColorMap(
-            (self.moving_prob * 255).astype(np.uint8), cv2.COLORMAP_JET
-        )
-        cv2.putText(
-            self.moving_prob_img,
-            "prior",
-            (10, 30),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (255, 255, 255),
-            2,
-        )
