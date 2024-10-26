@@ -21,17 +21,16 @@ class Segmentator:
         self.classes = None
         self.load_classes()
         self.sky_id = None
-        self.comp_sky_id()
+        self._comp_sky_id()
         self.static_ids = []
-        self.comp_static_ids()
+        self._comp_static_ids()
         self.sky_mask = None
         self.nonsky_static_mask = None
 
     def compute(self, img_name):
         pass
 
-
-    def comp_moving_prob(self):
+    def _comp_moving_prob(self):
         self.moving_prob = np.zeros_like(self.result_mask, dtype=float)
         for row in range(self.result_mask.shape[0]):
             for col in range(self.result_mask.shape[1]):
@@ -40,10 +39,10 @@ class Segmentator:
 
     def draw(self, bg_img=None):
         self.bg_img = bg_img
-        self.draw_movingobj_img()
-        self.draw_movingprob_img()
+        self._draw_movingobj_img()
+        self._draw_movingprob_img()
 
-    def draw_movingobj_img(self):
+    def _draw_movingobj_img(self):
         self.result_movingmask_img = self.bg_img.copy() // 2
 
         # draw sky mask as light blue in result_movingobj_img
@@ -64,7 +63,7 @@ class Segmentator:
             2,
         )
 
-    def draw_movingprob_img(self):
+    def _draw_movingprob_img(self):
         # draw moving probability as jet color in moving_prob_img.
         self.moving_prob_img = np.zeros(
             (self.moving_prob.shape[0], self.moving_prob.shape[1], 3), dtype=np.uint8
@@ -116,13 +115,13 @@ class Segmentator:
         self.classes_file = os.path.join(self.THIS_DIR, "..", "data", "classes.json")
         json.dump(self.classes, open(self.classes_file, "w"))
 
-    def comp_sky_id(self):
+    def _comp_sky_id(self):
         for class_dict in self.classes:
             if class_dict["class_name"] == "sky":
                 self.sky_id = class_dict["class_id"]
                 break
 
-    def comp_static_ids(self):
+    def _comp_static_ids(self):
         for class_dict in self.classes:
             if (class_dict["moving_prob"] < self.THRE_STATIC_PROB) and (
                 class_dict["class_id"] != self.sky_id
@@ -160,4 +159,4 @@ class InternImageSegmentator(Segmentator):
                     self.nonsky_static_mask, (self.result_mask == static_id)
                 )
 
-        self.comp_moving_prob()
+        self._comp_moving_prob()
