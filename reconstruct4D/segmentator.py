@@ -121,12 +121,24 @@ class Segmentator:
                 self.sky_id = class_dict["class_id"]
                 break
 
+    def _comp_sky_mask(self):
+        if self.sky_id is not None:
+            self.sky_mask = self.result_mask == self.sky_id
+
     def _comp_static_ids(self):
         for class_dict in self.classes:
             if (class_dict["moving_prob"] < self.THRE_STATIC_PROB) and (
                 class_dict["class_id"] != self.sky_id
             ):
                 self.static_ids.append(class_dict["class_id"])
+
+    def _comp_static_mask(self):
+        if len(self.static_ids) > 0:
+            self.nonsky_static_mask = np.zeros_like(self.result_mask, dtype=bool)
+            for static_id in self.static_ids:
+                self.nonsky_static_mask = np.logical_or(
+                    self.nonsky_static_mask, (self.result_mask == static_id)
+                )
 
 
 class InternImageSegmentator(Segmentator):
@@ -147,16 +159,6 @@ class InternImageSegmentator(Segmentator):
         seg_resultfile = os.path.join(self.RESULT_DIR, f"{imgnum}.npy")
         self.result_mask = np.load(seg_resultfile)
 
-        # compute sky mask
-        if self.sky_id is not None:
-            self.sky_mask = self.result_mask == self.sky_id
-
-        # compute static mask
-        if len(self.static_ids) > 0:
-            self.nonsky_static_mask = np.zeros_like(self.result_mask, dtype=bool)
-            for static_id in self.static_ids:
-                self.nonsky_static_mask = np.logical_or(
-                    self.nonsky_static_mask, (self.result_mask == static_id)
-                )
-
+        self._comp_sky_mask()
+        self._comp_static_mask()
         self._comp_moving_prob()

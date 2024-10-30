@@ -174,11 +174,12 @@ else
                      eval "$(conda shell.bash deactivate)";;
               "oneformer")
                      echo "[INFO] run segmentation using: ${SEG_MODEL_TYPE} ${SEG_TASK_TYPE}"
-                     CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/OneFormer/demo.py \
-                            --input ${INPUT} \
-                            --output ${OUTPUT_SEG_DIR} \
-                            --model ${SEG_MODEL_NAME} \
-                            --task ${SEG_TASK_TYPE};;
+                     CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/oneformersegmentation.py \
+                            --input_dir ${INPUT_DIR} \
+                            --output_dir ${OUTPUT_SEG_DIR} \
+                            --model_name ${SEG_MODEL_NAME} \
+                            --task_type ${SEG_TASK_TYPE} \
+                            --loglevel ${LOG_LEVEL};;
        esac
 fi
 
