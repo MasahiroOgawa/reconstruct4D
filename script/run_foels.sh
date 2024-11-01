@@ -191,6 +191,7 @@ mkdir -p ${OUTPUT_MOVOBJ_DIR}
 python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
        --input_dir ${INPUT_DIR} \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
+       --segment_model_type ${SEG_MODEL_TYPE} \
        --segment_result_dir ${OUTPUT_SEG_DIR} \
        --output_dir ${OUTPUT_MOVOBJ_DIR} \
        --skip_frames ${SKIP_FRAMES} \

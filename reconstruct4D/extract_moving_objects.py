@@ -43,13 +43,21 @@ class MovingObjectExtractor:
         self.optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
         self.undominantflow = opticalflow.UndominantFlowAngleExtractor(
             THRE_FLOWLENGTH, THRE_DOMINANTFLOW_ANGLE, args.loglevel)
-        self.seg = segmentator.InternImageSegmentator(
-            args.segment_result_dir, THRE_STATIC_PROB, args.loglevel)
+        # Segmentator initialization based on the model type
+        if args.segment_model_type == 'internimage':
+            self.seg = segmentator.InternImageSegmentator(
+                args.segment_result_dir, THRE_STATIC_PROB, args.loglevel)
+        elif args.segment_model_type == 'oneformer':
+            self.seg = segmentator.OneFormerSegmentator(
+                args.segment_result_dir, THRE_STATIC_PROB, args.loglevel)
+        else:
+            print(f"[ERROR] unknown segment model type: {args.segment_model_type}")
+            self.seg = None
         self.foe = FoE(THRE_FLOWLENGTH, THRE_INLIER_ANGLE, THRE_INLIER_RATE, THRE_FLOW_EXISTING_RATE,
                        NUM_RANSAC, SAME_FLOWANGLE_MOVING_PROB, SAME_FLOWLENGTH_MOVING_PROB, FLOWARROW_STEP, log_level=args.loglevel)
         self.cur_imgname = None
         self.cur_img = None
-        self.posterior_moving_prob = None
+        self.posterior_moving_prob = None 
 
     def compute(self):
         # process each image
