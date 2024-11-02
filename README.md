@@ -35,11 +35,8 @@ conda env create -f reconstruct4D/ext/unsupervised_detection/environment.yml
 # update code
 ## everyday update for users
 ```
-git pull --recurse-submodules
-( or
 git pull
 git submodule update --init --recursive
-)
 ```
 
 ## everyday update for developers
