@@ -45,10 +45,10 @@ class MovingObjectExtractor:
             THRE_FLOWLENGTH, THRE_DOMINANTFLOW_ANGLE, args.loglevel)
         # Segmentator initialization based on the model type
         if args.segment_model_type == 'internimage':
-            self.seg = segmentator.InternImageSegmentator(
+            self.seg = segmentator.InternImageSegmentatorWrapper(None,
                 args.segment_result_dir, THRE_STATIC_PROB, args.loglevel)
         elif args.segment_model_type == 'oneformer':
-            self.seg = segmentator.OneFormerSegmentator(
+            self.seg = segmentator.OneFormerSegmentatorWrapper("shi-labs/oneformer_coco_swin_large",
                 args.segment_result_dir, THRE_STATIC_PROB, args.loglevel)
         else:
             print(f"[ERROR] unknown segment model type: {args.segment_model_type}")
@@ -177,6 +177,8 @@ if __name__ == '__main__':
                         default='../data/sample', help='input image directory')
     parser.add_argument('--flow_result_dir', type=str,
                         default='../output/sample/flow', help='optical flow result directory')
+    parser.add_argument('--segment_model_type', type=str,
+                        default='internimage', help='segmentation model type: internimage or oneformer')
     parser.add_argument('--segment_result_dir', type=str,
                         default='../output/sample/segment', help='segmentation result directory')
     parser.add_argument('--output_dir', type=str,
@@ -189,5 +191,8 @@ if __name__ == '__main__':
                         default=0, help='skip frames at the beginning')
     args = parser.parse_args()
 
+    print("[INFO] Parameters passed to MovingObjectExtractor:")
+    for key, value in vars(args).items():
+        print(f"{key} = {value}")
     moe = MovingObjectExtractor(args)
     moe.compute()

@@ -6,7 +6,7 @@ from oneformersegmentator import OneFormerSegmentator
 
 
 class Segmentator:
-    def __init__(self, result_dir, thre_static_prob=0.1, log_level=0):
+    def __init__(self, model_name=None, result_dir="result", thre_static_prob=0.1, log_level=0):
         # constants
         self.RESULT_DIR = result_dir
         self.THRE_STATIC_PROB = thre_static_prob
@@ -14,6 +14,7 @@ class Segmentator:
         self.THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
         # variables
+        self.model_name = model_name
         self.result_img = None
         self.result_mask = None
         self.moving_prob = None
@@ -138,17 +139,18 @@ class Segmentator:
             self.nonsky_static_mask = np.zeros_like(self.result_mask, dtype=bool)
             for static_id in self.static_ids:
                 self.nonsky_static_mask = np.logical_or(
-                    self.nonsky_static_mask, (self.result_mask == static_id)get segmentation result
-        imgnum = img_name.split(".")[0]
-        seg_resultfile = os.path.join(self.RESULT_DIR, f"{imgnum}.npy")
-        self.result_mask = np.load(seg_resultfile)
+                    self.nonsky_static_mask, (self.result_mask == static_id)
                 )
 
 
-class InternImageSegmentator(Segmentator):
+class InternImageSegmentatorWrapper(Segmentator):
     # currenly just load the result from already processd directory.
-    def __init__(self, result_dir, thre_static_prob=0.1, log_level=0):
-        super().__init__(result_dir, thre_static_prob, log_level)
+    def __init__(self, model_name=None, result_dir="result", thre_static_prob=0.1, log_level=0):
+        """
+        model_name: InternImageSegmentatorWrapper just load the result from already processed directory.
+                    So this model_name is not used.
+        """
+        super().__init__(model_name, result_dir, thre_static_prob, log_level)
 
     def compute(self, img_name):
         if self.LOG_LEVEL > 0:
@@ -167,9 +169,10 @@ class InternImageSegmentator(Segmentator):
         self._comp_static_mask()
         self._comp_moving_prob()
 
-class OneformerSegmentator(Segmentator):
-    def __init__(self, result_dir, thre_static_prob=0.1, log_level=0):
-        super().__init__(result_dir, thre_static_prob, log_level)
+class OneformerSegmentatorWrapper(Segmentator):
+    def __init__(self, model_name="shi-labs/oneformer_coco_swin_large", result_dir="result", thre_static_prob=0.1, log_level=0):
+        super().__init__(model_name, result_dir, thre_static_prob, log_level)
+        self.task_type = "panoptic"
 
     def compute(self, img_name):
         if self.LOG_LEVEL > 0:
@@ -179,9 +182,7 @@ class OneformerSegmentator(Segmentator):
         image = cv2.imread(img_name)
 
         # run segmentation
-        model_name = "shi-labs/oneformer_coco_swin_large"
-        task_type = "panoptic"
-        oneformer = OneFormerSegmentator(model_name, task_type)
+        oneformer = OneFormerSegmentator(self.model_name, self.task_type)
         self.result_img, segments_info = oneformer.inference(
             image)
 
