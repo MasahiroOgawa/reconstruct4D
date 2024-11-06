@@ -22,6 +22,13 @@ class OneFormerSegmentator:
         self.task_type = task_type
 
     def inference(self, image):
+        """
+        Args: 
+            image (PIL.Image): The image to segment.
+        Returns:
+            PIL.Image: The segmented image.
+            list[dict]: A list of dictionaries containing information about each segment.
+        """
         self.image = image
         inputs = self.processor(images=self.image, task_inputs=[self.task_type], return_tensors="pt")
         with torch.no_grad():
