@@ -169,7 +169,7 @@ class InternImageSegmentatorWrapper(Segmentator):
         self._comp_static_mask()
         self._comp_moving_prob()
 
-class OneformerSegmentatorWrapper(Segmentator):
+class OneFormerSegmentatorWrapper(Segmentator):
     def __init__(self, model_name="shi-labs/oneformer_coco_swin_large", result_dir="result", thre_static_prob=0.1, log_level=0):
         super().__init__(model_name, result_dir, thre_static_prob, log_level)
         self.task_type = "panoptic"
