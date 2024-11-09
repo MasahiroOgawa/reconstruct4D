@@ -48,7 +48,7 @@ class MovingObjectExtractor:
             self.seg = segmentator.InternImageSegmentatorWrapper(None,
                 args.segment_result_dir, THRE_STATIC_PROB, args.loglevel)
         elif args.segment_model_type == 'oneformer':
-            self.seg = segmentator.OneFormerSegmentatorWrapper(args.segment_model_name,
+            self.seg = segmentator.OneFormerSegmentatorWrapper(args.segment_model_name, args.input_dir,
                 args.segment_result_dir, THRE_STATIC_PROB, args.loglevel)
         else:
             print(f"[ERROR] unknown segment model type: {args.segment_model_type}")
@@ -86,7 +86,7 @@ class MovingObjectExtractor:
         # So in the future, we need to compute flow from t-1 to t and overlap it with the current image.
         self.optflow.compute(self.cur_imgname)
 
-        # currently jusr read regmentation result from corresponding image file name.
+        # currently just read segmentation result from corresponding image file name.
         self.seg.compute(self.cur_imgname)
 
         # compute focus of expansion

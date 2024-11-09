@@ -3,12 +3,21 @@ import numpy as np
 import cv2
 import json
 from oneformersegmentator import OneFormerSegmentator
+from PIL import Image
 
 
 class Segmentator:
-    def __init__(self, model_name=None, result_dir="result", thre_static_prob=0.1, log_level=0):
+    def __init__(self, model_name=None, input_dir="../data/sample", result_dir="result", thre_static_prob=0.1, log_level=0):
+        """
+        model_name: segmentation model name. Currently only used for oneformer.
+        input_dir: input image directory .
+        result_dir: result directory where segmentation results are stored.
+        thre_static_prob: threshold of moving probability to determine static objects.
+        log_level: log level. 0: no log, 1: print log, 2: display image, 3: debug with detailed image, 4: debug with detailed image and stop every step.
+        """
         # constants
         self.RESULT_DIR = result_dir
+        self.INPUT_DIR = input_dir
         self.THRE_STATIC_PROB = thre_static_prob
         self.LOG_LEVEL = log_level
         self.THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -144,7 +153,7 @@ class Segmentator:
 
 
 class InternImageSegmentatorWrapper(Segmentator):
-    # currenly just load the result from already processd directory.
+    # currenly just load the result from already processd direwhere input images are stored.ctory.
     def __init__(self, model_name=None, result_dir="result", thre_static_prob=0.1, log_level=0):
         """
         model_name: InternImageSegmentatorWrapper just load the result from already processed directory.
@@ -170,21 +179,24 @@ class InternImageSegmentatorWrapper(Segmentator):
         self._comp_moving_prob()
 
 class OneFormerSegmentatorWrapper(Segmentator):
-    def __init__(self, model_name="shi-labs/oneformer_coco_swin_large", result_dir="result", thre_static_prob=0.1, log_level=0):
-        super().__init__(model_name, result_dir, thre_static_prob, log_level)
+    def __init__(self, model_name="shi-labs/oneformer_coco_swin_large", input_dir="../data/sample", result_dir="result", thre_static_prob=0.1, log_level=0):
+        super().__init__(model_name, input_dir, result_dir, thre_static_prob, log_level)
         self.task_type = "panoptic"
 
     def compute(self, img_name):
         if self.LOG_LEVEL > 0:
             print(f"[INFO] OneformerSegmentator.compute({img_name})")
 
-        # load image
-        image = cv2.imread(img_name)
+        # load PIL image
+        image = Image.open(os.path.join(self.INPUT_DIR, img_name))
 
         # run segmentation
         oneformer = OneFormerSegmentator(self.model_name, self.task_type)
-        self.result_img, segments_info = oneformer.inference(
+        result_pilimg, segments_info = oneformer.inference(
             image)
+        
+        # convert PIL image to opencv image
+        self.result_img = cv2.cvtColor(np.array(result_pilimg).astype(np.uint8), cv2.COLOR_RGB2BGR)
 
         self._comp_sky_mask()
         self._comp_static_mask()
