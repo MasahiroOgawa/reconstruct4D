@@ -7,7 +7,14 @@ from PIL import Image
 
 
 class Segmentator:
-    def __init__(self, model_name=None, input_dir="../data/sample", result_dir="result", thre_static_prob=0.1, log_level=0):
+    def __init__(
+        self,
+        model_name=None,
+        input_dir="../data/sample",
+        result_dir="result",
+        thre_static_prob=0.1,
+        log_level=0,
+    ):
         """
         model_name: segmentation model name. Currently only used for oneformer.
         input_dir: input image directory .
@@ -93,7 +100,6 @@ class Segmentator:
             2,
         )
 
-
     def load_classes(self):
         classes_file = os.path.join(self.THIS_DIR, "..", "data", "classes.json")
         if os.path.exists(classes_file):
@@ -154,7 +160,9 @@ class Segmentator:
 
 class InternImageSegmentatorWrapper(Segmentator):
     # currenly just load the result from already processd direwhere input images are stored.ctory.
-    def __init__(self, model_name=None, result_dir="result", thre_static_prob=0.1, log_level=0):
+    def __init__(
+        self, model_name=None, result_dir="result", thre_static_prob=0.1, log_level=0
+    ):
         """
         model_name: InternImageSegmentatorWrapper just load the result from already processed directory.
                     So this model_name is not used.
@@ -178,8 +186,16 @@ class InternImageSegmentatorWrapper(Segmentator):
         self._comp_static_mask()
         self._comp_moving_prob()
 
+
 class OneFormerSegmentatorWrapper(Segmentator):
-    def __init__(self, model_name="shi-labs/oneformer_coco_swin_large", input_dir="../data/sample", result_dir="result", thre_static_prob=0.1, log_level=0):
+    def __init__(
+        self,
+        model_name="shi-labs/oneformer_coco_swin_large",
+        input_dir="../data/sample",
+        result_dir="result",
+        thre_static_prob=0.1,
+        log_level=0,
+    ):
         super().__init__(model_name, input_dir, result_dir, thre_static_prob, log_level)
         self.task_type = "panoptic"
 
@@ -192,11 +208,12 @@ class OneFormerSegmentatorWrapper(Segmentator):
 
         # run segmentation
         oneformer = OneFormerSegmentator(self.model_name, self.task_type)
-        result_pilimg, segments_info = oneformer.inference(
-            image)
-        
+        result_pilimg, segments_info = oneformer.inference(image)
+
         # convert PIL image to opencv image
-        self.result_img = cv2.cvtColor(np.array(result_pilimg).astype(np.uint8), cv2.COLOR_RGB2BGR)
+        self.result_img = cv2.cvtColor(
+            np.array(result_pilimg).astype(np.uint8), cv2.COLOR_RGB2BGR
+        )
 
         self._comp_sky_mask()
         self._comp_static_mask()
