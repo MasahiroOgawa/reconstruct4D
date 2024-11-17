@@ -161,13 +161,13 @@ class Segmentator:
 class InternImageSegmentatorWrapper(Segmentator):
     # currenly just load the result from already processd direwhere input images are stored.ctory.
     def __init__(
-        self, model_name=None, result_dir="result", thre_static_prob=0.1, log_level=0
+        self, model_name=None, input_dir=None, result_dir="result", thre_static_prob=0.1, log_level=0
     ):
         """
         model_name: InternImageSegmentatorWrapper just load the result from already processed directory.
                     So this model_name is not used.
         """
-        super().__init__(model_name, result_dir, thre_static_prob, log_level)
+        super().__init__(model_name, input_dir, result_dir, thre_static_prob, log_level)
 
     def compute(self, img_name):
         if self.LOG_LEVEL > 0:
