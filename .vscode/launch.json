@@ -40,11 +40,19 @@
             ]
         },
         {
-            "name": "Debug moving run_foels.sh",
+            "name": "Attach to Python script in run_foels.sh",
             "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/script/run_foels.sh",
-            "console": "integratedTerminal"
-        }
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "${workspaceFolder}"
+                }
+            ]
+        },
     ]
 }
