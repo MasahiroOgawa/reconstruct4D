@@ -209,6 +209,7 @@ class OneFormerSegmentatorWrapper(Segmentator):
         # run segmentation
         oneformer = OneFormerSegmentator(self.model_name, self.task_type)
         result_pilimg, segments_info = oneformer.inference(image)
+        self.result_mask = np.array(result_pilimg)
 
         # convert PIL image to opencv image
         self.result_img = cv2.cvtColor(

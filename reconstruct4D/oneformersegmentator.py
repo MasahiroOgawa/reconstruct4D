@@ -21,12 +21,12 @@ class OneFormerSegmentator:
         self.model = OneFormerForUniversalSegmentation.from_pretrained(model_name)
         self.task_type = task_type
 
-    def inference(self, image):
+    def inference(self, image) -> tuple[torch.Tensor, list[dict]]:
         """
         Args: 
             image (PIL.Image): The image to segment.
         Returns:
-            PIL.Image: The segmented image.
+            torch.Tensor: The segmented image.
             list[dict]: A list of dictionaries containing information about each segment.
         """
         self.image = image
