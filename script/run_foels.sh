@@ -26,7 +26,7 @@ SKIP_FRAMES=0
 # SEG_MODEL_NAME options = {"upernet_internimage_t_512_160k_ade20k.pth", "upernet_internimage_xl_640_160k_ade20k.pth", 
 # "upernet_internimage_h_896_160k_ade20k.pth", "mask_rcnn_internimage_t_fpn_1x_coco.pth"}
 # "shi-labs/oneformer_coco_swin_large"
-SEG_MODEL_NAME="shi-labs/oneformer_coco_swin_large"
+SEG_MODEL_NAME="upernet_internimage_t_512_160k_ade20k.pth"
 ####################
 
 # to define INPUT_DIR, we need to do below first.
@@ -47,7 +47,7 @@ fi
 # automatically defined variables from INPUT
 OUTPUT_PARENT_DIR=${OUTPUT_PARENT_DIR}/$(basename ${INPUT_DIR})
 OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
-OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
+OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentationself.result_mask
 OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
 FLOW_MODEL_NAME=gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
 case ${SEG_MODEL_NAME} in

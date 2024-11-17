@@ -50,11 +50,11 @@ class MovingObjectExtractor:
         # Segmentator initialization based on the model type
         if args.segment_model_type == "internimage":
             self.seg = segmentator.InternImageSegmentatorWrapper(
-                model_name=None, 
+                model_name=None,
                 input_dir=None,
-                result_dir=args.segment_result_dir, 
-                thre_static_prob=THRE_STATIC_PROB, 
-                log_level=args.loglevel
+                result_dir=args.segment_result_dir,
+                thre_static_prob=THRE_STATIC_PROB,
+                log_level=args.loglevel,
             )
         elif args.segment_model_type == "oneformer":
             self.seg = segmentator.OneFormerSegmentatorWrapper(

@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import torch
 import numpy as np
 
+
 class OneFormerSegmentator:
     """A class for segmenting images using OneFormer models.
     Args:
@@ -16,37 +17,50 @@ class OneFormerSegmentator:
             - "shi-labs/oneformer_ade20k_dinat_large"
         task_type (str): The type of segmentation task to perform. Choose from 'semantic', 'instance', or 'panoptic'.
     """
-    def __init__(self, model_name="shi-labs/oneformer_coco_swin_large", task_type="panoptic"):
+
+    def __init__(
+        self, model_name="shi-labs/oneformer_coco_swin_large", task_type="panoptic"
+    ):
         self.processor = OneFormerProcessor.from_pretrained(model_name)
         self.model = OneFormerForUniversalSegmentation.from_pretrained(model_name)
         self.task_type = task_type
 
     def inference(self, image) -> tuple[torch.Tensor, list[dict]]:
         """
-        Args: 
+        Args:
             image (PIL.Image): The image to segment.
         Returns:
             torch.Tensor: The segmented image.
             list[dict]: A list of dictionaries containing information about each segment.
         """
         self.image = image
-        inputs = self.processor(images=self.image, task_inputs=[self.task_type], return_tensors="pt")
+        inputs = self.processor(
+            images=self.image, task_inputs=[self.task_type], return_tensors="pt"
+        )
         with torch.no_grad():
             outputs = self.model(**inputs)
 
         if self.task_type == "semantic":
-            self.predicted_map = self.processor.post_process_semantic_segmentation(outputs, target_sizes=[image.size[::-1]])[0]
+            self.predicted_map = self.processor.post_process_semantic_segmentation(
+                outputs, target_sizes=[image.size[::-1]]
+            )[0]
             self.segments_info = None
         elif self.task_type == "instance":
-            prediction = self.processor.post_process_instance_segmentation(outputs, target_sizes=[image.size[::-1]])[0]
+            prediction = self.processor.post_process_instance_segmentation(
+                outputs, target_sizes=[image.size[::-1]]
+            )[0]
             self.predicted_map = prediction["segmentation"]
             self.segments_info = prediction["segments_info"]
         elif self.task_type == "panoptic":
-            prediction = self.processor.post_process_panoptic_segmentation(outputs, target_sizes=[image.size[::-1]])[0]
+            prediction = self.processor.post_process_panoptic_segmentation(
+                outputs, target_sizes=[image.size[::-1]]
+            )[0]
             self.predicted_map = prediction["segmentation"]
             self.segments_info = prediction["segments_info"]
         else:
-            raise ValueError("Invalid task type. Choose from 'semantic', 'instance', or 'panoptic'")
+            raise ValueError(
+                "Invalid task type. Choose from 'semantic', 'instance', or 'panoptic'"
+            )
 
         return self.predicted_map, self.segments_info
 
@@ -55,15 +69,13 @@ class OneFormerSegmentator:
         print(f"segments_info = {self.segments_info}")
         if self.segments_info is not None:
             for segment in self.segments_info:
-                label = self.model.config.id2label[segment['label_id']]
+                label = self.model.config.id2label[segment["label_id"]]
                 print(f"segment id = {segment['id']} : {label}")
-
 
     def print_alllabels(self):
         labels = self.model.config.id2label
         for id, name in labels.items():
             print(f"{id} : {name}")
-
 
     def show(self, with_label: bool = True):
         """Displays the original image and the segmented image side-by-side.
@@ -86,21 +98,22 @@ class OneFormerSegmentator:
         plt.axis("off")
         plt.savefig("oneformer_segm.png")
         plt.show()
-             
+
     def _draw_labels(self):
         for segment in self.segments_info:
-            label = self.model.config.id2label[segment['label_id']]
-            segment_id = segment['id']
-            mask = self.predicted_map == segment_id  # Create a binary mask for the segment
+            label = self.model.config.id2label[segment["label_id"]]
+            segment_id = segment["id"]
+            mask = (
+                self.predicted_map == segment_id
+            )  # Create a binary mask for the segment
             centroid_x, centroid_y = self._calculate_centroid(mask)
             # draw label on image
-            plt.text(centroid_x, centroid_y, label, fontsize=12, color='black')  
-
+            plt.text(centroid_x, centroid_y, label, fontsize=12, color="black")
 
     def _calculate_centroid(self, mask) -> tuple[float, float]:
         """Calculates the centroid of a binary mask.
         Args:
-            mask (np.ndarray or torch.Tensor): The binary mask. 
+            mask (np.ndarray or torch.Tensor): The binary mask.
         Returns:
             tuple[float, float]: The x, y coordinates of the centroid.
         """
