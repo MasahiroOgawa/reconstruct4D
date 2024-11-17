@@ -182,16 +182,6 @@ class InternImageSegmentatorWrapper(Segmentator):
         seg_imgfile = os.path.join(self.RESULT_DIR, img_name)
         self.result_img = cv2.imread(seg_imgfile)
 
-        cv2.putText(
-            self.result_img,
-            "segmentation",
-            (10, 30),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 0, 0),
-            2,
-        )
-
         # get segmentation result
         imgnum = img_name.split(".")[0]
         seg_resultfile = os.path.join(self.RESULT_DIR, f"{imgnum}.npy")
@@ -228,16 +218,6 @@ class OneFormerSegmentatorWrapper(Segmentator):
 
         # convert PIL image to opencv image
         self.result_img = self.create_cv2resimg()
-
-        cv2.putText(
-            self.result_img,
-            "segmentation",
-            (10, 30),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 0, 0),
-            2,
-        )
 
         self._comp_sky_mask()
         self._comp_static_mask()

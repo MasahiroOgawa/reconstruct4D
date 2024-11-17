@@ -128,24 +128,17 @@ class MovingObjectExtractor:
         if self.posterior_moving_prob is None:
             return
 
-        posterior_moving_prob_img = cv2.applyColorMap(
+        self.posterior_moving_prob_img = cv2.applyColorMap(
             np.uint8(self.posterior_moving_prob * 255), cv2.COLORMAP_JET
-        )
-        cv2.putText(
-            posterior_moving_prob_img,
-            "posterior",
-            (10, 30),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (255, 255, 255),
-            2,
         )
 
         # overlay transparently outlier_mask(moving object mask) into input image
         overlay_img = self.cur_img.copy() // 2
         # increase the red channel.
         overlay_img[self.posterior_moving_prob > self.THRE_MOVING_PROB, 2] += 128
-        result_img = overlay_img
+        self.result_img = overlay_img
+
+        self._add_captions()
 
         # combine intermediate images
         self.seg.draw(bg_img=self.cur_img)
@@ -157,13 +150,13 @@ class MovingObjectExtractor:
             [self.seg.moving_prob_img, self.optflow.flow_img, self.foe.foe_camstate_img]
         )
         row3_img = cv2.hconcat(
-            [self.foe.moving_prob_img, posterior_moving_prob_img, result_img]
+            [self.foe.moving_prob_img, self.posterior_moving_prob_img, self.result_img]
         )
         result_comb_img = cv2.vconcat([row1_img, row2_img, row3_img])
         # resize keeping result image aspect ratio
         comb_imgsize = (
             self.RESULTIMG_WIDTH,
-            int(self.RESULTIMG_WIDTH * result_img.shape[0] / result_img.shape[1]),
+            int(self.RESULTIMG_WIDTH * self.result_img.shape[0] / self.result_img.shape[1]),
         )
         result_comb_img = cv2.resize(result_comb_img, comb_imgsize)
 
@@ -181,7 +174,7 @@ class MovingObjectExtractor:
         # create the result image and save it.
         # change file extension to png
         save_imgname = self.cur_imgname.replace(".jpg", "_result.png")
-        cv2.imwrite(f"{args.output_dir}/{save_imgname}", result_img)
+        cv2.imwrite(f"{args.output_dir}/{save_imgname}", self.result_img)
         save_comb_imgname = self.cur_imgname.replace(".jpg", "_result_comb.png")
         cv2.imwrite(f"{args.output_dir}/{save_comb_imgname}", result_comb_img)
 
@@ -202,6 +195,23 @@ class MovingObjectExtractor:
             cv2.imshow("loaded_mask_img", loaded_mask_img)
             cv2.waitKey(1)
 
+    def _add_caption(self, img, caption, color=(0, 0, 0)):
+        cv2.putText(
+            img,
+            caption,
+            (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            color,
+            2,
+        )
+    
+    def _add_captions(self):
+        self._add_caption(self.cur_img, "input")
+        self._add_caption(self.seg.result_img, "segmentation")
+        self._add_caption(self.optflow.flow_img, "optical flow")
+        self._add_caption(self.posterior_moving_prob_img, "posterior")
+        self._add_caption(self.result_img, "result")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="extract moving objects")
