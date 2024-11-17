@@ -18,7 +18,8 @@ INPUT=${1:-${ROOT_DIR}/data/sample}
 OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
-LOG_LEVEL=1
+ # 5: run python debugger.
+LOG_LEVEL=5
 IMG_HEIGHT=480
 # FRAME 79 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
 SKIP_FRAMES=0 
@@ -188,15 +189,20 @@ if [ -n "$(ls -A ${OUTPUT_MOVOBJ_DIR})" ]; then
        exit 0
 fi
 mkdir -p ${OUTPUT_MOVOBJ_DIR}
-python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py \
-       --input_dir ${INPUT_DIR} \
+MOVOBJEXT_OPTS="--input_dir ${INPUT_DIR} \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
        --segment_model_type ${SEG_MODEL_TYPE} \
        --segment_model_name ${SEG_MODEL_NAME} \
        --segment_result_dir ${OUTPUT_SEG_DIR} \
        --output_dir ${OUTPUT_MOVOBJ_DIR} \
        --skip_frames ${SKIP_FRAMES} \
-       --loglevel ${LOG_LEVEL}
+       --loglevel ${LOG_LEVEL}"
+if [ $LOG_LEVEL -ge 5 ]; then
+       python -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJEXT_OPTS}
+else
+       python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJEXT_OPTS}
+fi
+
 
 echo "[INFO] creating a segmentation movie (ffmpeg in InternImage conda env doesn't support libx264, so we create it here.)"
 # for segmentation, the image file format is jpg or png. so detect it first.

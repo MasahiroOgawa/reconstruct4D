@@ -38,6 +38,13 @@
                 "--out",
                 "${workspaceFolder}/output/sample/segmentation"
             ]
+        },
+        {
+            "name": "Debug moving run_foels.sh",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/script/run_foels.sh",
+            "console": "integratedTerminal"
         }
     ]
 }
