@@ -32,6 +32,14 @@ conda env create -f reconstruct4D/ext/unsupervised_detection/environment.yml
 ./script/run_foels.sh
 ```
 
+# Debug 
+set LOG_LEVEL=5 in run_foels.sh, then
+```
+./script/run_foels.sh
+```
+(It will stop at some state.)
+Then in left pane, push debug mark, choose "Attach to Python script in run_foels.sh" configuration, push run mark next to configuration mark. Then, the debugging will start.
+
 # update code
 ## everyday update for users
 ```
