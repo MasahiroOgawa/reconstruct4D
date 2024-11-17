@@ -161,7 +161,12 @@ class Segmentator:
 class InternImageSegmentatorWrapper(Segmentator):
     # currenly just load the result from already processd direwhere input images are stored.ctory.
     def __init__(
-        self, model_name=None, input_dir=None, result_dir="result", thre_static_prob=0.1, log_level=0
+        self,
+        model_name=None,
+        input_dir=None,
+        result_dir="result",
+        thre_static_prob=0.1,
+        log_level=0,
     ):
         """
         model_name: InternImageSegmentatorWrapper just load the result from already processed directory.
@@ -176,6 +181,16 @@ class InternImageSegmentatorWrapper(Segmentator):
         # get segmentation image
         seg_imgfile = os.path.join(self.RESULT_DIR, img_name)
         self.result_img = cv2.imread(seg_imgfile)
+
+        cv2.putText(
+            self.result_img,
+            "segmentation",
+            (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 0, 0),
+            2,
+        )
 
         # get segmentation result
         imgnum = img_name.split(".")[0]
@@ -208,14 +223,26 @@ class OneFormerSegmentatorWrapper(Segmentator):
 
         # run segmentation
         oneformer = OneFormerSegmentator(self.model_name, self.task_type)
-        result_pilimg, segments_info = oneformer.inference(image)
-        self.result_mask = np.array(result_pilimg)
+        result_masktensor, segments_info = oneformer.inference(image)
+        self.result_mask = np.array(result_masktensor)
 
         # convert PIL image to opencv image
-        self.result_img = cv2.cvtColor(
-            np.array(result_pilimg).astype(np.uint8), cv2.COLOR_RGB2BGR
+        self.result_img = self.create_cv2resimg()
+
+        cv2.putText(
+            self.result_img,
+            "segmentation",
+            (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 0, 0),
+            2,
         )
 
         self._comp_sky_mask()
         self._comp_static_mask()
         self._comp_moving_prob()
+
+    def create_cv2resimg(self) -> cv2.Mat:
+        result_masku8 = self.result_mask.astype(np.uint8)
+        return cv2.applyColorMap(result_masku8, cv2.COLORMAP_JET)
