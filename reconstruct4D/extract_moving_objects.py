@@ -138,7 +138,7 @@ class MovingObjectExtractor:
         overlay_img[self.posterior_moving_prob > self.THRE_MOVING_PROB, 2] += 128
         self.result_img = overlay_img
 
-        self._add_captions()
+        self._write_allimgtitles()
 
         # combine intermediate images
         self.seg.draw(bg_img=self.cur_img)
@@ -195,7 +195,7 @@ class MovingObjectExtractor:
             cv2.imshow("loaded_mask_img", loaded_mask_img)
             cv2.waitKey(1)
 
-    def _add_caption(self, img, caption, color=(0, 0, 0)):
+    def _write_imgtitle(self, img, caption, color=(0, 0, 0)):
         cv2.putText(
             img,
             caption,
@@ -206,12 +206,12 @@ class MovingObjectExtractor:
             2,
         )
     
-    def _add_captions(self):
-        self._add_caption(self.cur_img, "input")
-        self._add_caption(self.seg.result_img, "segmentation")
-        self._add_caption(self.optflow.flow_img, "optical flow")
-        self._add_caption(self.posterior_moving_prob_img, "posterior")
-        self._add_caption(self.result_img, "result")
+    def _write_allimgtitles(self):
+        self._write_imgtitle(self.cur_img, "input")
+        self._write_imgtitle(self.seg.result_img, "segmentation")
+        self._write_imgtitle(self.optflow.flow_img, "optical flow")
+        self._write_imgtitle(self.posterior_moving_prob_img, "posterior")
+        self._write_imgtitle(self.result_img, "result")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="extract moving objects")
