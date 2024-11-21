@@ -204,6 +204,9 @@ class OneFormerSegmentatorWrapper(Segmentator):
         super().__init__(model_name, input_dir, result_dir, thre_static_prob, log_level)
         self.task_type = "panoptic"
 
+        self.oneformer = OneFormerSegmentator(self.model_name, self.task_type)
+        self.dump_id_label_json()
+
     def compute(self, img_name):
         if self.LOG_LEVEL > 0:
             print(f"[INFO] OneformerSegmentator.compute({img_name})")
@@ -212,8 +215,7 @@ class OneFormerSegmentatorWrapper(Segmentator):
         image = Image.open(os.path.join(self.INPUT_DIR, img_name))
 
         # run segmentation
-        oneformer = OneFormerSegmentator(self.model_name, self.task_type)
-        result_masktensor, segments_info = oneformer.inference(image)
+        result_masktensor, segments_info = self.oneformer.inference(image)
         self.result_mask = np.array(result_masktensor)
 
         # convert PIL image to opencv image
@@ -226,3 +228,7 @@ class OneFormerSegmentatorWrapper(Segmentator):
     def create_cv2resimg(self) -> cv2.Mat:
         result_masku8 = self.result_mask.astype(np.uint8)
         return cv2.applyColorMap(result_masku8, cv2.COLORMAP_JET)
+
+    def dump_id_label_json(self):
+        id2label = self.oneformer.model.config.id2label
+        json.dump(id2label, open(os.path.join(self.RESULT_DIR,"id2label.json"), "w"))         
