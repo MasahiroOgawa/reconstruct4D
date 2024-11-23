@@ -137,7 +137,7 @@ class Segmentator:
         # append "moving_prob": 0.0 for each content.
         for id, class_name in self.id_classes.items():
             self.class_movprobs.append(
-                {"class_name": class_name, "class_id": id, "moving_prob": 0.0}
+                {"class_name": class_name, "class_id": id, "moving_prob": 0.01}
             )
 
         # save classes with mobing probability
