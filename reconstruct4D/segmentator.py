@@ -153,6 +153,9 @@ class Segmentator:
     def _comp_sky_mask(self):
         if self.sky_id is not None:
             self.sky_mask = self.result_mask == self.sky_id
+        else:
+            self.sky_mask =  np.zeros_like(self.result_mask, dtype=bool)
+            
 
     def _comp_static_ids(self):
         for class_dict in self.class_movprobs:
