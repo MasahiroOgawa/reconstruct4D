@@ -28,6 +28,8 @@ class Segmentator:
         self.THRE_STATIC_PROB = thre_static_prob
         self.LOG_LEVEL = log_level
         self.THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+        self.ID_CLASS_FILENAME = "id_class.json"
+        self.CLASS_MOVPROB_FILENAME = "class_prob.json"
 
         # variables
         self.model_name = model_name
@@ -36,14 +38,16 @@ class Segmentator:
         self.moving_prob = None
         self.moving_prob_img = None
         self.result_movingobj_img = None
-        self.classes = None
-        self.load_classes()
+        self.class_movprobs = None
         self.sky_id = None
-        self._comp_sky_id()
         self.static_ids = []
-        self._comp_static_ids()
         self.sky_mask = None
         self.nonsky_static_mask = None
+
+    def load_prior(self):
+        self._load_class_movprobs()
+        self._comp_sky_id()
+        self._comp_static_ids()
 
     def compute(self, img_name):
         pass
@@ -53,7 +57,7 @@ class Segmentator:
         for row in range(self.result_mask.shape[0]):
             for col in range(self.result_mask.shape[1]):
                 class_id = self.result_mask[row, col]
-                self.moving_prob[row, col] = self.classes[class_id]["moving_prob"]
+                self.moving_prob[row, col] = self.class_movprobs[class_id]["moving_prob"]
 
     def draw(self, bg_img=None):
         self.bg_img = bg_img
@@ -100,14 +104,14 @@ class Segmentator:
             2,
         )
 
-    def load_classes(self):
-        classes_file = os.path.join(self.THIS_DIR, "..", "data", "classes.json")
+    def _load_class_movprobs(self):
+        classes_file = os.path.join(self.THIS_DIR, "..", "data", self.CLASS_MOVPROB_FILENAME)
         if os.path.exists(classes_file):
-            self.classes = json.load(open(classes_file, "r"))
+            self.class_movprobs = json.load(open(classes_file, "r"))
         else:
             self.dump_classes_with_moving_prob()
             print(
-                f"[ERROR] {classes_file} does not exist, so it is created newly in data/classes.json. \
+                f"[ERROR] {classes_file} does not exist, so it is created newly in data/{self.CLASS_MOVPROB_FILENAME}. \
                 Please edit moving probability first."
             )
             exit()
@@ -117,23 +121,31 @@ class Segmentator:
         name: dump classes with moving probability.
         usage: Just use this function when you need to change the class names in the class file.
         """
-        self.class_names = json.load(
-            open(os.path.join(self.RESULT_DIR, "class_names.json"), "r")
+        if(self.class_movprobs is None):
+            if(self.model_name=="shi-labs/oneformer_coco_swin_large"): #oneformer case
+                self.dump_id_class_json()
+            else:
+                print("[ERROR] classes is None. Please set the class names first")
+                exit()
+
+        self.id_classes = json.load(
+            open(os.path.join(self.RESULT_DIR, self.ID_CLASS_FILENAME), "r")
         )
 
         # create combined struct with id, class name and moving probagilities, which is 0 as default.
-        self.classes = []
-        for i, class_name in enumerate(self.class_names):
-            self.classes.append(
-                {"class_name": class_name, "class_id": i, "moving_prob": 0.0}
+        self.class_movprobs = []
+        # append "moving_prob": 0.0 for each content.
+        for id, class_name in self.id_classes.items():
+            self.class_movprobs.append(
+                {"class_name": class_name, "class_id": id, "moving_prob": 0.0}
             )
 
         # save classes with mobing probability
-        self.classes_file = os.path.join(self.THIS_DIR, "..", "data", "classes.json")
-        json.dump(self.classes, open(self.classes_file, "w"))
+        self.class_movprob_file = os.path.join(self.THIS_DIR, "..", "data", self.CLASS_MOVPROB_FILENAME)
+        json.dump(self.class_movprobs, open(self.class_movprob_file, "w"))
 
     def _comp_sky_id(self):
-        for class_dict in self.classes:
+        for class_dict in self.class_movprobs:
             if class_dict["class_name"] == "sky":
                 self.sky_id = class_dict["class_id"]
                 break
@@ -143,7 +155,7 @@ class Segmentator:
             self.sky_mask = self.result_mask == self.sky_id
 
     def _comp_static_ids(self):
-        for class_dict in self.classes:
+        for class_dict in self.class_movprobs:
             if (class_dict["moving_prob"] < self.THRE_STATIC_PROB) and (
                 class_dict["class_id"] != self.sky_id
             ):
@@ -196,16 +208,14 @@ class OneFormerSegmentatorWrapper(Segmentator):
     def __init__(
         self,
         model_name="shi-labs/oneformer_coco_swin_large",
+        task_type="panoptic",
         input_dir="../data/sample",
         result_dir="result",
         thre_static_prob=0.1,
         log_level=0,
     ):
         super().__init__(model_name, input_dir, result_dir, thre_static_prob, log_level)
-        self.task_type = "panoptic"
-
-        self.oneformer = OneFormerSegmentator(self.model_name, self.task_type)
-        self.dump_id_label_json()
+        self.oneformer = OneFormerSegmentator(model_name, task_type)
 
     def compute(self, img_name):
         if self.LOG_LEVEL > 0:
@@ -229,6 +239,6 @@ class OneFormerSegmentatorWrapper(Segmentator):
         result_masku8 = self.result_mask.astype(np.uint8)
         return cv2.applyColorMap(result_masku8, cv2.COLORMAP_JET)
 
-    def dump_id_label_json(self):
+    def dump_id_class_json(self):
         id2label = self.oneformer.model.config.id2label
-        json.dump(id2label, open(os.path.join(self.RESULT_DIR,"id2label.json"), "w"))         
+        json.dump(id2label, open(os.path.join(self.RESULT_DIR, self.ID_CLASS_FILENAME), "w"))         

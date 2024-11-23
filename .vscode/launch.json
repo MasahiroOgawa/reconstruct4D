@@ -6,6 +6,7 @@
     //  ctrl+shift+p -> interpreter -> select contextual-information-separation.
     "version": "0.2.0",
     "configurations": [
+        
         {
             "name": "test_movobjextractor for DAVIS2016 and Foels",
             "type": "debugpy",
@@ -41,7 +42,7 @@
         },
         {
             "name": "Attach to Python script in run_foels.sh",
-            "type": "python",
+            "type": "debugpy",
             "request": "attach",
             "connect": {
                 "host": "localhost",

@@ -193,6 +193,7 @@ MOVOBJEXT_OPTS="--input_dir ${INPUT_DIR} \
        --flow_result_dir ${OUTPUT_FLOW_DIR} \
        --segment_model_type ${SEG_MODEL_TYPE} \
        --segment_model_name ${SEG_MODEL_NAME} \
+       --segment_task_type ${SEG_TASK_TYPE} \
        --segment_result_dir ${OUTPUT_SEG_DIR} \
        --output_dir ${OUTPUT_MOVOBJ_DIR} \
        --skip_frames ${SKIP_FRAMES} \
@@ -212,8 +213,8 @@ if [ $(ls -1 ${OUTPUT_SEG_DIR}/*.jpg 2>/dev/null | wc -l) != 0 ]; then
 elif [ $(ls -1 ${OUTPUT_SEG_DIR}/*.png 2>/dev/null | wc -l) != 0 ]; then
        IMG_EXT=png
 else
-       echo "[ERROR] no jpg or png image file in ${OUTPUT_SEG_DIR}"
-       exit 1
+       echo "[ERROR] no jpg or png image file in ${OUTPUT_SEG_DIR}\
+        So skip creating a segmentation movie."
 fi
 ffmpeg -y -framerate 30  -pattern_type glob -i "${OUTPUT_SEG_DIR}/*.${IMG_EXT}" \
        -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_SEG_DIR}/segmentation.mp4

@@ -59,6 +59,7 @@ class MovingObjectExtractor:
         elif args.segment_model_type == "oneformer":
             self.seg = segmentator.OneFormerSegmentatorWrapper(
                 model_name=args.segment_model_name,
+                task_type=args.segment_task_type,
                 input_dir=args.input_dir,
                 result_dir=args.segment_result_dir,
                 thre_static_prob=THRE_STATIC_PROB,
@@ -67,6 +68,7 @@ class MovingObjectExtractor:
         else:
             print(f"[ERROR] unknown segment model type: {args.segment_model_type}")
             self.seg = None
+        self.seg.load_prior()
         self.foe = FoE(
             THRE_FLOWLENGTH,
             THRE_INLIER_ANGLE,
@@ -232,6 +234,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--segment_model_name", type=str, default=None, help="segmentation model name"
+    )
+    parser.add_argument(
+        "--segment_task_type",
+        type=str,
+        default="panoptic",
+        help="segmentation task type: panoptic or semantic or instance",
     )
     parser.add_argument(
         "--segment_result_dir",
