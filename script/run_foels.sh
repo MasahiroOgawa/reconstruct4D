@@ -216,7 +216,7 @@ else
        echo "[INFO] no jpg or png image file in ${OUTPUT_SEG_DIR}\
         So skip creating a segmentation movie."
 fi
-if [ -z ${OUTPUT_SEG_DIR}/*.${IMG_EXT} ]; then
+if [ $(ls -1 ${OUTPUT_SEG_DIR}/*.${IMG_EXT} 2>/dev/null | wc -l) != 0 ]; then
        ffmpeg -y -framerate 30  -pattern_type glob -i "${OUTPUT_SEG_DIR}/*.${IMG_EXT}" \
        -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_SEG_DIR}/segmentation.mp4
 fi

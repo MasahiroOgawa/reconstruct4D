@@ -178,6 +178,13 @@ class MovingObjectExtractor:
                 return
 
         # create the result image and save it.
+        # save segmentation image if it is not saved yet.
+        if not os.path.exists(f"{args.segment_result_dir}/{self.cur_imgname}"):
+            cv2.imwrite(
+                f"{args.segment_result_dir}/{self.cur_imgname}", self.seg.result_img
+            )
+
+
         # change file extension to png
         save_imgname = self.cur_imgname.replace(".jpg", "_result.png")
         cv2.imwrite(f"{args.output_dir}/{save_imgname}", self.result_img)
