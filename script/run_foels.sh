@@ -213,7 +213,7 @@ if [ $(ls -1 ${OUTPUT_SEG_DIR}/*.jpg 2>/dev/null | wc -l) != 0 ]; then
 elif [ $(ls -1 ${OUTPUT_SEG_DIR}/*.png 2>/dev/null | wc -l) != 0 ]; then
        IMG_EXT=png
 else
-       echo "[ERROR] no jpg or png image file in ${OUTPUT_SEG_DIR}\
+       echo "[INFO] no jpg or png image file in ${OUTPUT_SEG_DIR}\
         So skip creating a segmentation movie."
 fi
 ffmpeg -y -framerate 30  -pattern_type glob -i "${OUTPUT_SEG_DIR}/*.${IMG_EXT}" \

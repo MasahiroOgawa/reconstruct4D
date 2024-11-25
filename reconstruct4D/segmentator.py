@@ -107,18 +107,14 @@ class Segmentator:
         )
 
     def _load_class_movprobs(self):
-        classes_file = os.path.join(
+        class_movprob_fname = os.path.join(
             self.THIS_DIR, "..", "data", self.CLASS_MOVPROB_FILENAME
         )
-        if os.path.exists(classes_file):
-            self.class_movprobs = json.load(open(classes_file, "r"))
-        else:
+        if not os.path.exists(class_movprob_fname):
             self.dump_classes_with_moving_prob()
-            print(
-                f"[ERROR] {classes_file} does not exist, so it is created newly in data/{self.CLASS_MOVPROB_FILENAME}. \
-                Please edit moving probability first."
-            )
-            exit()
+
+        self.class_movprobs = json.load(open(class_movprob_fname, "r"))
+
 
     def dump_classes_with_moving_prob(self):
         """
@@ -131,7 +127,7 @@ class Segmentator:
             ):  # oneformer case
                 self.dump_id_class_json()
             else:
-                print("[ERROR] classes is None. Please set the class names first")
+                print("[ERROR] id-class file is not exist. Please create it first")
                 exit()
 
         self.id_classes = json.load(
