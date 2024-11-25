@@ -150,7 +150,7 @@ class Segmentator:
 
     def _comp_sky_id(self):
         for class_dict in self.class_movprobs:
-            if class_dict["class_name"] == "sky":
+            if class_dict["class_name"] in {"sky", "sky-other-merged"}:
                 self.sky_id = class_dict["class_id"]
                 break
 
