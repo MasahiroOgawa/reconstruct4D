@@ -115,7 +115,6 @@ class Segmentator:
 
         self.class_movprobs = json.load(open(class_movprob_fname, "r"))
 
-
     def dump_classes_with_moving_prob(self):
         """
         name: dump classes with moving probability.
@@ -242,7 +241,9 @@ class OneFormerSegmentatorWrapper(Segmentator):
         self._comp_moving_prob()
 
     def create_cv2resimg(self) -> cv2.Mat:
-        result_masku8 = self.result_mask.astype(np.uint8)
+        result_masku8 = (self.result_mask * 13 % 255).astype(
+            np.uint8
+        )  # 13: prime number in [0,255].
         return cv2.applyColorMap(result_masku8, cv2.COLORMAP_JET)
 
     def dump_id_class_json(self):

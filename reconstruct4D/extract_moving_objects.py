@@ -176,7 +176,7 @@ class MovingObjectExtractor:
             key = cv2.waitKey(1)
             if key == ord("q"):
                 return
-            
+
         # display segmentation result image
         if args.loglevel > 2:
             self.seg.show()
@@ -188,28 +188,31 @@ class MovingObjectExtractor:
                 f"{args.segment_result_dir}/{self.cur_imgname}", self.seg.result_img
             )
 
-
         # change file extension to png
         save_imgname = self.cur_imgname.replace(".jpg", "_result.png")
         cv2.imwrite(f"{args.output_dir}/{save_imgname}", self.result_img)
         save_comb_imgname = self.cur_imgname.replace(".jpg", "_result_comb.png")
         cv2.imwrite(f"{args.output_dir}/{save_comb_imgname}", result_comb_img)
 
-        # save mask image
-        mask_img = np.zeros(self.posterior_moving_prob.shape, dtype=np.float32)
+        # save the posterior mask image
+        posterior_mask_img = np.zeros(
+            self.posterior_moving_prob.shape, dtype=np.float32
+        )
         # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
-        mask_img[self.posterior_moving_prob > self.THRE_MOVING_PROB] = 255.0
-        mask_imgfname = (
+        posterior_mask_img[self.posterior_moving_prob > self.THRE_MOVING_PROB] = 255.0
+        posterior_mask_imgfname = (
             f"{args.output_dir}/{self.cur_imgname.replace('.jpg', '_mask.png')}"
         )
-        cv2.imwrite(mask_imgfname, mask_img)
+        cv2.imwrite(posterior_mask_imgfname, posterior_mask_img)
 
         if args.loglevel > 2:
             # check loaded image type.
-            loaded_mask_img = cv2.imread(mask_imgfname, cv2.IMREAD_UNCHANGED)
-            print(f"loaded_mask_img.shape={loaded_mask_img.shape}")
-            print(f"loaded_mask_img.dtype={loaded_mask_img.dtype}")
-            cv2.imshow("loaded_mask_img", loaded_mask_img)
+            loaded_posterior_mask_img = cv2.imread(
+                posterior_mask_imgfname, cv2.IMREAD_UNCHANGED
+            )
+            print(f"loaded_mask_img.shape={loaded_posterior_mask_img.shape}")
+            print(f"loaded_mask_img.dtype={loaded_posterior_mask_img.dtype}")
+            cv2.imshow("loaded_mask_img", loaded_posterior_mask_img)
             cv2.waitKey(1)
 
     def _write_imgtitle(self, img, caption, color=(0, 0, 0)):
