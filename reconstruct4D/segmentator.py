@@ -57,7 +57,9 @@ class Segmentator:
         for row in range(self.result_mask.shape[0]):
             for col in range(self.result_mask.shape[1]):
                 class_id = self.result_mask[row, col]
-                self.moving_prob[row, col] = self.class_movprobs[class_id]["moving_prob"]
+                self.moving_prob[row, col] = self.class_movprobs[class_id][
+                    "moving_prob"
+                ]
 
     def draw(self, bg_img=None):
         self.bg_img = bg_img
@@ -105,7 +107,9 @@ class Segmentator:
         )
 
     def _load_class_movprobs(self):
-        classes_file = os.path.join(self.THIS_DIR, "..", "data", self.CLASS_MOVPROB_FILENAME)
+        classes_file = os.path.join(
+            self.THIS_DIR, "..", "data", self.CLASS_MOVPROB_FILENAME
+        )
         if os.path.exists(classes_file):
             self.class_movprobs = json.load(open(classes_file, "r"))
         else:
@@ -121,8 +125,10 @@ class Segmentator:
         name: dump classes with moving probability.
         usage: Just use this function when you need to change the class names in the class file.
         """
-        if(self.class_movprobs is None):
-            if(self.model_name=="shi-labs/oneformer_coco_swin_large"): #oneformer case
+        if self.class_movprobs is None:
+            if (
+                self.model_name == "shi-labs/oneformer_coco_swin_large"
+            ):  # oneformer case
                 self.dump_id_class_json()
             else:
                 print("[ERROR] classes is None. Please set the class names first")
@@ -141,7 +147,9 @@ class Segmentator:
             )
 
         # save classes with mobing probability
-        self.class_movprob_file = os.path.join(self.THIS_DIR, "..", "data", self.CLASS_MOVPROB_FILENAME)
+        self.class_movprob_file = os.path.join(
+            self.THIS_DIR, "..", "data", self.CLASS_MOVPROB_FILENAME
+        )
         json.dump(self.class_movprobs, open(self.class_movprob_file, "w"))
 
     def _comp_sky_id(self):
@@ -154,8 +162,7 @@ class Segmentator:
         if self.sky_id is not None:
             self.sky_mask = self.result_mask == self.sky_id
         else:
-            self.sky_mask =  np.zeros_like(self.result_mask, dtype=bool)
-            
+            self.sky_mask = np.zeros_like(self.result_mask, dtype=bool)
 
     def _comp_static_ids(self):
         for class_dict in self.class_movprobs:
@@ -244,4 +251,6 @@ class OneFormerSegmentatorWrapper(Segmentator):
 
     def dump_id_class_json(self):
         id2label = self.oneformer.model.config.id2label
-        json.dump(id2label, open(os.path.join(self.RESULT_DIR, self.ID_CLASS_FILENAME), "w"))         
+        json.dump(
+            id2label, open(os.path.join(self.RESULT_DIR, self.ID_CLASS_FILENAME), "w")
+        )

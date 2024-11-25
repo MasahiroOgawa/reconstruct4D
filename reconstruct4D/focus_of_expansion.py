@@ -103,11 +103,13 @@ class FoE:
                 self.tmp_moving_prob[row, col] = 1.0
                 num_flow_existing_pix_in_static += 1
 
-        if(len(staticpix_indices[0])==0):
+        if len(staticpix_indices[0]) == 0:
             self.mean_flow_length_in_static = 0
             self.flow_existing_rate_in_static = 0
         else:
-            self.mean_flow_length_in_static = sum_flow_length / len(staticpix_indices[0])
+            self.mean_flow_length_in_static = sum_flow_length / len(
+                staticpix_indices[0]
+            )
             self.flow_existing_rate_in_static = num_flow_existing_pix_in_static / len(
                 staticpix_indices[0]
             )

@@ -158,7 +158,11 @@ class MovingObjectExtractor:
         # resize keeping result image aspect ratio
         comb_imgsize = (
             self.RESULTIMG_WIDTH,
-            int(self.RESULTIMG_WIDTH * self.result_img.shape[0] / self.result_img.shape[1]),
+            int(
+                self.RESULTIMG_WIDTH
+                * self.result_img.shape[0]
+                / self.result_img.shape[1]
+            ),
         )
         result_comb_img = cv2.resize(result_comb_img, comb_imgsize)
 
@@ -207,13 +211,14 @@ class MovingObjectExtractor:
             color,
             2,
         )
-    
+
     def _write_allimgtitles(self):
         self._write_imgtitle(self.cur_img, "input")
         self._write_imgtitle(self.seg.result_img, "segmentation")
         self._write_imgtitle(self.optflow.flow_img, "optical flow")
         self._write_imgtitle(self.posterior_moving_prob_img, "posterior")
         self._write_imgtitle(self.result_img, "result")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="extract moving objects")
