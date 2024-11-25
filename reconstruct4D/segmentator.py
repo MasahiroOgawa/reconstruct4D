@@ -250,3 +250,6 @@ class OneFormerSegmentatorWrapper(Segmentator):
         json.dump(
             id2label, open(os.path.join(self.RESULT_DIR, self.ID_CLASS_FILENAME), "w")
         )
+
+    def show(self):
+        self.oneformer.show()

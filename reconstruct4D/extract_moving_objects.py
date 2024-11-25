@@ -176,6 +176,10 @@ class MovingObjectExtractor:
             key = cv2.waitKey(1)
             if key == ord("q"):
                 return
+            
+        # display segmentation result image
+        if args.loglevel > 2:
+            self.seg.show()
 
         # create the result image and save it.
         # save segmentation image if it is not saved yet.
