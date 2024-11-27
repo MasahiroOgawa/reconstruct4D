@@ -62,7 +62,8 @@ class OneFormerSegmentator:
                 "Invalid task type. Choose from 'semantic', 'instance', or 'panoptic'"
             )
 
-        return self.predicted_map, self.segments_info
+        self._create_labelid_mask()
+        return self.labelid_mask, self.segments_info
 
     def print_result(self):
         print(f"predicted_map = {self.predicted_map}")
@@ -102,9 +103,8 @@ class OneFormerSegmentator:
     def _draw_labels(self):
         for segment in self.segments_info:
             label = self.model.config.id2label[segment["label_id"]]
-            segment_id = segment["id"]
             mask = (
-                self.predicted_map == segment_id
+                self.predicted_map == segment["id"]
             )  # Create a binary mask for the segment
             centroid_x, centroid_y = self._calculate_centroid(mask)
             # draw label on image
@@ -122,3 +122,9 @@ class OneFormerSegmentator:
         indices = np.argwhere(mask).astype(float)
         centroid = indices.mean(axis=0)
         return centroid[1], centroid[0]
+
+    def _create_labelid_mask(self):
+        self.labelid_mask = np.zeros_like(self.predicted_map)
+        for segment in self.segments_info:
+            mask = (self.predicted_map == segment["id"])
+            self.labelid_mask[mask] = segment["label_id"]

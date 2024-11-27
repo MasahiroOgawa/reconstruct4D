@@ -177,10 +177,6 @@ class MovingObjectExtractor:
             if key == ord("q"):
                 return
 
-        # display segmentation result image
-        if args.loglevel > 2:
-            self.seg.show()
-
         # create the result image and save it.
         # save segmentation image if it is not saved yet.
         if not os.path.exists(f"{args.segment_result_dir}/{self.cur_imgname}"):

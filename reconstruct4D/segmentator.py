@@ -233,6 +233,9 @@ class OneFormerSegmentatorWrapper(Segmentator):
         result_masktensor, segments_info = self.oneformer.inference(image)
         self.result_mask = np.array(result_masktensor)
 
+        if(self.LOG_LEVEL > 0):
+            self.oneformer.print_result()
+
         # convert PIL image to opencv image
         self.result_img = self.create_cv2resimg()
 
