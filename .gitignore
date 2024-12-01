@@ -170,5 +170,6 @@ output
 *.png
 
 # Input data
-data/
+data/*
 !data/sample
+!data/class_prob.json

@@ -126,5 +126,5 @@ class OneFormerSegmentator:
     def _create_labelid_mask(self):
         self.labelid_mask = np.zeros_like(self.predicted_map)
         for segment in self.segments_info:
-            mask = (self.predicted_map == segment["id"])
+            mask = self.predicted_map == segment["id"]
             self.labelid_mask[mask] = segment["label_id"]

@@ -132,6 +132,8 @@ class Segmentator:
         self.id_classes = json.load(
             open(os.path.join(self.RESULT_DIR, self.ID_CLASS_FILENAME), "r")
         )
+        # convert id from string to int, because id needs to compare as an int later.
+        self.id_classes = {int(k): v for k, v in self.id_classes.items()}
 
         # create combined struct with id, class name and moving probagilities, which is 0 as default.
         self.class_movprobs = []
@@ -233,7 +235,7 @@ class OneFormerSegmentatorWrapper(Segmentator):
         result_masktensor, segments_info = self.oneformer.inference(image)
         self.result_mask = np.array(result_masktensor)
 
-        if(self.LOG_LEVEL > 0):
+        if self.LOG_LEVEL > 0:
             self.oneformer.print_result()
 
         # convert PIL image to opencv image
