@@ -1,9 +1,10 @@
 # ref: https://huggingface.co/learn/computer-vision-course/en/unit3/vision-transformers/oneformer
 
 from transformers import OneFormerProcessor, OneFormerForUniversalSegmentation
+import cv2
 import matplotlib.pyplot as plt
-import torch
 import numpy as np
+import torch
 
 
 class OneFormerSegmentator:
@@ -100,12 +101,20 @@ class OneFormerSegmentator:
         plt.savefig("oneformer_segm.png")
         plt.show()
 
+    def result_cvmat(self) -> cv2.Mat:
+        if self.labelid_mask is None:
+            raise ValueError("labelid_mask is not created.")
+
+        result_masku8 = (self.labelid_mask * 13 % 255).astype(
+            np.uint8
+        )  # 13: prime number in [0,255].
+        return cv2.applyColorMap(result_masku8, cv2.COLORMAP_JET)
+
     def _draw_labels(self):
         for segment in self.segments_info:
             label = self.model.config.id2label[segment["label_id"]]
-            mask = (
-                self.predicted_map == segment["id"]
-            )  # Create a binary mask for the segment
+            # Create a binary mask for the segment
+            mask = self.predicted_map == segment["id"]
             centroid_x, centroid_y = self._calculate_centroid(mask)
             # draw label on image
             plt.text(centroid_x, centroid_y, label, fontsize=12, color="black")

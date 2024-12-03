@@ -232,24 +232,15 @@ class OneFormerSegmentatorWrapper(Segmentator):
         image = Image.open(os.path.join(self.INPUT_DIR, img_name))
 
         # run segmentation
-        result_masktensor, segments_info = self.oneformer.inference(image)
-        self.result_mask = np.array(result_masktensor)
+        self.result_mask, segments_info = self.oneformer.inference(image)
+        self.result_img = self.oneformer.result_cvmat()
 
         if self.LOG_LEVEL > 0:
             self.oneformer.print_result()
 
-        # convert PIL image to opencv image
-        self.result_img = self.create_cv2resimg()
-
         self._comp_sky_mask()
         self._comp_static_mask()
         self._comp_moving_prob()
-
-    def create_cv2resimg(self) -> cv2.Mat:
-        result_masku8 = (self.result_mask * 13 % 255).astype(
-            np.uint8
-        )  # 13: prime number in [0,255].
-        return cv2.applyColorMap(result_masku8, cv2.COLORMAP_JET)
 
     def dump_id_class_json(self):
         id2label = self.oneformer.model.config.id2label
