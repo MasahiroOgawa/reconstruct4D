@@ -108,7 +108,9 @@ class OneFormerSegmentator:
         result_masku8 = (self.labelid_mask * 13 % 255).astype(
             np.uint8
         )  # 13: prime number in [0,255].
-        return cv2.applyColorMap(result_masku8, cv2.COLORMAP_JET)
+        self.res_cvmat = cv2.applyColorMap(result_masku8, cv2.COLORMAP_JET)
+        self._draw_labels()
+        return self.res_cvmat
 
     def _draw_labels(self):
         for segment in self.segments_info:
@@ -118,6 +120,16 @@ class OneFormerSegmentator:
             centroid_x, centroid_y = self._calculate_centroid(mask)
             # draw label on image
             plt.text(centroid_x, centroid_y, label, fontsize=12, color="black")
+            cv2.putText(
+                self.res_cvmat,
+                label,
+                (int(centroid_x), int(centroid_y)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 255, 255),
+                1,
+                cv2.LINE_AA,
+            )
 
     def _calculate_centroid(self, mask) -> tuple[float, float]:
         """Calculates the centroid of a binary mask.
