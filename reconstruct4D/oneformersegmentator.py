@@ -64,7 +64,7 @@ class OneFormerSegmentator:
             )
 
         self._create_labelid_mask()
-        return self.labelid_mask, self.segments_info
+        return self.labelid_mask, self.predicted_map, self.segments_info
 
     def print_result(self):
         print(f"predicted_map = {self.predicted_map}")
@@ -145,7 +145,9 @@ class OneFormerSegmentator:
         return centroid[1], centroid[0]
 
     def _create_labelid_mask(self):
-        self.labelid_mask = np.full_like(self.predicted_map, -1) # -1 means unkown label
+        self.labelid_mask = np.full_like(
+            self.predicted_map, -1
+        )  # -1 means unkown label
         for segment in self.segments_info:
             mask = self.predicted_map == segment["id"]
             self.labelid_mask[mask] = segment["label_id"]

@@ -232,7 +232,9 @@ class OneFormerSegmentatorWrapper(Segmentator):
         image = Image.open(os.path.join(self.INPUT_DIR, img_name))
 
         # run segmentation
-        self.result_mask, segments_info = self.oneformer.inference(image)
+        # result_mask: segmentation result as class id, so semantic segmentation.
+        # id_mask: segmentation result as instance id, so instance segmentation.
+        self.result_mask, self.id_mask, segments_info = self.oneformer.inference(image)
         self.result_img = self.oneformer.result_cvmat()
 
         if self.LOG_LEVEL > 0:
