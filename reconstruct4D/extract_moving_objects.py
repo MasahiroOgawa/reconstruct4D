@@ -82,7 +82,7 @@ class MovingObjectExtractor:
         )
         self.cur_imgname = None
         self.cur_img = None
-        self.posterior_moving_prob = None
+        self.posterior_movpix_prob = None
 
     def compute(self):
         # process each image
@@ -124,20 +124,20 @@ class MovingObjectExtractor:
         #     self.foe.moving_prob = self.undominantflow.undominant_flow_prob
 
         # compute posterior probability of moving objects
-        self.posterior_moving_prob = self.seg.moving_prob * self.foe.moving_prob
+        self.posterior_movpix_prob = self.seg.moving_prob * self.foe.moving_prob
 
     def draw(self) -> None:
-        if self.posterior_moving_prob is None:
+        if self.posterior_movpix_prob is None:
             return
 
-        self.posterior_moving_prob_img = cv2.applyColorMap(
-            np.uint8(self.posterior_moving_prob * 255), cv2.COLORMAP_JET
+        self.posterior_movpix_prob_img = cv2.applyColorMap(
+            np.uint8(self.posterior_movpix_prob * 255), cv2.COLORMAP_JET
         )
 
         # overlay transparently outlier_mask(moving object mask) into input image
         overlay_img = self.cur_img.copy() // 2
         # increase the red channel.
-        overlay_img[self.posterior_moving_prob > self.THRE_MOVING_PROB, 2] += 128
+        overlay_img[self.posterior_movpix_prob > self.THRE_MOVING_PROB, 2] += 128
         self.result_img = overlay_img
 
         self._write_allimgtitles()
@@ -152,7 +152,7 @@ class MovingObjectExtractor:
             [self.seg.moving_prob_img, self.optflow.flow_img, self.foe.foe_camstate_img]
         )
         row3_img = cv2.hconcat(
-            [self.foe.moving_prob_img, self.posterior_moving_prob_img, self.result_img]
+            [self.foe.moving_prob_img, self.posterior_movpix_prob_img, self.result_img]
         )
         result_comb_img = cv2.vconcat([row1_img, row2_img, row3_img])
         # resize keeping result image aspect ratio
@@ -192,10 +192,10 @@ class MovingObjectExtractor:
 
         # save the posterior mask image
         posterior_mask_img = np.zeros(
-            self.posterior_moving_prob.shape, dtype=np.float32
+            self.posterior_movpix_prob.shape, dtype=np.float32
         )
         # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
-        posterior_mask_img[self.posterior_moving_prob > self.THRE_MOVING_PROB] = 255.0
+        posterior_mask_img[self.posterior_movpix_prob > self.THRE_MOVING_PROB] = 255.0
         posterior_mask_imgfname = (
             f"{args.output_dir}/{self.cur_imgname.replace('.jpg', '_mask.png')}"
         )
@@ -226,7 +226,7 @@ class MovingObjectExtractor:
         self._write_imgtitle(self.cur_img, "input")
         self._write_imgtitle(self.seg.result_img, "segmentation")
         self._write_imgtitle(self.optflow.flow_img, "optical flow")
-        self._write_imgtitle(self.posterior_moving_prob_img, "posterior")
+        self._write_imgtitle(self.posterior_movpix_prob_img, "posterior")
         self._write_imgtitle(self.result_img, "result")
 
 
