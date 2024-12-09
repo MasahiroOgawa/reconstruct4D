@@ -31,6 +31,8 @@ class MovingObjectExtractor:
         SAME_FLOWANGLE_MOVING_PROB = 0.2
         # minimum moving probability even when the flow length is the same with background.
         SAME_FLOWLENGTH_MOVING_PROB = 0.4
+        # in moving pixel region, it is considered as moving object if the same object id exists over this rate.
+        self.THRE_MOVINGOBJ_AREA_RATE = 0.2
 
         # variables
         self.imgfiles = sorted(
@@ -119,6 +121,9 @@ class MovingObjectExtractor:
 
         # compute posterior probability of moving pixels
         self.posterior_movpix_prob = self.seg.moving_prob * self.foe.moving_prob
+        self.moving_pix_mask = self.posterior_movpix_prob > self.THRE_MOVING_PROB
+
+        self._compute_moving_obj_mask()
 
     def draw(self) -> None:
         if self.posterior_movpix_prob is None:
@@ -131,7 +136,8 @@ class MovingObjectExtractor:
         # overlay transparently outlier_mask(moving object mask) into input image
         overlay_img = self.cur_img.copy() // 2
         # increase the red channel.
-        overlay_img[self.posterior_movpix_prob > self.THRE_MOVING_PROB, 2] += 128
+        overlay_img[self.moving_obj_mask == 255, 2] += 128
+        # overlay_img[self.posterior_movpix_prob > self.THRE_MOVING_PROB, 2] += 128
         self.result_img = overlay_img
 
         self._write_allimgtitles()
@@ -222,6 +228,32 @@ class MovingObjectExtractor:
         self._write_imgtitle(self.optflow.flow_img, "optical flow")
         self._write_imgtitle(self.posterior_movpix_prob_img, "posterior")
         self._write_imgtitle(self.result_img, "result")
+
+    def _compute_moving_obj_mask(self):
+        """
+        Compute moving object mask based on the posterior probability of moving pixels.
+        Moving object is defined as segmented object which has some moving pixel area. The detail definition is below.
+        In a moving pixels connected region, if the same object id exists over thresold are percentage, the object is considered as moving object.
+        object id can get from seg.id_mask, which is torch.tensor.
+        """
+        self.moving_obj_mask = np.zeros_like(self.moving_pix_mask, dtype=np.uint8)
+        # find connected regions of moving pixels
+        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+            self.moving_pix_mask.astype(np.uint8), connectivity=8
+        )
+        # compute moving object mask
+        for label in range(1, num_labels):
+            label_mask = labels == label
+            label_area = stats[label, cv2.CC_STAT_AREA]
+            # get object id in the label region
+            obj_ids, obj_areas = np.unique(
+                self.seg.id_mask[label_mask], return_counts=True
+            )
+            # get the object id which has the maximum area in the label region
+            max_area_obj_id = obj_ids[np.argmax(obj_areas)]
+            max_area = np.max(obj_areas)
+            if max_area / label_area > self.THRE_MOVINGOBJ_AREA_RATE:
+                self.moving_obj_mask[label_mask] = 255
 
 
 if __name__ == "__main__":
