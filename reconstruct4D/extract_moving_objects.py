@@ -117,13 +117,7 @@ class MovingObjectExtractor:
             self.optflow.flow, self.seg.sky_mask, self.seg.nonsky_static_mask
         )
 
-        # # stopping erea is defined as foe.inlier_mask[row, col] = 0
-        # if self.foe.state == CameraState.ROTATING:
-        #     self.undominantflow.compute(
-        #         self.optflow.flow, self.seg.nonsky_static_mask)
-        #     self.foe.moving_prob = self.undominantflow.undominant_flow_prob
-
-        # compute posterior probability of moving objects
+        # compute posterior probability of moving pixels
         self.posterior_movpix_prob = self.seg.moving_prob * self.foe.moving_prob
 
     def draw(self) -> None:
