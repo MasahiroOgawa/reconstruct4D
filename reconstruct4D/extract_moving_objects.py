@@ -136,7 +136,7 @@ class MovingObjectExtractor:
         # overlay transparently outlier_mask(moving object mask) into input image
         overlay_img = self.cur_img.copy() // 2
         # increase the red channel.
-        overlay_img[self.moving_obj_mask == 255, 2] += 128
+        overlay_img[self.moving_obj_mask == 1, 2] += 128
         # overlay_img[self.posterior_movpix_prob > self.THRE_MOVING_PROB, 2] += 128
         self.result_img = overlay_img
 
@@ -243,6 +243,7 @@ class MovingObjectExtractor:
         )
         # compute moving object mask
         for label in range(1, num_labels):
+            # extract current label area mask
             label_mask = labels == label
             label_area = stats[label, cv2.CC_STAT_AREA]
             # get object id in the label region
@@ -253,7 +254,9 @@ class MovingObjectExtractor:
             max_area_obj_id = obj_ids[np.argmax(obj_areas)]
             max_area = np.max(obj_areas)
             if max_area / label_area > self.THRE_MOVINGOBJ_AREA_RATE:
-                self.moving_obj_mask[label_mask] = 255
+                self.moving_obj_mask = (
+                    self.seg.id_mask == max_area_obj_id
+                ) | self.moving_obj_mask
 
 
 if __name__ == "__main__":
