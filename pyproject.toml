@@ -1,7 +1,7 @@
 [project]
 name = "reconstruct4d"
-version = "0.1.1"
-description = "Switch to OneFormer"
+version = "0.2"
+description = "output moving object mask, not moving pix"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
