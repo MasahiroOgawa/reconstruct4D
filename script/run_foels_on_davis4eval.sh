@@ -26,6 +26,7 @@ else
 fi
 
 
+echo "[INFO] run foels on davis."
 for DATA_DIR in ${ROOT_DATA_DIR}/*
 do
     echo "[INFO] read DATA_DIR=${DATA_DIR}"

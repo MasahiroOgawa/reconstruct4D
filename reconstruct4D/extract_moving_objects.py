@@ -121,7 +121,7 @@ class MovingObjectExtractor:
 
         # compute posterior probability of moving pixels
         self.posterior_movpix_prob = self.seg.moving_prob * self.foe.moving_prob
-        self.moving_pix_mask = self.posterior_movpix_prob > self.THRE_MOVING_PROB
+        self.posterior_movpix_mask = self.posterior_movpix_prob > self.THRE_MOVING_PROB
 
         self._compute_moving_obj_mask()
 
@@ -137,7 +137,6 @@ class MovingObjectExtractor:
         overlay_img = self.cur_img.copy() // 2
         # increase the red channel.
         overlay_img[self.moving_obj_mask == 1, 2] += 128
-        # overlay_img[self.posterior_movpix_prob > self.THRE_MOVING_PROB, 2] += 128
         self.result_img = overlay_img
 
         self._write_allimgtitles()
@@ -191,11 +190,8 @@ class MovingObjectExtractor:
         cv2.imwrite(f"{args.output_dir}/{save_comb_imgname}", result_comb_img)
 
         # save the posterior mask image
-        posterior_mask_img = np.zeros(
-            self.posterior_movpix_prob.shape, dtype=np.float32
-        )
         # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
-        posterior_mask_img[self.posterior_movpix_prob > self.THRE_MOVING_PROB] = 255.0
+        posterior_mask_img = self.moving_obj_mask * 255
         posterior_mask_imgfname = (
             f"{args.output_dir}/{self.cur_imgname.replace('.jpg', '_mask.png')}"
         )
@@ -211,7 +207,7 @@ class MovingObjectExtractor:
             cv2.imshow("loaded_mask_img", loaded_posterior_mask_img)
             cv2.waitKey(1)
 
-    def _write_imgtitle(self, img, caption, color=(0, 0, 0)):
+    def _write_imgtitle(self, img, caption, color=(255, 255, 255)):
         cv2.putText(
             img,
             caption,
@@ -236,10 +232,10 @@ class MovingObjectExtractor:
         In a moving pixels connected region, if the same object id exists over thresold are percentage, the object is considered as moving object.
         object id can get from seg.id_mask, which is torch.tensor.
         """
-        self.moving_obj_mask = np.zeros_like(self.moving_pix_mask, dtype=np.uint8)
+        self.moving_obj_mask = np.zeros_like(self.posterior_movpix_mask, dtype=np.uint8)
         # find connected regions of moving pixels
         num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-            self.moving_pix_mask.astype(np.uint8), connectivity=8
+            self.posterior_movpix_mask.astype(np.uint8), connectivity=8
         )
         # compute moving object mask
         for label in range(1, num_labels):
@@ -250,13 +246,14 @@ class MovingObjectExtractor:
             obj_ids, obj_areas = np.unique(
                 self.seg.id_mask[label_mask], return_counts=True
             )
-            # get the object id which has the maximum area in the label region
-            max_area_obj_id = obj_ids[np.argmax(obj_areas)]
-            max_area = np.max(obj_areas)
-            if max_area / label_area > self.THRE_MOVINGOBJ_AREA_RATE:
-                self.moving_obj_mask = (
-                    self.seg.id_mask == max_area_obj_id
-                ) | self.moving_obj_mask
+            # get the object id which has over threshold area in the label region.
+            dominant_obj_ids = obj_ids[
+                obj_areas > self.THRE_MOVINGOBJ_AREA_RATE * label_area
+            ]
+            # update moving object mask
+            self.moving_obj_mask = (
+                np.isin(self.seg.id_mask, dominant_obj_ids) | self.moving_obj_mask
+            )
 
 
 if __name__ == "__main__":
