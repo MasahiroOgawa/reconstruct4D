@@ -11,5 +11,15 @@ if [ ! -d "${ROOT_DIR}/output/davis" ]; then
     ${ROOT_DIR}/script/run_foels_on_davis4eval.sh
 fi
 
+echo "[INFO] deactivate current uv venv first. otherwise, conda env will be hide."
+if [ -z "${VIRTUAL_ENV}" ]; then
+    echo "[INFO] No virtualenv activated."
+else
+    echo "[INFO] deactivate current uv venv: $VIRTUAL_ENV"
+    PATH=$(echo $PATH | tr ':' '\n' | grep -v "$VIRTUAL_ENV" | tr '\n' ':')
+    unset VIRTUAL_ENV
+fi
+
+
 # run eval
 ${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/scripts/test_DAVIS2016_foels.sh
