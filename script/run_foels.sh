@@ -19,7 +19,7 @@ OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
  # 5: run python debugger. push F5 after running the script.
-LOG_LEVEL=3
+LOG_LEVEL=1
 IMG_HEIGHT=480
 # FRAME 79 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
 SKIP_FRAMES=0 
@@ -225,4 +225,7 @@ echo "[INFO] creating a final movie"
 ffmpeg -y -framerate 30  -pattern_type glob -i "${OUTPUT_MOVOBJ_DIR}/*_result.png" \
        -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_MOVOBJ_DIR}/moving_object.mp4
 
-vlc ${OUTPUT_MOVOBJ_DIR}/moving_object.mp4
+if [ $LOG_LEVEL -ge 4 ]; then
+       echo "[INFO] display the final movie"
+       vlc ${OUTPUT_MOVOBJ_DIR}/moving_object.mp4
+fi
