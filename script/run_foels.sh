@@ -85,7 +85,7 @@ deactivate_allenvs() {
 echo "[INFO] compute optical flow"
 source ${ROOT_DIR}/.venv/bin/activate
 echo "[INFO] env: $VIRTUAL_ENV"
-if [ -d ${OUTPUT_FLOW_DIR} ] && [ -n "$(ls -A ${OUTPUT_FLOW_DIR})" ]; then
+if [ -d ${OUTPUT_FLOW_DIR} ] && [ -n "$(ls -A ${OUTPUT_FLOW_DIR}/*.mp4)" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
        if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth ]; then
@@ -117,7 +117,7 @@ fi
 
 
 echo "[INFO] run segmentation"
-if [ -d ${OUTPUT_SEG_DIR} ] && [ -n "$(ls -A ${OUTPUT_SEG_DIR})" ]; then
+if [ -d ${OUTPUT_SEG_DIR} ] && [ -n "$(ls -A ${OUTPUT_SEG_DIR}/*.mp4)" ]; then
        echo "[INFO] segmentation output files already exist. Skip running segmentation."
 else
        mkdir -p ${OUTPUT_SEG_DIR}
@@ -184,7 +184,7 @@ fi
 echo "[INFO] run extract moving objects"
 source ${ROOT_DIR}/.venv/bin/activate
 echo "[INFO] env: $VIRTUAL_ENV"
-if [ -n "$(ls -A ${OUTPUT_MOVOBJ_DIR})" ]; then
+if [ -n "$(ls -A ${OUTPUT_MOVOBJ_DIR}/*.mp4)" ]; then
        echo "[INFO] moving objects output files already exist. So skip running extract moving objects."
        exit 0
 fi

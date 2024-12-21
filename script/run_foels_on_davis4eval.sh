@@ -32,3 +32,5 @@ do
     echo "[INFO] read DATA_DIR=${DATA_DIR}"
     $ROOT_DIR/script/run_foels.sh $DATA_DIR ${ROOT_DIR}/output/davis
 done
+
+echo "[INFO] all jobs are done."
