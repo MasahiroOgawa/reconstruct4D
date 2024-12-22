@@ -286,7 +286,7 @@ class FoE:
             else:
                 num_flow_existingpix += 1
 
-                if self.LOG_LEVEL > 3:
+                if self.LOG_LEVEL > 5:
                     LENGTH_FACTOR = 10
                     foe_flow_img = self.intermediate_foe_img.copy()
                     cv2.arrowedLine(
@@ -320,6 +320,13 @@ class FoE:
                 # count up inlier if the angle is lower than the threshold.
                 if cos_foe_flow > self.THRE_COS_INLIER:
                     num_inlier += 1
+                    # add inlier foe2pt vector to matrix as a row vector
+                    if num_inlier == 1:
+                        self.inlier_foe2pt_mat = foe2pt
+                    else:
+                        self.inlier_foe2pt_mat = np.vstack(
+                            (self.inlier_foe2pt_mat, foe2pt)
+                        )
 
         if self.flow_existing_rate_in_static == 0:
             self.inlier_rate = 0

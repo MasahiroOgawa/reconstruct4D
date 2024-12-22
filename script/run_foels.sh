@@ -19,7 +19,8 @@ OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
  # 5: run python debugger. push F5 after running the script.
-LOG_LEVEL=1
+ # 6: run python debugger and display super verbose image.
+LOG_LEVEL=5
 IMG_HEIGHT=480
 # FRAME 79 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
 SKIP_FRAMES=0 
@@ -68,6 +69,22 @@ case ${SEG_MODEL_NAME} in
               echo "[ERROR] unknown segmentation model name: ${SEG_MODEL_NAME}"
               exit 1;;
 esac
+
+# print variables
+if [ $LOG_LEVEL -ge 1 ]; then
+       echo "[INFO] INPUT_DIR: ${INPUT_DIR}"
+       echo "[INFO] OUTPUT_PARENT_DIR: ${OUTPUT_PARENT_DIR}"
+       echo "[INFO] OUTPUT_FLOW_DIR: ${OUTPUT_FLOW_DIR}"
+       echo "[INFO] OUTPUT_SEG_DIR: ${OUTPUT_SEG_DIR}"
+       echo "[INFO] OUTPUT_MOVOBJ_DIR: ${OUTPUT_MOVOBJ_DIR}"
+       echo "[INFO] FLOW_MODEL_NAME: ${FLOW_MODEL_NAME}"
+       echo "[INFO] SEG_MODEL_NAME: ${SEG_MODEL_NAME}"
+       echo "[INFO] SEG_MODEL_TYPE: ${SEG_MODEL_TYPE}"
+       echo "[INFO] SEG_TASK_TYPE: ${SEG_TASK_TYPE}"
+fi
+if [ $LOG_LEVEL -ge 5 ]; then
+       echo "[NOTE] Please press F5 to start debugging!"
+fi
 
 deactivate_allenvs() {
        while [ -n "$VIRTUAL_ENV" ]; do
