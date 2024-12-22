@@ -72,15 +72,16 @@ esac
 
 # print variables
 if [ $LOG_LEVEL -ge 1 ]; then
-       echo "[INFO] INPUT_DIR: ${INPUT_DIR}"
-       echo "[INFO] OUTPUT_PARENT_DIR: ${OUTPUT_PARENT_DIR}"
-       echo "[INFO] OUTPUT_FLOW_DIR: ${OUTPUT_FLOW_DIR}"
-       echo "[INFO] OUTPUT_SEG_DIR: ${OUTPUT_SEG_DIR}"
-       echo "[INFO] OUTPUT_MOVOBJ_DIR: ${OUTPUT_MOVOBJ_DIR}"
-       echo "[INFO] FLOW_MODEL_NAME: ${FLOW_MODEL_NAME}"
-       echo "[INFO] SEG_MODEL_NAME: ${SEG_MODEL_NAME}"
-       echo "[INFO] SEG_MODEL_TYPE: ${SEG_MODEL_TYPE}"
-       echo "[INFO] SEG_TASK_TYPE: ${SEG_TASK_TYPE}"
+       echo "[INFO] print all variables"
+       echo -e "\tINPUT_DIR: ${INPUT_DIR}"
+       echo -e "\tOUTPUT_PARENT_DIR: ${OUTPUT_PARENT_DIR}"
+       echo -e "\tOUTPUT_FLOW_DIR: ${OUTPUT_FLOW_DIR}"
+       echo -e "\tOUTPUT_SEG_DIR: ${OUTPUT_SEG_DIR}"
+       echo -e "\tOUTPUT_MOVOBJ_DIR: ${OUTPUT_MOVOBJ_DIR}"
+       echo -e "\tFLOW_MODEL_NAME: ${FLOW_MODEL_NAME}"
+       echo -e "\tSEG_MODEL_NAME: ${SEG_MODEL_NAME}"
+       echo -e "\tSEG_MODEL_TYPE: ${SEG_MODEL_TYPE}"
+       echo -e "\tSEG_TASK_TYPE: ${SEG_TASK_TYPE}"
 fi
 if [ $LOG_LEVEL -ge 5 ]; then
        echo "[NOTE] Please press F5 to start debugging!"
