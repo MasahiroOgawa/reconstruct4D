@@ -268,7 +268,8 @@ class FoE:
             v = self.flow[row, col, 1]
 
             flow_length = np.sqrt(u**2 + v**2)
-            # TODO: I need to check thid definition is OK. probably, 100 times difference should be moure exaggerate.
+            # TODO: I need to check whether this (tanh) definition is OK.
+            # probably, e.g. 100 times difference should be more exaggerated than this.
             length_diff_prob = min(
                 1.0,
                 max(
@@ -277,9 +278,11 @@ class FoE:
                 ),
             )
             if flow_length < self.THRE_FLOWLENGTH:
-                # this means nonstatic object which moves with camera.
-                # camera is not stopping, so the object must be moving.
-                self.tmp_moving_prob[row, col] = length_diff_prob
+                # this means that the nonstatic object moves with the camera.
+                # And the camera is not stopping, so the object must be moving.
+                self.tmp_moving_prob[row, col] = (
+                    length_diff_prob * self.SAME_FLOWANGLE_MIN_MOVING_PROB
+                )
             else:
                 num_flow_existingpix += 1
 
@@ -305,14 +308,16 @@ class FoE:
                     if key == ord("q"):
                         exit()
 
-                # check the angle between flow and FoE to each pixel is lower than threshold.
-                cos_foe_flow = np.dot((col - foe_u, row - foe_v), (u, v)) / (
-                    np.sqrt((col - foe_u) ** 2 + (row - foe_v) ** 2) * flow_length
+                # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
+                foe2pt = np.array([col - foe_u, row - foe_v, 1])
+                cos_foe_flow = np.dot((foe2pt[0], foe2pt[1]), (u, v)) / (
+                    np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2) * flow_length
                 )
                 angle_diff_prob = min(
                     1.0, max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MIN_MOVING_PROB)
                 )
                 self.tmp_moving_prob[row, col] = angle_diff_prob * length_diff_prob
+                # count up inlier if the angle is lower than the threshold.
                 if cos_foe_flow > self.THRE_COS_INLIER:
                     num_inlier += 1
 
