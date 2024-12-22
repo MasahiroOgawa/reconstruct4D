@@ -27,10 +27,10 @@ class MovingObjectExtractor:
         NUM_RANSAC = 10
         # every this pixel, draw flow arrow.
         FLOWARROW_STEP = 20
-        # minimum moving probability even when the angle is totally the same with FoE-position angle, or the flow length is the same with background.
-        SAME_FLOWANGLE_MOVING_PROB = 0.2
+        # minimum moving probability even when the angle is totally the same with FoE-position angle.
+        SAME_FLOWANGLE_MIN_MOVING_PROB = 0.2
         # minimum moving probability even when the flow length is the same with background.
-        SAME_FLOWLENGTH_MOVING_PROB = 0.4
+        SAME_FLOWLENGTH_MIN_MOVING_PROB = 0.4
         # in moving pixel region, it is considered as moving object if the same object id exists over this rate.
         self.THRE_MOVINGOBJ_AREA_RATE = 0.2
 
@@ -77,8 +77,8 @@ class MovingObjectExtractor:
             THRE_INLIER_RATE,
             THRE_FLOW_EXISTING_RATE,
             NUM_RANSAC,
-            SAME_FLOWANGLE_MOVING_PROB,
-            SAME_FLOWLENGTH_MOVING_PROB,
+            SAME_FLOWANGLE_MIN_MOVING_PROB,
+            SAME_FLOWLENGTH_MIN_MOVING_PROB,
             FLOWARROW_STEP,
             log_level=args.loglevel,
         )

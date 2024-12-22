@@ -13,8 +13,8 @@ class FoE:
         thre_inlier_rate=0.9,
         thre_flow_existing_rate=0.1,
         num_ransac=10,
-        same_flowangle_moving_prob=0.1,
-        same_flowlength_moving_prob=0.5,
+        same_flowangle_min_moving_prob=0.1,
+        same_flowlength_min_moving_prob=0.4,
         flowarrow_step=20,
         log_level=0,
     ) -> None:
@@ -27,8 +27,8 @@ class FoE:
         self.THRE_FLOW_EXISTING_RATE = thre_flow_existing_rate
         self.NUM_RANSAC = num_ransac
         self.FLOWARROW_STEP = flowarrow_step
-        self.SAME_FLOWANGLE_MOVING_PROB = same_flowangle_moving_prob
-        self.SAME_FLOWLENGTH_MOVING_PROB = same_flowlength_moving_prob
+        self.SAME_FLOWANGLE_MIN_MOVING_PROB = same_flowangle_min_moving_prob
+        self.SAME_FLOWLENGTH_MIN_MOVING_PROB = same_flowlength_min_moving_prob
 
         # variables
         self.state = CameraState.ROTATING  # most unkown movement.
@@ -60,7 +60,7 @@ class FoE:
 
         if self.flow_existing_rate_in_static < self.THRE_FLOW_EXISTING_RATE:
             self.state = CameraState.STOPPING
-            # at this moment, all flow existing pixel ins static mask is set as moving.
+            # at this moment, all flow existing pixel inside non-static mask is set as moving.
             self.comp_flow_existance_in_nonstatic()
             self.moving_prob = self.tmp_moving_prob.copy()
         else:
@@ -273,7 +273,7 @@ class FoE:
                 1.0,
                 max(
                     np.tanh(abs(flow_length / self.mean_flow_length_in_static - 1)),
-                    self.SAME_FLOWLENGTH_MOVING_PROB,
+                    self.SAME_FLOWLENGTH_MIN_MOVING_PROB,
                 ),
             )
             if flow_length < self.THRE_FLOWLENGTH:
@@ -310,7 +310,7 @@ class FoE:
                     np.sqrt((col - foe_u) ** 2 + (row - foe_v) ** 2) * flow_length
                 )
                 angle_diff_prob = min(
-                    1.0, max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MOVING_PROB)
+                    1.0, max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MIN_MOVING_PROB)
                 )
                 self.tmp_moving_prob[row, col] = angle_diff_prob * length_diff_prob
                 if cos_foe_flow > self.THRE_COS_INLIER:
