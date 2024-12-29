@@ -61,7 +61,7 @@ class FoE:
         if self.flow_existing_rate_in_static < self.THRE_FLOW_EXISTING_RATE:
             self.state = CameraState.STOPPING
             # at this moment, all flow existing pixel inside non-static mask is set as moving.
-            self.comp_flow_existance_in_nonstatic()
+            self.comp_flow_existence_in_nonstatic()
             self.moving_prob = self.tmp_moving_prob.copy()
         else:
             self.comp_foe_by_ransac()
@@ -122,7 +122,7 @@ class FoE:
                 f"[INFO] flow existing pixel rate: {self.flow_existing_rate_in_static * 100:.2f} %"
             )
 
-    def comp_flow_existance_in_nonstatic(self):
+    def comp_flow_existence_in_nonstatic(self):
         # check pixels inside non static mask
         nonstaticpix_indices = np.where(
             (self.nonsky_static_mask == False) & (self.sky_mask == False)
@@ -146,6 +146,8 @@ class FoE:
         compute FoE by RANSAC
         """
         max_inlier_rate = 0.0
+        if self.LOG_LEVEL > 3:
+            self.display_foe_flow_img = True
 
         for _ in range(self.NUM_RANSAC):
             foe_candi = self.comp_foe_candidate()
@@ -264,10 +266,10 @@ class FoE:
         # check pixels inside flow existing static mask area.
         for row, col in zip(*np.nonzero(self.tmp_moving_prob)):
             # get flow
-            u = self.flow[row, col, 0]
-            v = self.flow[row, col, 1]
+            flow_u = self.flow[row, col, 0]
+            flow_v = self.flow[row, col, 1]
 
-            flow_length = np.sqrt(u**2 + v**2)
+            flow_length = np.sqrt(flow_u**2 + flow_v**2)
             # TODO: I need to check whether this (tanh) definition is OK.
             # probably, e.g. 100 times difference should be more exaggerated than this.
             length_diff_prob = min(
@@ -286,31 +288,12 @@ class FoE:
             else:
                 num_flow_existingpix += 1
 
-                if self.LOG_LEVEL > 5:
-                    LENGTH_FACTOR = 10
-                    foe_flow_img = self.intermediate_foe_img.copy()
-                    cv2.arrowedLine(
-                        foe_flow_img,
-                        (int(foe_u), int(foe_v)),
-                        (col, row),
-                        (0, 255, 0),
-                        3,
-                    )
-                    cv2.arrowedLine(
-                        foe_flow_img,
-                        (col, row),
-                        (int(col + u * LENGTH_FACTOR), int(row + v * LENGTH_FACTOR)),
-                        (0, 0, 255),
-                        3,
-                    )
-                    cv2.imshow("FoE and flow", foe_flow_img)
-                    key = cv2.waitKey(1)
-                    if key == ord("q"):
-                        exit()
+                if self.LOG_LEVEL > 3 and self.display_foe_flow_img:
+                    self._show_foe_flow_img(row, col, foe_u, foe_v, flow_u, flow_v)
 
                 # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
                 foe2pt = np.array([col - foe_u, row - foe_v, 1])
-                cos_foe_flow = np.dot((foe2pt[0], foe2pt[1]), (u, v)) / (
+                cos_foe_flow = np.dot((foe2pt[0], foe2pt[1]), (flow_u, flow_v)) / (
                     np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2) * flow_length
                 )
                 angle_diff_prob = min(
@@ -337,6 +320,38 @@ class FoE:
             print(
                 f"[INFO] FoE candidate: {foe}, inlier rate: {self.inlier_rate * 100:.2f} %"
             )
+        
+    def _show_foe_flow_img(self, row, col, foe_u, foe_v, flow_u, flow_v):
+        LENGTH_FACTOR = 10
+        foe_flow_img = self.intermediate_foe_img.copy()
+        cv2.arrowedLine(
+            foe_flow_img,
+            (int(foe_u), int(foe_v)),
+            (col, row),
+            (0, 255, 0),
+            3,
+        )
+        cv2.arrowedLine(
+            foe_flow_img,
+            (col, row),
+            (int(col + flow_u * LENGTH_FACTOR), int(row + flow_v * LENGTH_FACTOR)),
+            (0, 0, 255),
+            3,
+        )
+        cv2.putText(
+            foe_flow_img,
+            "you can close this image by pressing 'q'",
+            (10,30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 255, 0),
+            2,
+        )
+        cv2.imshow("FoE and flow", foe_flow_img)
+        key = cv2.waitKey(1)
+        if key == ord("q"):
+            self.display_foe_flow_img = False
+            cv2.destroyWindow("FoE and flow")
 
     def prepare_canvas(self):
         if self.bg_img is None:
