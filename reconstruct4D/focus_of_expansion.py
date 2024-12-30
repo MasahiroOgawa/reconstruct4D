@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from enum import Enum
+from scipy import sparse
 
 CameraState = Enum("CameraState", ["STOPPING", "ROTATING", "ONLY_TRANSLATING"])
 
@@ -262,7 +263,10 @@ class FoE:
             print("[WARNING] Not enough lines to compute the crossing point.")
             return None
 
-        U, S, Vt = np.linalg.svd(self.inlier_foe2pt_mat)
+        # to avoid _ArrayMemoryError, use scipy's svd instead of np.linalg.svd.
+        # Convert the matrix to a sparse representation
+        sparse_matrix = sparse.csr_matrix(self.inlier_foe2pt_mat)
+        U, S, Vt = sparse.linalg.svds(sparse_matrix, k=1)
 
         # The crossing point is the last column of V (or Vt.T[-1])
         crossing_point_homogeneous = Vt.T[:, -1]
