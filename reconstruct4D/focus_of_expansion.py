@@ -147,6 +147,7 @@ class FoE:
         """
         max_inlier_rate = 0.0
         if self.LOG_LEVEL > 3:
+            # need to reset every time because it might be pressed 'q' to dkip the previous drawing image.
             self.display_foe_flow_img = True
 
         for _ in range(self.NUM_RANSAC):
@@ -160,8 +161,11 @@ class FoE:
                 # update by the current best
                 max_inlier_rate = self.inlier_rate
                 self.moving_prob = self.tmp_moving_prob.copy()
-                # currently we don't recompute FoE using all inliers, because our final objective is getting outlier mask.
-                self.foe = foe_candi
+                self.foe = self._comp_crosspt()
+
+                if self.LOG_LEVEL > 2:
+                    #check distance from foe_candi to foe
+                    print(f"distance from foe_candi to foe: {np.linalg.norm(foe_candi - self.foe)}")
 
                 # stop if inlier rate is high enough
                 if self.inlier_rate > self.THRE_INLIER_RATE:
@@ -246,6 +250,27 @@ class FoE:
         col = indices[1][index]
 
         return row, col
+    
+    def _comp_crosspt(self) -> np.ndarray:
+        """
+        Compute the most probable crossing point (Focus of Expansion) from the inlier lines.
+        return:
+            crossing_point: crossing point in 3D homogeneous coordinate.
+        """
+        # Check that there are enough lines to compute the crossing point
+        if self.inlier_foe2pt_mat.shape[0] < 2:
+            print("[WARNING] Not enough lines to compute the crossing point.")
+            return None
+
+        U, S, Vt = np.linalg.svd(self.inlier_foe2pt_mat)
+
+        # The crossing point is the last column of V (or Vt.T[-1])
+        crossing_point_homogeneous = Vt.T[:, -1]
+
+        # Normalize the homogeneous coordinates
+        crossing_point = crossing_point_homogeneous / crossing_point_homogeneous[-1]
+
+        return crossing_point
 
     def comp_inlier_rate(self, foe) -> float:
         """
