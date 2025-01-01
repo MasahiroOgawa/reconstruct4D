@@ -166,7 +166,8 @@ class FoE:
 
                 if self.LOG_LEVEL > 2:
                     #check distance from foe_candi to foe
-                    print(f"distance from foe_candi to foe: {np.linalg.norm(foe_candi - self.foe)}")
+                    print(f"[INFO] distance from foe_candi to foe [pix] = "
+                          f"{np.linalg.norm(foe_candi[0:1]/foe_candi[2] - self.foe[0:1]/self.foe[2])}")
 
                 # stop if inlier rate is high enough
                 if self.inlier_rate > self.THRE_INLIER_RATE:
