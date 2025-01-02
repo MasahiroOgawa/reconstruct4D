@@ -235,12 +235,12 @@ class MovingObjectExtractor:
         num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
             self.posterior_movpix_mask.astype(np.uint8), connectivity=8
         )
-        # compute moving object mask
+        # compute moving object mask by looping each connected region.
         for label in range(1, num_labels):
             # extract current label area mask
             label_mask = labels == label
             label_area = stats[label, cv2.CC_STAT_AREA]
-            # get object id in the label region
+            # get object ids in the label region
             obj_ids, obj_areas = np.unique(
                 self.seg.id_mask[label_mask], return_counts=True
             )
@@ -248,7 +248,7 @@ class MovingObjectExtractor:
             dominant_obj_ids = obj_ids[
                 obj_areas > self.THRE_MOVINGOBJ_AREA_RATE * label_area
             ]
-            # update moving object mask
+            # update moving object mask by adding whole object which has the dominant object id.
             self.moving_obj_mask = (
                 np.isin(self.seg.id_mask, dominant_obj_ids) | self.moving_obj_mask
             )
