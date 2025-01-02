@@ -227,7 +227,7 @@ class MovingObjectExtractor:
         """
         Compute moving object mask based on the posterior probability of moving pixels.
         Moving object is defined as segmented object which has some moving pixel area. The detail definition is below.
-        In a moving pixels connected region, if the same object id exists over thresold are percentage, the object is considered as moving object.
+        In a moving pixels connected region, if the same object id exists over thresold percentage, the object is considered as moving object.
         object id can get from seg.id_mask, which is torch.tensor.
         """
         self.moving_obj_mask = np.zeros_like(self.posterior_movpix_mask, dtype=np.uint8)
