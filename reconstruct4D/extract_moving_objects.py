@@ -221,7 +221,8 @@ class MovingObjectExtractor:
         self._write_imgtitle(self.seg.result_img, "segmentation")
         self._write_imgtitle(self.optflow.flow_img, "optical flow")
         self._write_imgtitle(self.posterior_movpix_prob_img, "posterior")
-        self._write_imgtitle(self.result_img, "result")
+        # it might be better not to write "result" in final output image to display clean result.
+        # self._write_imgtitle(self.result_img, "result")
 
     def _compute_moving_obj_mask(self):
         """
