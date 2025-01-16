@@ -260,7 +260,8 @@ class FoE:
             crossing_point: crossing point in 3D homogeneous coordinate.
         """
         # Check that there are enough lines to compute the crossing point
-        if self.inlier_foe2pt_mat.shape[0] < 2:
+        # And to avoid ValueError: `k` must be an integer satisfying `0 < k < min(A.shape)`"
+        if self.inlier_foe2pt_mat.shape[0] < 2 or min(self.inlier_foe2pt_mat.shape) < 1:
             print("[WARNING] Not enough lines to compute the crossing point.")
             return None
 
