@@ -260,14 +260,17 @@ class FoE:
             crossing_point: crossing point in 3D homogeneous coordinate.
         """
         # Check that there are enough lines to compute the crossing point
-        # And to avoid ValueError: `k` must be an integer satisfying `0 < k < min(A.shape)`"
-        if self.inlier_foe2pt_mat.shape[0] < 2 or min(self.inlier_foe2pt_mat.shape) < 1:
+        if self.inlier_foe2pt_mat.shape[0] < 2:
             print("[WARNING] Not enough lines to compute the crossing point.")
             return None
 
         # to avoid _ArrayMemoryError, use scipy's svd instead of np.linalg.svd.
         # Convert the matrix to a sparse representation
         sparse_matrix = sparse.csr_matrix(self.inlier_foe2pt_mat)
+        # to avoid ValueError: `k` must be an integer satisfying `0 < k < min(A.shape)`"
+        if min(sparse_matrix.shape) < 1:
+            print(f"[WARNING] parse_matrix.shape = {sparse_matrix.shape} is too small.")
+            return None
         U, S, Vt = sparse.linalg.svds(sparse_matrix, k=1)
 
         # The crossing point is the last column of V (or Vt.T[-1])
