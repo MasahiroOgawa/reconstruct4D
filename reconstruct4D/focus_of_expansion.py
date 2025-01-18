@@ -146,7 +146,9 @@ class FoE:
         """
         compute FoE by RANSAC
         """
-        max_inlier_rate = 0.0
+        # if we set below as 0.0, it caused a error in self.foe = self._comp_crosspt().
+        max_inlier_rate = 1e-6
+        self.foe = None
         if self.LOG_LEVEL > 3:
             # need to reset every time because it might be pressed 'q' to dkip the previous drawing image.
             self.display_foe_flow_img = True
@@ -155,6 +157,9 @@ class FoE:
             foe_candi = self.comp_foe_candidate()
             if foe_candi is None:
                 continue
+            if self.foe is None:
+                # initialize by the first candidate
+                self.foe = foe_candi
 
             self.comp_inlier_rate(foe_candi)
 
@@ -268,7 +273,7 @@ class FoE:
         # Convert the matrix to a sparse representation
         sparse_matrix = sparse.csr_matrix(self.inlier_foe2pt_mat)
         # to avoid ValueError: `k` must be an integer satisfying `0 < k < min(A.shape)`"
-        if min(sparse_matrix.shape) < 1:
+        if min(sparse_matrix.shape) < 2:
             print(f"[WARNING] parse_matrix.shape = {sparse_matrix.shape} is too small.")
             return None
         U, S, Vt = sparse.linalg.svds(sparse_matrix, k=1)
