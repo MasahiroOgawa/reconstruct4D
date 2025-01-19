@@ -94,6 +94,12 @@ class MovingObjectExtractor:
                 args.skip_frames -= 1
                 continue
 
+            # skip if the result image is already saved.
+            base_imgname = os.path.splitext(self.cur_imgname)[0]
+            self.fullpath_result_imgname = f"{args.output_dir}/{base_imgname}_result.png"
+            if os.path.exists(self.fullpath_result_imgname):
+                continue
+
             self.process_image()
             self.draw()
 
@@ -183,16 +189,15 @@ class MovingObjectExtractor:
                 f"{args.segment_result_dir}/{self.cur_imgname}", self.seg.result_img
             )
 
-        base_name = os.path.splitext(self.cur_imgname)[0]
-        save_imgname = f"{base_name}_result.png"
-        cv2.imwrite(f"{args.output_dir}/{save_imgname}", self.result_img)
-        save_comb_imgname = f"{base_name}_result_comb.png"
+        base_imgname = os.path.splitext(self.cur_imgname)[0]
+        cv2.imwrite(self.fullpath_result_imgname, self.result_img)
+        save_comb_imgname = f"{base_imgname}_result_comb.png"
         cv2.imwrite(f"{args.output_dir}/{save_comb_imgname}", result_comb_img)
 
         # save the posterior mask image
         # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
         posterior_mask_img = self.moving_obj_mask * 255
-        posterior_mask_imgfname = f"{args.output_dir}/{base_name}_mask.png"
+        posterior_mask_imgfname = f"{args.output_dir}/{base_imgname}_mask.png"
         cv2.imwrite(posterior_mask_imgfname, posterior_mask_img)
 
         if args.loglevel > 2:
