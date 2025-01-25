@@ -33,4 +33,10 @@ do
     $ROOT_DIR/script/run_foels.sh $DATA_DIR ${ROOT_DIR}/output/davis
 done
 
-echo "[INFO] all jobs are done."
+echo "[INFO] run evaluation."
+$ROOT_DIR/script/evaluate_foels_on_davis.sh
+
+echo "[INFO] copy results to output directory."
+cp ${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/results/Foels/DAVIS2016/result.txt ${ROOT_DIR}/output/davis
+
+echo "[INFO] finish."

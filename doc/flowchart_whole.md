@@ -1,4 +1,13 @@
 ```mermaid
+%%{
+  init: {
+    'theme': 'default',
+    'themeVariables': {
+      'fontSize': '28pix'
+    }
+  }
+}%%
+
 flowchart LR
     imgt-1[image t-1] --> flow(optical flow)
     imgt[image t] --> flow
