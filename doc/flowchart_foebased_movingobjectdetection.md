@@ -1,8 +1,18 @@
 ```mermaid
-flowchart TD
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'fontSize': '28pix',
+      'curve': 'linear'
+    }
+  }
+}%%
+
+flowchart TB
     D(segment):::seg --> |segmented mask| P(remove sky area):::seg
     P --> |object mask| R{Does ground/building exist?}:::seg
-    R --> |Yes| M{flow existing area \n in ground/building > thre ?}:::cam
+    R --> |Yes| M{flow existing area in ground/building > thre ?}:::cam
     R --> |No| N
     A(compute flows) -->|optical flow| M
     M --> |No| N(camera is stopping):::cam

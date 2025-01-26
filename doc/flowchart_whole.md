@@ -1,9 +1,10 @@
 ```mermaid
 %%{
   init: {
-    'theme': 'default',
+    'theme': 'base',
     'themeVariables': {
-      'fontSize': '28pix'
+      'fontSize': '28pix',
+      'curve': 'linear'
     }
   }
 }%%
