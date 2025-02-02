@@ -1,7 +1,7 @@
 # reconstruct4D
-This is a 4D reconstruction project.
+This is a 4D reconstruction project of Masahiro Ogawa.
 
-# setup
+# Setup
 clone
 ```bash
 git clone git@github.com:MasahiroOgawa/reconstruct4D.git
@@ -27,7 +27,7 @@ conda env create -f reconstruct4D/ext/InternImage/environment.yml
 conda env create -f reconstruct4D/ext/unsupervised_detection/environment.yml
 ```
 
-# run demo
+# Run demo
 ```
 ./script/run_foels.sh
 ```
@@ -40,14 +40,14 @@ set LOG_LEVEL=5 in run_foels.sh, then
 (It will stop at some state.)
 Then in left pane, push debug mark, choose "Attach to Python script in run_foels.sh" configuration, push run mark next to configuration mark. Then, the debugging will start.
 
-# update code
-## everyday update for users
+# Update code
+## Everyday update for users
 ```
 git pull
 git submodule update --init --recursive
 ```
 
-## everyday update for developers
+## Everyday update for developers
 ```
 (in case you change submodule,
  commit in ext/* directory, and
@@ -68,3 +68,7 @@ git fetch upstream
 git switch main
 git merge upstream/main
 ```
+
+# License
+[License](LICENSE) is in this repository.
+But if you want to use this for your other needs, e.g. commertially, please consult me.
