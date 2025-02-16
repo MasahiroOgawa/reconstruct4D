@@ -120,7 +120,7 @@ class MovingObjectExtractor:
         # currently just read segmentation result from corresponding image file name.
         self.seg.compute(self.cur_imgname)
 
-        # compute focus of expansion
+        # compute camera is moving or not and focus of expansion
         self.foe.compute(
             self.optflow.flow, self.seg.sky_mask, self.seg.nonsky_static_mask
         )

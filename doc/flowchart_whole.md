@@ -1,7 +1,7 @@
 ```mermaid
 %%{
   init: {
-    'theme': 'base',
+    'theme': 'dark',
     'themeVariables': {
       'fontSize': '28pix',
       'curve': 'linear'
@@ -16,11 +16,13 @@ flowchart LR
     flow --> cam(camera motion)
     seg --> cam
     cam --> foe(FoE)
-    foe --> movpix(moving object probability)
+    foe --> movpix(moving pixel)
+    movpix --> objref(object level refinement)
 
-    style flow fill:#3390FF
-    style foe fill:#098739
-    style cam fill: #8EA928
-    style movpix fill: #3DA98C
-    style seg fill:#FF9633
+    style flow fill: #0650AC
+    style seg fill: #C74606
+    style cam fill: #6C0372
+    style foe fill: #8B0000
+    style movpix fill: #5A7203
+    style objref fill: #0C6A51
 ```

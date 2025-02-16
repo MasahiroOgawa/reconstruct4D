@@ -167,6 +167,7 @@ class FoE:
                 # update by the current best
                 max_inlier_rate = self.inlier_rate
                 self.moving_prob = self.tmp_moving_prob.copy()
+                # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
                 self.foe = self._comp_crosspt()
 
                 if self.LOG_LEVEL > 2:
@@ -315,7 +316,7 @@ class FoE:
                 1.0,
                 max(
                     np.tanh(abs(flow_length / self.mean_flow_length_in_static - 1)),
-                    self.SAME_FLOWLENGTH_MIN_MOVING_PROB,
+                    self.SAME_FLOWLENGTH_MIN_MOVING_PROB
                 ),
             )
             if flow_length < self.THRE_FLOWLENGTH:
