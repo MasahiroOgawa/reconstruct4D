@@ -161,7 +161,7 @@ class FoE:
                 # initialize by the first candidate
                 self.foe = foe_candi
 
-            self.comp_inlier_rate(foe_candi)
+            self.comp_inlierrate_movpixprob(foe_candi)
 
             if self.inlier_rate > max_inlier_rate:
                 # update by the current best
@@ -287,9 +287,11 @@ class FoE:
 
         return crossing_point
 
-    def comp_inlier_rate(self, foe) -> float:
+    def comp_inlierrate_movpixprob(self, foe) -> float:
         """
-        compute inlier rate except sky mask from FoE
+        compute inlier rate except sky mask from FoE,
+        and temporary moving pixel probability by length and angle difference,
+        in the same pixel for loop.
         args:
             foe: FoE in 3D homogeneous coordinate
         """
@@ -343,7 +345,7 @@ class FoE:
                 # count up inlier if the angle is lower than the threshold.
                 if cos_foe_flow > self.THRE_COS_INLIER:
                     num_inlier += 1
-                    # add inlier foe2pt vector to matrix as a row vector
+                    # add inlier foe2pt vector to matrix as a row vector to compute FoE by RANSAC
                     if num_inlier == 1:
                         self.inlier_foe2pt_mat = foe2pt
                     else:
