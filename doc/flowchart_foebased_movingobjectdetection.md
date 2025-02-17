@@ -22,7 +22,7 @@ flowchart TB
     C --> |x_t-1| E(compute flow arrow):::foe
     E --> |2 flow arrows| G(compute FoE as cross point of 2 arrows):::foe
     G --> H(update FoE by RANSAC):::foe
-    H --> |FoE, inliers, outliers, no flow| J(compute moving pixel probability; outliers have higher probability):::movpix
+    H --> |FoE, inliers, outliers, no flow| J(compute moving pixel probability from flow length and angle difference):::movpix
     N --> Q(compute moving pixel probability from flow length):::movpix
     Q --> U(multiply moving pixel probability and prior probabilit from segmentation):::movpix
     J --> U
