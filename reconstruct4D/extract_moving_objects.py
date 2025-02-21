@@ -33,6 +33,8 @@ class MovingObjectExtractor:
         SAME_FLOWLENGTH_MIN_MOVING_PROB = 0.4
         # in moving pixel region, it is considered as moving object if the same object id exists over this rate.
         self.THRE_MOVINGOBJ_AREA_RATE = 0.2
+        # wheter all inlier estimation at the RANSAC final step. bool
+        self.RANSAC_ALLINLIER_ESTIMATION = False
 
         # variables
         self.imgfiles = sorted(
@@ -96,7 +98,9 @@ class MovingObjectExtractor:
 
             # skip if the result image is already saved.
             base_imgname = os.path.splitext(self.cur_imgname)[0]
-            self.fullpath_result_imgname = f"{args.output_dir}/{base_imgname}_result.png"
+            self.fullpath_result_imgname = (
+                f"{args.output_dir}/{base_imgname}_result.png"
+            )
             if os.path.exists(self.fullpath_result_imgname):
                 continue
 
