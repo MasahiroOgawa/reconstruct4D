@@ -35,7 +35,7 @@ class MovingObjectExtractor:
         # in moving pixel region, it is considered as moving object if the same object id exists over this rate.
         self.THRE_MOVINGOBJ_AREA_RATE = 0.2
         # wheter all inlier estimation at the RANSAC final step. bool
-        self.RANSAC_ALLINLIER_ESTIMATION = False
+        RANSAC_ALLINLIER_ESTIMATION = False
 
         # variables
         self.imgfiles = sorted(
@@ -83,6 +83,7 @@ class MovingObjectExtractor:
             SAME_FLOWANGLE_MIN_MOVING_PROB,
             SAME_FLOWLENGTH_MIN_MOVING_PROB,
             FLOWARROW_STEP,
+            RANSAC_ALLINLIER_ESTIMATION,
             log_level=args.loglevel,
         )
         self.cur_imgname = None

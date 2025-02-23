@@ -17,6 +17,7 @@ class FoE:
         same_flowangle_min_moving_prob=0.1,
         same_flowlength_min_moving_prob=0.4,
         flowarrow_step=20,
+        ransac_all_inlier_estimation=False,
         log_level=0,
     ) -> None:
         # constants
@@ -30,6 +31,7 @@ class FoE:
         self.FLOWARROW_STEP = flowarrow_step
         self.SAME_FLOWANGLE_MIN_MOVING_PROB = same_flowangle_min_moving_prob
         self.SAME_FLOWLENGTH_MIN_MOVING_PROB = same_flowlength_min_moving_prob
+        self.ALL_INLIER_ESTIMATION = ransac_all_inlier_estimation
 
         # variables
         self.state = CameraState.ROTATING  # most unkown movement.
@@ -175,16 +177,16 @@ class FoE:
                     self.state = CameraState.ONLY_TRANSLATING
                     break
 
-        # comput FoE using all the inliers.
-        # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
-        self.foe = self._comp_crosspt()
+        if self.ALL_INLIER_ESTIMATION:
+            # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
+            self.foe = self._comp_crosspt()
 
-        if self.LOG_LEVEL > 2:
-            # check distance from foe_candi to foe
-            print(
-                f"[INFO] distance from foe_candi to foe [pix] = "
-                f"{np.linalg.norm(foe_candi[0:1]/foe_candi[2] - self.foe[0:1]/self.foe[2])}"
-            )
+            if self.LOG_LEVEL > 2:
+                # check distance from foe_candi to foe
+                print(
+                    f"[INFO] distance from foe_candi to foe [pix] = "
+                    f"{np.linalg.norm(foe_candi[0:1]/foe_candi[2] - self.foe[0:1]/self.foe[2])}"
+                )
 
     def comp_foe_candidate(self) -> np.ndarray:
         """
