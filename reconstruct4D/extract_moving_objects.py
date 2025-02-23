@@ -5,6 +5,7 @@ import argparse
 import cv2
 import os
 import numpy as np
+import time
 
 
 class MovingObjectExtractor:
@@ -91,6 +92,8 @@ class MovingObjectExtractor:
     def compute(self):
         # process each image
         for self.cur_imgname in self.imgfiles:
+            start_time = time.time()
+
             # skip frames at the beginning if it is specified.
             if args.skip_frames > 0:
                 args.skip_frames -= 1
@@ -105,7 +108,14 @@ class MovingObjectExtractor:
                 continue
 
             self.process_image()
+            process_time = time.time()
             self.draw()
+
+            end_time = time.time()
+            if args.loglevel > 0:
+                print(f"[INFO] processing time = {process_time - start_time:.2f} [sec]")
+                print(f"[INFO] drawing time = {end_time - process_time:.2f} [sec]")
+                print(f"[INFO] total time = {end_time - start_time:.2f} [sec]")
 
         cv2.destroyAllWindows()
 

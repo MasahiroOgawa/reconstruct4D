@@ -149,6 +149,7 @@ class FoE:
         # if we set below as 0.0, it caused a error in self.foe = self._comp_crosspt().
         max_inlier_rate = 1e-6
         self.foe = None
+        self.inlier_foe2pt_mat = None
         if self.LOG_LEVEL > 3:
             # need to reset every time because it might be pressed 'q' to dkip the previous drawing image.
             self.display_foe_flow_img = True
@@ -167,18 +168,23 @@ class FoE:
                 # update by the current best
                 max_inlier_rate = self.inlier_rate
                 self.moving_prob = self.tmp_moving_prob.copy()
-                # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
-                self.foe = self._comp_crosspt()
-
-                if self.LOG_LEVEL > 2:
-                    #check distance from foe_candi to foe
-                    print(f"[INFO] distance from foe_candi to foe [pix] = "
-                          f"{np.linalg.norm(foe_candi[0:1]/foe_candi[2] - self.foe[0:1]/self.foe[2])}")
+                self.inlier_foe2pt_mat = self.tmp_inlier_foe2pt_mat.copy()
 
                 # stop if inlier rate is high enough
                 if self.inlier_rate > self.THRE_INLIER_RATE:
                     self.state = CameraState.ONLY_TRANSLATING
                     break
+
+        # comput FoE using all the inliers.
+        # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
+        self.foe = self._comp_crosspt()
+
+        if self.LOG_LEVEL > 2:
+            # check distance from foe_candi to foe
+            print(
+                f"[INFO] distance from foe_candi to foe [pix] = "
+                f"{np.linalg.norm(foe_candi[0:1]/foe_candi[2] - self.foe[0:1]/self.foe[2])}"
+            )
 
     def comp_foe_candidate(self) -> np.ndarray:
         """
@@ -258,7 +264,7 @@ class FoE:
         col = indices[1][index]
 
         return row, col
-    
+
     def _comp_crosspt(self) -> np.ndarray:
         """
         Compute the most probable crossing point (Focus of Expansion) from the inlier lines.
@@ -266,7 +272,7 @@ class FoE:
             crossing_point: crossing point in 3D homogeneous coordinate.
         """
         # Check that there are enough lines to compute the crossing point
-        if self.inlier_foe2pt_mat.shape[0] < 2:
+        if self.inlier_foe2pt_mat is None or self.inlier_foe2pt_mat.shape[0] < 2:
             print("[WARNING] Not enough lines to compute the crossing point.")
             return None
 
@@ -297,6 +303,7 @@ class FoE:
         """
         num_inlier = 0
         num_flow_existingpix = 0
+        self.tmp_inlier_foe2pt_mat = None
 
         # treat candidate FoE is infinite case
         if foe[2] == 0:
@@ -318,7 +325,7 @@ class FoE:
                 1.0,
                 max(
                     np.tanh(abs(flow_length / self.mean_flow_length_in_static - 1)),
-                    self.SAME_FLOWLENGTH_MIN_MOVING_PROB
+                    self.SAME_FLOWLENGTH_MIN_MOVING_PROB,
                 ),
             )
             if flow_length < self.THRE_FLOWLENGTH:
@@ -347,10 +354,10 @@ class FoE:
                     num_inlier += 1
                     # add inlier foe2pt vector to matrix as a row vector to compute FoE by RANSAC
                     if num_inlier == 1:
-                        self.inlier_foe2pt_mat = foe2pt
+                        self.tmp_inlier_foe2pt_mat = foe2pt
                     else:
-                        self.inlier_foe2pt_mat = np.vstack(
-                            (self.inlier_foe2pt_mat, foe2pt)
+                        self.tmp_inlier_foe2pt_mat = np.vstack(
+                            (self.tmp_inlier_foe2pt_mat, foe2pt)
                         )
 
         if self.flow_existing_rate_in_static == 0:
@@ -362,7 +369,7 @@ class FoE:
             print(
                 f"[INFO] FoE candidate: {foe}, inlier rate: {self.inlier_rate * 100:.2f} %"
             )
-        
+
     def _show_foe_flow_img(self, row, col, foe_u, foe_v, flow_u, flow_v):
         LENGTH_FACTOR = 10
         foe_flow_img = self.intermediate_foe_img.copy()
@@ -383,7 +390,7 @@ class FoE:
         cv2.putText(
             foe_flow_img,
             "you can close this image by pressing 'q'",
-            (10,30),
+            (10, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
             (0, 255, 0),
