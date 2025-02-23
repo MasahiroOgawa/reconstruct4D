@@ -124,7 +124,9 @@ class MovingObjectExtractor:
         self.cur_img = cv2.imread(os.path.join(args.input_dir, self.cur_imgname))
 
         if args.loglevel > 0:
-            print(f"[INFO] processing {self.cur_imgname} : {self.cur_img.shape}")
+            print(
+                f"------------\n[INFO] processing {self.cur_imgname} : {self.cur_img.shape}"
+            )
 
         # currently just read flow from corresponding image file name.
         # unimatch flow at time t is t to t+1 flow.
