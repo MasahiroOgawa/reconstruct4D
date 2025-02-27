@@ -366,8 +366,10 @@ class FoE:
                             (self.tmp_inlier_foe2pt_mat, foe2pt)
                         )
 
-        if self.flow_existing_rate_in_static == 0:
-            self.inlier_rate = 0
+        # when search_step > 1, flow_existing_rate_in_static=0, but num_flow_existingpix is not 0, so we add condition.
+        if self.flow_existing_rate_in_static == 0 or num_flow_existingpix == 0:
+            # this means the camera is stopping.
+            self.inlier_rate = 1.0
         else:
             self.inlier_rate = num_inlier / num_flow_existingpix
 
