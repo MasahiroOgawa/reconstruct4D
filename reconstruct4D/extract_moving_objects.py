@@ -34,8 +34,6 @@ class MovingObjectExtractor:
         SAME_FLOWLENGTH_MIN_MOVING_PROB = 0.4
         # in moving pixel region, it is considered as moving object if the same object id exists over this rate.
         self.THRE_MOVINGOBJ_AREA_RATE = 0.2
-        # wheter all inlier estimation at the RANSAC final step. bool
-        RANSAC_ALLINLIER_ESTIMATION = False
 
         # variables
         self.imgfiles = sorted(
@@ -83,7 +81,8 @@ class MovingObjectExtractor:
             SAME_FLOWANGLE_MIN_MOVING_PROB,
             SAME_FLOWLENGTH_MIN_MOVING_PROB,
             FLOWARROW_STEP,
-            RANSAC_ALLINLIER_ESTIMATION,
+            args.ransac_all_inlier_estimation,
+            args.foe_search_step,
             log_level=args.loglevel,
         )
         self.cur_imgname = None
@@ -326,6 +325,18 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--skip_frames", type=int, default=0, help="skip frames at the beginning"
+    )
+    parser.add_argument(
+        "--ransac_all_inlier_estimation",
+        type=bool,
+        default=False,
+        help="whether all inlier estimation at the RANSAC final step.",
+    )
+    parser.add_argument(
+        "--foe_search_step",
+        type=int,
+        default=1,
+        help="search step size when computing FoE candidate",
     )
     args = parser.parse_args()
 

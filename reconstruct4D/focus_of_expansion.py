@@ -18,6 +18,7 @@ class FoE:
         same_flowlength_min_moving_prob=0.4,
         flowarrow_step=20,
         ransac_all_inlier_estimation=False,
+        search_step=1,
         log_level=0,
     ) -> None:
         # constants
@@ -31,7 +32,8 @@ class FoE:
         self.FLOWARROW_STEP = flowarrow_step
         self.SAME_FLOWANGLE_MIN_MOVING_PROB = same_flowangle_min_moving_prob
         self.SAME_FLOWLENGTH_MIN_MOVING_PROB = same_flowlength_min_moving_prob
-        self.ALL_INLIER_ESTIMATION = ransac_all_inlier_estimation
+        self.RANSAC_ALL_INLIER_ESTIMATION = ransac_all_inlier_estimation
+        self.SEARCH_STEP = search_step
 
         # variables
         self.state = CameraState.ROTATING  # most unkown movement.
@@ -177,7 +179,7 @@ class FoE:
                     self.state = CameraState.ONLY_TRANSLATING
                     break
 
-        if self.ALL_INLIER_ESTIMATION:
+        if self.RANSAC_ALL_INLIER_ESTIMATION:
             # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
             self.foe = self._comp_crosspt()
 
@@ -315,7 +317,9 @@ class FoE:
             foe_v = foe[1] / foe[2]
 
         # check pixels inside flow existing static mask area.
-        for row, col in zip(*np.nonzero(self.tmp_moving_prob)):
+        for row, col in zip(
+            *np.nonzero(self.tmp_moving_prob[:: self.SEARCH_STEP, :: self.SEARCH_STEP])
+        ):
             # get flow
             flow_u = self.flow[row, col, 0]
             flow_v = self.flow[row, col, 1]

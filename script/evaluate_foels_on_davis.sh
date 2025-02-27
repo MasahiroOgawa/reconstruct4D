@@ -1,4 +1,5 @@
 #!/bin/bash
+# This script is not intended to run directly, but called by `run_foels_on_davis4eval.sh.
 
 # stop immediately when error occurred
 set -eu
