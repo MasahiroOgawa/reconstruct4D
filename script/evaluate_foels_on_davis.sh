@@ -8,7 +8,7 @@ echo "[INFO] set parameters."
 ROOT_DIR=$(dirname "$0")/..
 
 echo "[INFO] deactivate current uv venv first. otherwise, conda env will be hide."
-if [ -z "${VIRTUAL_ENV}" ]; then
+if [ -z "${VIRTUAL_ENV:-}" ]; then
     echo "[INFO] No virtualenv activated."
 else
     echo "[INFO] deactivate current uv venv: $VIRTUAL_ENV"
