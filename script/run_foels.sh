@@ -19,7 +19,7 @@ OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
  # 5: run python debugger. push F5 after running the script.
-LOG_LEVEL=1
+LOG_LEVEL=4
 IMG_HEIGHT=480
 # FRAME 79 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
 SKIP_FRAMES=0 
@@ -117,6 +117,8 @@ else
 
        mkdir -p ${OUTPUT_FLOW_DIR}
        export OMP_NUM_THREADS=1
+       # to avoid CUDA out of memory error.
+       export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
        CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
        --inference_dir ${INPUT} \
        --output_path ${OUTPUT_FLOW_DIR} \

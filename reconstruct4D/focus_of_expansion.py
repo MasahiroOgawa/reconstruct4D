@@ -382,6 +382,11 @@ class FoE:
     def _show_foe_flow_img(self, row, col, foe_u, foe_v, flow_u, flow_v):
         LENGTH_FACTOR = 10
         foe_flow_img = self.intermediate_foe_img.copy()
+
+        # paint self.tmp_moving_prob!=0 area as gray
+        foe_flow_img[self.tmp_moving_prob != 0] = (128, 128, 128)
+
+        # draw arrows.
         cv2.arrowedLine(
             foe_flow_img,
             (int(foe_u), int(foe_v)),
