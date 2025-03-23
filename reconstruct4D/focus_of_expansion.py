@@ -42,22 +42,21 @@ class FoE:
         self.inlier_rate = 0.0
         self.foe = None
         self.foe_camstate_img = None
-        self.tmp_moving_prob = None  # 0: inlier=stop, 1: outlier=moving
-        self.moving_prob = None
+        self.moving_prob = None  # 0: inlier=stop, 1: outlier=moving
         self.moving_prob_img = None
         self.intermediate_foe_img = None
 
-    def compute(self, flow, sky_mask, nonsky_static_mask):
+    def compute(self, flow, sky_mask, static_mask):
         """..ext.
         compute focus of expansion from optical flow.
         args:
             flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
             sky_mask: mask of sky. shape = (height, width), dtype = bool.
-            nonsky_static_mask: mask of static object except sky like grounds. shape = (height, width), dtype = bool
+            static_mask: mask of static (very low prior moving probability segment) object except sky like grounds. shape = (height, width), dtype = bool
         """
         self.flow = flow
         self.sky_mask = sky_mask
-        self.nonsky_static_mask = nonsky_static_mask
+        self.static_mask = static_mask
 
         self.prepare_variables()
 
@@ -65,10 +64,9 @@ class FoE:
 
         if self.flow_existing_rate_in_static < self.THRE_FLOW_EXISTING_RATE:
             self.state = CameraState.STOPPING
-            # at this moment, all flow existing pixel inside non-static mask is set as moving.
             self.comp_flow_existence_in_nonstatic()
-            self.moving_prob = self.tmp_moving_prob.copy()
         else:
+            # camera is considered as moving (set as rotating by default)
             self.comp_foe_by_ransac()
 
     def draw(self, bg_img=None):
@@ -80,17 +78,16 @@ class FoE:
 
     def prepare_variables(self):
         self.state = CameraState.ROTATING
-        self.tmp_moving_prob = (
+        self.moving_prob = (
             np.ones((self.flow.shape[0], self.flow.shape[1]), dtype=np.float16) * 0.5
         )
-        self.tmp_moving_prob[self.sky_mask == True] = 0.0
-        self.moving_prob = self.tmp_moving_prob.copy()
+        self.moving_prob[self.sky_mask == True] = 0.0
 
     def comp_flow_existing_rate_in_static(self):
         num_flow_existing_pix_in_static = 0
 
         # check pixels inside static mask
-        staticpix_indices = np.where(self.nonsky_static_mask == True)
+        staticpix_indices = np.where(self.static_mask == True)
         sum_flow_length = 0.0
         for i in range(len(staticpix_indices[0])):
             row = staticpix_indices[0][i]
@@ -100,12 +97,15 @@ class FoE:
             u = self.flow[row, col, 0]
             v = self.flow[row, col, 1]
 
+            # count flow existing pix in static mask, and compute temporary moving prob.
             flow_length = np.sqrt(u**2 + v**2)
             sum_flow_length += flow_length
             if flow_length < self.THRE_FLOWLENGTH:
-                self.tmp_moving_prob[row, col] = flow_length / self.THRE_FLOWLENGTH
+                # compute moving probabiity based on flow length,
+                # because the area is segemnted as static, but some static object, like chair, might be moved by other force, like wind.
+                self.moving_prob[row, col] = flow_length / self.THRE_FLOWLENGTH
             else:
-                self.tmp_moving_prob[row, col] = 1.0
+                self.moving_prob[row, col] = 1.0
                 num_flow_existing_pix_in_static += 1
 
         if len(staticpix_indices[0]) == 0:
@@ -128,9 +128,10 @@ class FoE:
             )
 
     def comp_flow_existence_in_nonstatic(self):
+        # at this moment, all flow existing pixel inside non-static mask will be set as moving.
         # check pixels inside non static mask
         nonstaticpix_indices = np.where(
-            (self.nonsky_static_mask == False) & (self.sky_mask == False)
+            (self.static_mask == False) & (self.sky_mask == False)
         )
         for i in range(len(nonstaticpix_indices[0])):
             row = nonstaticpix_indices[0][i]
@@ -142,9 +143,9 @@ class FoE:
 
             flow_lentgh = np.sqrt(u**2 + v**2)
             if flow_lentgh < self.THRE_FLOWLENGTH:
-                self.tmp_moving_prob[row, col] = flow_lentgh / self.THRE_FLOWLENGTH
+                self.moving_prob[row, col] = flow_lentgh / self.THRE_FLOWLENGTH
             else:
-                self.tmp_moving_prob[row, col] = 1.0
+                self.moving_prob[row, col] = 1.0
 
     def comp_foe_by_ransac(self):
         """
@@ -166,12 +167,11 @@ class FoE:
                 # initialize by the first candidate
                 self.foe = foe_candi
 
-            self.comp_inlierrate_movpixprob(foe_candi)
+            self.comp_inlierrate_and_movpixprob(foe_candi)
 
             if self.inlier_rate > max_inlier_rate:
                 # update by the current best
                 max_inlier_rate = self.inlier_rate
-                self.moving_prob = self.tmp_moving_prob.copy()
                 self.inlier_foe2pt_mat = self.tmp_inlier_foe2pt_mat.copy()
 
                 # stop if inlier rate is high enough
@@ -258,7 +258,7 @@ class FoE:
 
     def random_point_in_static_mask(self):
         # Find the indices of all pixels in the static mask that have a value of 1
-        indices = np.where(self.nonsky_static_mask == 1)
+        indices = np.where(self.static_mask == 1)
 
         # Randomly select one of the indices
         index = np.random.choice(len(indices[0]))
@@ -297,10 +297,10 @@ class FoE:
 
         return crossing_point
 
-    def comp_inlierrate_movpixprob(self, foe) -> float:
+    def comp_inlierrate_and_movpixprob(self, foe) -> float:
         """
         compute inlier rate except sky mask from FoE,
-        and temporary moving pixel probability by length and angle difference,
+        and moving pixel probability by length and angle difference,
         in the same pixel for loop.
         args:
             foe: FoE in 3D homogeneous coordinate
@@ -318,7 +318,7 @@ class FoE:
 
         # check pixels inside flow existing static mask area.
         for row, col in zip(
-            *np.nonzero(self.tmp_moving_prob[:: self.SEARCH_STEP, :: self.SEARCH_STEP])
+            *np.nonzero(self.static_mask[:: self.SEARCH_STEP, :: self.SEARCH_STEP])
         ):
             # get flow
             flow_u = self.flow[row, col, 0]
@@ -335,9 +335,9 @@ class FoE:
                 ),
             )
             if flow_length < self.THRE_FLOWLENGTH:
-                # this means that the nonstatic object moves with the camera.
-                # And the camera is not stopping, so the object must be moving.
-                self.tmp_moving_prob[row, col] = (
+                # Currently the camera is judged as moving in the former process,
+                # so this means that the former considered static object moves with the camera.
+                self.moving_prob[row, col] = (
                     length_diff_prob * self.SAME_FLOWANGLE_MIN_MOVING_PROB
                 )
             else:
@@ -354,7 +354,7 @@ class FoE:
                 angle_diff_prob = min(
                     1.0, max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MIN_MOVING_PROB)
                 )
-                self.tmp_moving_prob[row, col] = angle_diff_prob * length_diff_prob
+                self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
                 # count up inlier if the angle is lower than the threshold.
                 if cos_foe_flow > self.THRE_COS_INLIER:
                     num_inlier += 1
@@ -384,7 +384,7 @@ class FoE:
         foe_flow_img = self.intermediate_foe_img.copy()
 
         # paint self.tmp_moving_prob!=0 area as gray
-        foe_flow_img[self.tmp_moving_prob != 0] = (128, 128, 128)
+        foe_flow_img[self.moving_prob != 0] = (128, 128, 128)
 
         # draw arrows.
         cv2.arrowedLine(

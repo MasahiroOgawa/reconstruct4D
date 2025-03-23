@@ -137,9 +137,7 @@ class MovingObjectExtractor:
         self.seg.compute(self.cur_imgname)
 
         # compute camera is moving or not and focus of expansion
-        self.foe.compute(
-            self.optflow.flow, self.seg.sky_mask, self.seg.nonsky_static_mask
-        )
+        self.foe.compute(self.optflow.flow, self.seg.sky_mask, self.seg.static_mask)
 
         # compute posterior probability of moving pixels
         self.posterior_movpix_prob = self.seg.moving_prob * self.foe.moving_prob
@@ -336,7 +334,7 @@ if __name__ == "__main__":
         "--foe_search_step",
         type=int,
         default=1,
-        help="search step size when computing FoE candidate",
+        help="search step size when computing FoE inlier",
     )
     args = parser.parse_args()
 

@@ -42,7 +42,7 @@ class Segmentator:
         self.sky_id = None
         self.static_ids = []
         self.sky_mask = None
-        self.nonsky_static_mask = None
+        self.static_mask = None
 
     def load_prior(self):
         self._load_class_movprobs()
@@ -73,9 +73,7 @@ class Segmentator:
         self.result_movingmask_img[self.sky_mask, 0] += 128  # 0 means blue channel
 
         # draw moving object mask as blighter in result_movingobj_img
-        moving_obj_mask = np.logical_not(
-            np.logical_or(self.sky_mask, self.nonsky_static_mask)
-        )
+        moving_obj_mask = np.logical_not(np.logical_or(self.sky_mask, self.static_mask))
         self.result_movingmask_img[moving_obj_mask, :] += 128
         cv2.putText(
             self.result_movingmask_img,
@@ -170,10 +168,10 @@ class Segmentator:
 
     def _comp_static_mask(self):
         if len(self.static_ids) > 0:
-            self.nonsky_static_mask = np.zeros_like(self.result_mask, dtype=bool)
+            self.static_mask = np.zeros_like(self.result_mask, dtype=bool)
             for static_id in self.static_ids:
-                self.nonsky_static_mask = np.logical_or(
-                    self.nonsky_static_mask, (self.result_mask == static_id)
+                self.static_mask = np.logical_or(
+                    self.static_mask, (self.result_mask == static_id)
                 )
 
 
