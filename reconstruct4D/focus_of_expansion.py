@@ -64,7 +64,7 @@ class FoE:
 
         if self.flow_existing_rate_in_static < self.THRE_FLOW_EXISTING_RATE:
             self.state = CameraState.STOPPING
-            self.comp_flow_existence_in_nonstatic()
+            self.comp_flow_existence()
         else:
             # camera is considered as moving (set as rotating by default)
             self.comp_foe_by_ransac()
@@ -127,25 +127,20 @@ class FoE:
                 f"[INFO] flow existing pixel rate: {self.flow_existing_rate_in_static * 100:.2f} %"
             )
 
-    def comp_flow_existence_in_nonstatic(self):
-        # at this moment, all flow existing pixel inside non-static mask will be set as moving.
+    def comp_flow_existence(self):
+        # at this moment, all flow existing pixel will be set as moving.
         # check pixels inside non static mask
-        nonstaticpix_indices = np.where(
-            (self.static_mask == False) & (self.sky_mask == False)
-        )
-        for i in range(len(nonstaticpix_indices[0])):
-            row = nonstaticpix_indices[0][i]
-            col = nonstaticpix_indices[1][i]
+        for row in range(self.flow.shape[0]):
+            for col in range(self.flow.shape[1]):
+                # get flow
+                u = self.flow[row, col, 0]
+                v = self.flow[row, col, 1]
 
-            # get flow
-            u = self.flow[row, col, 0]
-            v = self.flow[row, col, 1]
-
-            flow_lentgh = np.sqrt(u**2 + v**2)
-            if flow_lentgh < self.THRE_FLOWLENGTH:
-                self.moving_prob[row, col] = flow_lentgh / self.THRE_FLOWLENGTH
-            else:
-                self.moving_prob[row, col] = 1.0
+                flow_lentgh = np.sqrt(u**2 + v**2)
+                if flow_lentgh < self.THRE_FLOWLENGTH:
+                    self.moving_prob[row, col] = flow_lentgh / self.THRE_FLOWLENGTH
+                else:
+                    self.moving_prob[row, col] = 1.0
 
     def comp_foe_by_ransac(self):
         """
