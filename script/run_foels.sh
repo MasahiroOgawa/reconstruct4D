@@ -30,7 +30,7 @@ SEG_MODEL_NAME="shi-labs/oneformer_coco_swin_large"
 # whether run ransac all inlier estimation or not.
 RANSAC_ALL_INLIER_ESTIMATION=True
 # FOE_SEARCH_STEP: the number of steps to search the focus of expansion (FOE) in the image.
-FOE_SEARCH_STEP=1
+FOE_SEARCH_STEP=5
 ####################
 
 # to define INPUT_DIR, we need to do below first.
