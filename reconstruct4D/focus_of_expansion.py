@@ -312,54 +312,59 @@ class FoE:
             foe_v = foe[1] / foe[2]
 
         # check pixels inside flow existing static mask area.
-        for row, col in zip(
-            *np.nonzero(self.static_mask[:: self.SEARCH_STEP, :: self.SEARCH_STEP])
-        ):
-            # get flow
-            flow_u = self.flow[row, col, 0]
-            flow_v = self.flow[row, col, 1]
+        for row in range(0, self.static_mask.shape[0], self.SEARCH_STEP):
+            for col in range(0, self.static_mask.shape[1], self.SEARCH_STEP):
+                if self.static_mask[row, col]:
+                    # get flow
+                    flow_u = self.flow[row, col, 0]
+                    flow_v = self.flow[row, col, 1]
 
-            flow_length = np.sqrt(flow_u**2 + flow_v**2)
-            # TODO: I need to check whether this (tanh) definition is OK.
-            # probably, e.g. 100 times difference should be more exaggerated than this.
-            length_diff_prob = min(
-                1.0,
-                max(
-                    np.tanh(abs(flow_length / self.mean_flow_length_in_static - 1)),
-                    self.SAME_FLOWLENGTH_MIN_MOVING_PROB,
-                ),
-            )
-            if flow_length < self.THRE_FLOWLENGTH:
-                # Currently the camera is judged as moving in the former process,
-                # so this means that the former considered static object moves with the camera.
-                self.moving_prob[row, col] = (
-                    length_diff_prob * self.SAME_FLOWANGLE_MIN_MOVING_PROB
-                )
-            else:
-                num_flow_existingpix += 1
-
-                if self.LOG_LEVEL > 3 and self.display_foe_flow_img:
-                    self._show_foe_flow_img(row, col, foe_u, foe_v, flow_u, flow_v)
-
-                # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
-                foe2pt = np.array([col - foe_u, row - foe_v, 1])
-                cos_foe_flow = np.dot((foe2pt[0], foe2pt[1]), (flow_u, flow_v)) / (
-                    np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2) * flow_length
-                )
-                angle_diff_prob = min(
-                    1.0, max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MIN_MOVING_PROB)
-                )
-                self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
-                # count up inlier if the angle is lower than the threshold.
-                if cos_foe_flow > self.THRE_COS_INLIER:
-                    num_inlier += 1
-                    # add inlier foe2pt vector to matrix as a row vector to compute FoE by RANSAC
-                    if num_inlier == 1:
-                        self.tmp_inlier_foe2pt_mat = foe2pt
-                    else:
-                        self.tmp_inlier_foe2pt_mat = np.vstack(
-                            (self.tmp_inlier_foe2pt_mat, foe2pt)
+                    flow_length = np.sqrt(flow_u**2 + flow_v**2)
+                    # TODO: I need to check whether this (tanh) definition is OK.
+                    # probably, e.g. 100 times difference should be more exaggerated than this.
+                    length_diff_prob = min(
+                        1.0,
+                        max(
+                            np.tanh(
+                                abs(flow_length / self.mean_flow_length_in_static - 1)
+                            ),
+                            self.SAME_FLOWLENGTH_MIN_MOVING_PROB,
+                        ),
+                    )
+                    if flow_length < self.THRE_FLOWLENGTH:
+                        # Currently the camera is judged as moving in the former process,
+                        # so this means that the former considered static object moves with the camera.
+                        self.moving_prob[row, col] = (
+                            length_diff_prob * self.SAME_FLOWANGLE_MIN_MOVING_PROB
                         )
+                    else:
+                        num_flow_existingpix += 1
+
+                        if self.LOG_LEVEL > 3 and self.display_foe_flow_img:
+                            self._show_foe_flow_img(
+                                row, col, foe_u, foe_v, flow_u, flow_v
+                            )
+
+                        # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
+                        foe2pt = np.array([col - foe_u, row - foe_v, 1])
+                        cos_foe_flow = np.dot(
+                            (foe2pt[0], foe2pt[1]), (flow_u, flow_v)
+                        ) / (np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2) * flow_length)
+                        angle_diff_prob = min(
+                            1.0,
+                            max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MIN_MOVING_PROB),
+                        )
+                        self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
+                        # count up inlier if the angle is lower than the threshold.
+                        if cos_foe_flow > self.THRE_COS_INLIER:
+                            num_inlier += 1
+                            # add inlier foe2pt vector to matrix as a row vector to compute FoE by RANSAC
+                            if num_inlier == 1:
+                                self.tmp_inlier_foe2pt_mat = foe2pt
+                            else:
+                                self.tmp_inlier_foe2pt_mat = np.vstack(
+                                    (self.tmp_inlier_foe2pt_mat, foe2pt)
+                                )
 
         # when search_step > 1, flow_existing_rate_in_static=0, but num_flow_existingpix is not 0, so we add condition.
         if self.flow_existing_rate_in_static == 0 or num_flow_existingpix == 0:
@@ -378,8 +383,8 @@ class FoE:
         LENGTH_FACTOR = 10
         foe_flow_img = self.intermediate_foe_img.copy()
 
-        # paint self.tmp_moving_prob!=0 area as gray
-        foe_flow_img[self.moving_prob != 0] = (128, 128, 128)
+        # paint self.static_mask area as gray
+        foe_flow_img[self.static_mask] = [128, 128, 128]
 
         # draw arrows.
         cv2.arrowedLine(
