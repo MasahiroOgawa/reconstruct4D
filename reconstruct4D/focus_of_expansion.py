@@ -68,6 +68,7 @@ class FoE:
         else:
             # camera is considered as moving (set as rotating by default)
             self.comp_foe_by_ransac()
+            self.comp_movpixprob(self.foe)
 
     def draw(self, bg_img=None):
         self.bg_img = bg_img
@@ -156,7 +157,7 @@ class FoE:
                 # initialize by the first candidate
                 self.foe = foe_candi
 
-            self.comp_inlierrate_and_movpixprob(foe_candi)
+            self.comp_inlier_rate(foe_candi)
 
             if self.inlier_rate > max_inlier_rate:
                 # update by the current best
@@ -286,13 +287,13 @@ class FoE:
 
         return crossing_point
 
-    def comp_inlierrate_and_movpixprob(self, foe) -> float:
+    def comp_inlier_rate(self, foe: np.ndarray) -> float:
         """
-        compute inlier rate except sky mask from FoE,
-        and moving pixel probability by length and angle difference,
-        in the same pixel for loop.
+        compute inlier rate except sky mask from a candidate FoE.
         args:
             foe: FoE in 3D homogeneous coordinate
+        Returns:
+            float: _description_
         """
         num_inlier = 0
         num_flow_existingpix = 0
@@ -308,6 +309,66 @@ class FoE:
         # check pixels inside flow existing static mask area.
         for row in range(0, self.static_mask.shape[0], self.SEARCH_STEP):
             for col in range(0, self.static_mask.shape[1], self.SEARCH_STEP):
+                if self.static_mask[row, col]:
+                    # get flow
+                    flow_u = self.flow[row, col, 0]
+                    flow_v = self.flow[row, col, 1]
+
+                    flow_length = np.sqrt(flow_u**2 + flow_v**2)
+
+                    if flow_length > self.THRE_FLOWLENGTH:
+                        num_flow_existingpix += 1
+
+                        if self.LOG_LEVEL > 3 and self.display_foe_flow_img:
+                            self._show_foe_flow_img(
+                                row, col, foe_u, foe_v, flow_u, flow_v
+                            )
+
+                        # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
+                        foe2pt = np.array([col - foe_u, row - foe_v, 1])
+                        cos_foe_flow = np.dot(
+                            (foe2pt[0], foe2pt[1]), (flow_u, flow_v)
+                        ) / (np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2) * flow_length)
+                        # count up as an inlier when the angle is close.
+                        if cos_foe_flow > self.THRE_COS_INLIER:
+                            num_inlier += 1
+                            # add inlier foe2pt vector to matrix as a row vector to compute FoE by RANSAC
+                            if num_inlier == 1:
+                                self.tmp_inlier_foe2pt_mat = foe2pt
+                            else:
+                                self.tmp_inlier_foe2pt_mat = np.vstack(
+                                    (self.tmp_inlier_foe2pt_mat, foe2pt)
+                                )
+
+        # when search_step > 1, flow_existing_rate_in_static=0, but num_flow_existingpix is not 0, so we add condition.
+        if self.flow_existing_rate_in_static == 0 or num_flow_existingpix == 0:
+            # this means the camera is stopping.
+            # But to avoid 'NoneType' object has no attribute 'copy' in line175, set it as 0.
+            self.inlier_rate = 0
+        else:
+            self.inlier_rate = num_inlier / num_flow_existingpix
+
+        if self.LOG_LEVEL > 0:
+            print(
+                f"[INFO] FoE candidate: {foe}, inlier rate: {self.inlier_rate * 100:.2f} %"
+            )
+
+    def comp_movpixprob(self, foe) -> float:
+        """
+        compute moving pixel probability by length and angle difference.
+        args:
+            foe: FoE in 3D homogeneous coordinate
+        """
+        # treat candidate FoE is infinite case
+        if foe[2] == 0:
+            foe[2] = 1e-10
+        else:
+            foe_u = foe[0] / foe[2]
+            foe_v = foe[1] / foe[2]
+
+        # check pixels inside flow existing static mask area.
+        for row in range(0, self.static_mask.shape[0]):
+            for col in range(0, self.static_mask.shape[1]):
                 if self.static_mask[row, col]:
                     # get flow
                     flow_u = self.flow[row, col, 0]
@@ -332,13 +393,6 @@ class FoE:
                             length_diff_prob * self.SAME_FLOWANGLE_MIN_MOVING_PROB
                         )
                     else:
-                        num_flow_existingpix += 1
-
-                        if self.LOG_LEVEL > 3 and self.display_foe_flow_img:
-                            self._show_foe_flow_img(
-                                row, col, foe_u, foe_v, flow_u, flow_v
-                            )
-
                         # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
                         foe2pt = np.array([col - foe_u, row - foe_v, 1])
                         cos_foe_flow = np.dot(
@@ -349,29 +403,6 @@ class FoE:
                             max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MIN_MOVING_PROB),
                         )
                         self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
-                        # count up inlier if the angle is lower than the threshold.
-                        if cos_foe_flow > self.THRE_COS_INLIER:
-                            num_inlier += 1
-                            # add inlier foe2pt vector to matrix as a row vector to compute FoE by RANSAC
-                            if num_inlier == 1:
-                                self.tmp_inlier_foe2pt_mat = foe2pt
-                            else:
-                                self.tmp_inlier_foe2pt_mat = np.vstack(
-                                    (self.tmp_inlier_foe2pt_mat, foe2pt)
-                                )
-
-        # when search_step > 1, flow_existing_rate_in_static=0, but num_flow_existingpix is not 0, so we add condition.
-        if self.flow_existing_rate_in_static == 0 or num_flow_existingpix == 0:
-            # this means the camera is stopping.
-            # But to avoid 'NoneType' object has no attribute 'copy' in line175, set it as 0.
-            self.inlier_rate = 0
-        else:
-            self.inlier_rate = num_inlier / num_flow_existingpix
-
-        if self.LOG_LEVEL > 0:
-            print(
-                f"[INFO] FoE candidate: {foe}, inlier rate: {self.inlier_rate * 100:.2f} %"
-            )
 
     def _show_foe_flow_img(self, row, col, foe_u, foe_v, flow_u, flow_v):
         LENGTH_FACTOR = 10
