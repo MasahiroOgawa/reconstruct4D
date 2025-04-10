@@ -100,12 +100,7 @@ class FoE:
             # count flow existing pix in static mask, and compute temporary moving prob.
             flow_length = np.sqrt(u**2 + v**2)
             sum_flow_length += flow_length
-            if flow_length < self.THRE_FLOWLENGTH:
-                # compute moving probabiity based on flow length,
-                # because the area is segemnted as static, but some static object, like chair, might be moved by other force, like wind.
-                self.moving_prob[row, col] = flow_length / self.THRE_FLOWLENGTH
-            else:
-                self.moving_prob[row, col] = 1.0
+            if flow_length > self.THRE_FLOWLENGTH:
                 num_flow_existing_pix_in_static += 1
 
         if len(staticpix_indices[0]) == 0:
@@ -137,10 +132,9 @@ class FoE:
                 v = self.flow[row, col, 1]
 
                 flow_lentgh = np.sqrt(u**2 + v**2)
-                if flow_lentgh < self.THRE_FLOWLENGTH:
-                    self.moving_prob[row, col] = flow_lentgh / self.THRE_FLOWLENGTH
-                else:
-                    self.moving_prob[row, col] = 1.0
+                self.moving_prob[row, col] = min(
+                    1.0, abs(flow_lentgh / self.THRE_FLOWLENGTH)
+                )
 
     def comp_foe_by_ransac(self):
         """

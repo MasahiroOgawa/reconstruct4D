@@ -19,7 +19,7 @@ OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
  # 5: run python debugger. push F5 after running the script.
-LOG_LEVEL=4
+LOG_LEVEL=3
 IMG_HEIGHT=480
 # FRAME 79 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
 SKIP_FRAMES=0 
@@ -30,7 +30,7 @@ SEG_MODEL_NAME="shi-labs/oneformer_coco_swin_large"
 # whether run ransac all inlier estimation or not.
 RANSAC_ALL_INLIER_ESTIMATION=True
 # FOE_SEARCH_STEP: the number of steps to search the focus of expansion (FOE) in the image.
-FOE_SEARCH_STEP=5
+FOE_SEARCH_STEP=1
 ####################
 
 # to define INPUT_DIR, we need to do below first.
