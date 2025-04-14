@@ -25,7 +25,6 @@ class MovingObjectExtractor:
         # if flow existing pixel rate is lower than this value, the camera is considered as stopping.
         # the flow existing rate will be computed only inside static mask.
         THRE_FLOW_EXISTING_RATE = 0.01
-        NUM_RANSAC = 10
         # every this pixel, draw flow arrow.
         FLOWARROW_STEP = 20
         # minimum moving probability even when the angle is totally the same with FoE-position angle.
@@ -77,7 +76,7 @@ class MovingObjectExtractor:
             THRE_INLIER_ANGLE,
             THRE_INLIER_RATE,
             THRE_FLOW_EXISTING_RATE,
-            NUM_RANSAC,
+            args.num_ransac,
             SAME_FLOWANGLE_MIN_MOVING_PROB,
             SAME_FLOWLENGTH_MIN_MOVING_PROB,
             FLOWARROW_STEP,
@@ -335,6 +334,12 @@ if __name__ == "__main__":
         type=int,
         default=1,
         help="search step size when computing FoE inlier",
+    )
+    parser.add_argument(
+        "--num_ransac",
+        type=int,
+        default=30,
+        help="number of RANSAC iterations for FoE estimation",
     )
     args = parser.parse_args()
 

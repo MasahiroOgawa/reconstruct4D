@@ -13,7 +13,7 @@ class FoE:
         thre_inlier_angle=10 * np.pi / 180,
         thre_inlier_rate=0.9,
         thre_flow_existing_rate=0.1,
-        num_ransac=10,
+        num_ransac=100,
         same_flowangle_min_moving_prob=0.1,
         same_flowlength_min_moving_prob=0.4,
         flowarrow_step=20,
@@ -173,7 +173,7 @@ class FoE:
                     self.state = CameraState.ONLY_TRANSLATING
                     break
 
-        if self.RANSAC_ALL_INLIER_ESTIMATION and (self.inlier_foe2pt_mat is not None):
+        if self.RANSAC_ALL_INLIER_ESTIMATION and (self.inlier_foe2pt_mat.shape[0] > 1):
             # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
             self.foe = self._comp_crosspt()
 
@@ -280,7 +280,7 @@ class FoE:
             crossing_point: crossing point in 3D homogeneous coordinate.
         """
         # Check that there are enough lines to compute the crossing point
-        if self.inlier_foe2pt_mat is None or self.inlier_foe2pt_mat.shape[0] < 2:
+        if (self.inlier_foe2pt_mat is None) or (self.inlier_foe2pt_mat.shape[0] < 2):
             print("[WARNING] Not enough lines to compute the crossing point.")
             return None
 

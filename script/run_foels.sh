@@ -27,6 +27,8 @@ SKIP_FRAMES=0
 # "upernet_internimage_h_896_160k_ade20k.pth", "mask_rcnn_internimage_t_fpn_1x_coco.pth"}
 # "shi-labs/oneformer_coco_swin_large"
 SEG_MODEL_NAME="shi-labs/oneformer_coco_swin_large"
+# number of iteration in RANSAC
+NUM_RANSAC=100
 # whether run ransac all inlier estimation or not.
 RANSAC_ALL_INLIER_ESTIMATION=True
 # FOE_SEARCH_STEP: the number of steps to search the focus of expansion (FOE) in the image.
@@ -222,6 +224,7 @@ MOVOBJEXT_OPTS="--input_dir ${INPUT_DIR} \
        --skip_frames ${SKIP_FRAMES} \
        --ransac_all_inlier_estimation ${RANSAC_ALL_INLIER_ESTIMATION} \
        --foe_search_step ${FOE_SEARCH_STEP} \
+       --num_ransac ${NUM_RANSAC} \
        --loglevel ${LOG_LEVEL}"
 if [ $LOG_LEVEL -ge 5 ]; then
        python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJEXT_OPTS}
