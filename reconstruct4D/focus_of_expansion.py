@@ -150,9 +150,12 @@ class FoE:
             # need to reset every time because it might be pressed 'q' to dkip the previous drawing image.
             self.display_foe_flow_img = True
 
-        for _ in range(self.NUM_RANSAC):
+        for try_num in range(self.NUM_RANSAC):
             foe_candi = self.comp_foe_candidate()
             if foe_candi is None:  # this will unlikely happen.
+                print(
+                    f"[WARNING] foe_candi is None in ransac {try_num} trial. @ comp_foe_by_ransac"
+                )
                 continue
             elif self.foe is None:
                 # initialize by the first candidate
@@ -170,7 +173,7 @@ class FoE:
                     self.state = CameraState.ONLY_TRANSLATING
                     break
 
-        if self.RANSAC_ALL_INLIER_ESTIMATION:
+        if self.RANSAC_ALL_INLIER_ESTIMATION and (self.inlier_foe2pt_mat is not None):
             # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
             self.foe = self._comp_crosspt()
 
@@ -198,13 +201,13 @@ class FoE:
                 line = self.comp_flowline(row, col)
                 if line is not None:
                     return line
-            return None
+            raise RuntimeError(
+                "[ERROR] Failed to find a valid flow line after {max_retry} attempts @ comp_foe_candidate"
+            )
 
         # Get two valid flow lines and compute their cross product as the candidate FoE.
         l1 = _get_random_flowline()
         l2 = _get_random_flowline()
-        if l1 is None or l2 is None:
-            return None
         foe_candi = np.cross(l1, l2)
 
         # draw debug image
