@@ -83,6 +83,7 @@ class FoE:
             np.ones((self.flow.shape[0], self.flow.shape[1]), dtype=np.float16) * 0.5
         )
         self.moving_prob[self.sky_mask == True] = 0.0
+        self.foe = None
 
     def comp_flow_existing_rate_in_static(self):
         num_flow_existing_pix_in_static = 0
@@ -151,9 +152,9 @@ class FoE:
 
         for _ in range(self.NUM_RANSAC):
             foe_candi = self.comp_foe_candidate()
-            if foe_candi is None:
+            if foe_candi is None:  # this will unlikely happen.
                 continue
-            if self.foe is None:
+            elif self.foe is None:
                 # initialize by the first candidate
                 self.foe = foe_candi
 
@@ -177,24 +178,34 @@ class FoE:
                 # check distance from foe_candi to foe
                 print(
                     f"[INFO] distance from foe_candi to foe [pix] = "
-                    f"{np.linalg.norm(foe_candi[0:1]/foe_candi[2] - self.foe[0:1]/self.foe[2])}"
+                    f"{np.linalg.norm(foe_candi[0:1] / foe_candi[2] - self.foe[0:1] / self.foe[2])}"
                 )
 
     def comp_foe_candidate(self) -> np.ndarray:
         """
         compute FoE from 2 flow lines only inside static mask.
         FoE is in 3D homogeneous coordinate.
+        If candidate is None, reselect 2 flow lines.
+        The camera is considered not stopping when this function is called, so there must exist 2 flow lines.
+        return:
+            foe_candi: candidate FoE in 3D homogeneous coordinate.
         """
-        # compute FoE from 2 flow lines only inside static mask.
-        row, col = self.random_point_in_static_mask()
-        l1 = self.comp_flowline(row, col)
-        if l1 is None:
+
+        def _get_random_flowline(max_retries=1000) -> np.ndarray:
+            """Pick a random pixel from the static mask until a valid flow line is found."""
+            for _ in range(max_retries):
+                row, col = self.random_point_in_static_mask()
+                line = self.comp_flowline(row, col)
+                if line is not None:
+                    return line
             return None
-        row, col = self.random_point_in_static_mask()
-        l2 = self.comp_flowline(row, col)
-        if l2 is None:
+
+        # Get two valid flow lines and compute their cross product as the candidate FoE.
+        l1 = _get_random_flowline()
+        l2 = _get_random_flowline()
+        if l1 is None or l2 is None:
             return None
-        foe = np.cross(l1, l2)
+        foe_candi = np.cross(l1, l2)
 
         # draw debug image
         if self.LOG_LEVEL > 2:
@@ -203,13 +214,13 @@ class FoE:
             )
             self.draw_line(l1, self.intermediate_foe_img)
             self.draw_line(l2, self.intermediate_foe_img)
-            self.draw_homogeneous_point(foe, self.intermediate_foe_img)
+            self.draw_homogeneous_point(foe_candi, self.intermediate_foe_img)
             cv2.imshow("Debug", self.intermediate_foe_img)
             key = cv2.waitKey(1)
             if key == ord("q"):
                 exit()
 
-        return foe
+        return foe_candi
 
     def comp_flowline(self, row: int, col: int) -> np.ndarray:
         """
@@ -359,6 +370,9 @@ class FoE:
         args:
             foe: FoE in 3D homogeneous coordinate
         """
+        if foe is None:
+            raise ValueError("FoE is None @ comp_movpixprob")
+
         # treat candidate FoE is infinite case
         if foe[2] == 0:
             foe[2] = 1e-10
