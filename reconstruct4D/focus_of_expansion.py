@@ -316,9 +316,9 @@ class FoE:
         # treat candidate FoE is infinite case
         if foe[2] == 0:
             foe[2] = 1e-10
-        else:
-            foe_u = foe[0] / foe[2]
-            foe_v = foe[1] / foe[2]
+
+        foe_u = foe[0] / foe[2]
+        foe_v = foe[1] / foe[2]
 
         # check pixels inside flow existing static mask area.
         for row in range(0, self.static_mask.shape[0], self.SEARCH_STEP):
