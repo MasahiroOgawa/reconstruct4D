@@ -7,6 +7,7 @@ set -eu
 echo "[INFO] set parameters."
 ROOT_DIR=$(dirname "$0")/..
 ROOT_DATA_DIR=${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/download/DAVIS/JPEGImages/480p
+DATASET_NAME="DAVIS2016"
 
 
 echo "[INFO] check input file existence."
@@ -21,22 +22,22 @@ else
         eval "$(conda shell.bash activate contextual-information-separation)"
         set -eu
         echo "[INFO] env: $CONDA_DEFAULT_ENV"
-        bash ./scripts/test_DAVIS2016_raw.sh
+        python ./scripts/test_${DATASET_NAME}_raw.py
     )
 fi
 
 
-echo "[INFO] run foels on davis."
+echo "[INFO] run foels on the dataset."
 for DATA_DIR in ${ROOT_DATA_DIR}/*
 do
     echo "[INFO] read DATA_DIR=${DATA_DIR}"
-    $ROOT_DIR/script/run_foels.sh $DATA_DIR ${ROOT_DIR}/output/davis
+    $ROOT_DIR/script/run_foels.sh $DATA_DIR ${ROOT_DIR}/output/${DATASET_NAME}
 done
 
 echo "[INFO] run evaluation."
-$ROOT_DIR/script/evaluate_foels_on_davis.sh
+$ROOT_DIR/script/evaluate_foels_on_${DATASET_NAME}.sh
 
 echo "[INFO] copy results to output directory."
-cp ${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/results/Foels/DAVIS2016/result.txt ${ROOT_DIR}/output/davis
+cp ${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/results/Foels/${DATASET_NAME}/result.txt ${ROOT_DIR}/output/${DATASET_NAME}
 
 echo "[INFO] finish."

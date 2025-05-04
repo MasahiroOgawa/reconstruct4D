@@ -158,11 +158,11 @@ class MovingObjectExtractor:
         overlay_img[self.moving_obj_mask == 1, 2] += 128
         self.result_img = overlay_img
 
-        self._write_allimgtitles()
-
         # combine intermediate images
         self.seg.draw(bg_img=self.cur_img)
         self.foe.draw(bg_img=self.optflow.flow_img)
+
+        self._write_allimgtitles()
         row1_img = cv2.hconcat(
             [self.cur_img, self.seg.result_img, self.seg.result_movingmask_img]
         )

@@ -383,43 +383,42 @@ class FoE:
             foe_u = foe[0] / foe[2]
             foe_v = foe[1] / foe[2]
 
-        # check pixels inside flow existing static mask area.
-        for row in range(0, self.static_mask.shape[0]):
-            for col in range(0, self.static_mask.shape[1]):
-                if self.static_mask[row, col]:
-                    # get flow
-                    flow_u = self.flow[row, col, 0]
-                    flow_v = self.flow[row, col, 1]
+        for row in range(0, self.flow.shape[0]):
+            for col in range(0, self.flow.shape[1]):
+                # get flow
+                flow_u = self.flow[row, col, 0]
+                flow_v = self.flow[row, col, 1]
 
-                    flow_length = np.sqrt(flow_u**2 + flow_v**2)
-                    # TODO: I need to check whether this (tanh) definition is OK.
-                    # probably, e.g. 100 times difference should be more exaggerated than this.
-                    length_diff_prob = min(
-                        1.0,
-                        max(
-                            np.tanh(
-                                abs(flow_length / self.mean_flow_length_in_static - 1)
-                            ),
-                            self.SAME_FLOWLENGTH_MIN_MOVING_PROB,
-                        ),
+                flow_length = np.sqrt(flow_u**2 + flow_v**2)
+                # TODO: I need to check whether this (tanh) definition is OK.
+                # probably, e.g. 100 times difference should be more exaggerated than this.
+                length_diff_prob = min(
+                    1.0,
+                    max(
+                        np.tanh(abs(flow_length / self.mean_flow_length_in_static - 1)),
+                        self.SAME_FLOWLENGTH_MIN_MOVING_PROB,
+                    ),
+                )
+                if flow_length < self.THRE_FLOWLENGTH:
+                    # Currently the camera is judged as moving in the former process,
+                    # so this means that the former considered static object moves with the camera.
+                    self.moving_prob[row, col] = (
+                        length_diff_prob * self.SAME_FLOWANGLE_MIN_MOVING_PROB
                     )
-                    if flow_length < self.THRE_FLOWLENGTH:
-                        # Currently the camera is judged as moving in the former process,
-                        # so this means that the former considered static object moves with the camera.
-                        self.moving_prob[row, col] = (
-                            length_diff_prob * self.SAME_FLOWANGLE_MIN_MOVING_PROB
-                        )
-                    else:
-                        # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
-                        foe2pt = np.array([col - foe_u, row - foe_v, 1])
-                        cos_foe_flow = np.dot(
-                            (foe2pt[0], foe2pt[1]), (flow_u, flow_v)
-                        ) / (np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2) * flow_length)
-                        angle_diff_prob = min(
-                            1.0,
-                            max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MIN_MOVING_PROB),
-                        )
-                        self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
+                else:
+                    # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
+                    foe2pt = np.array([col - foe_u, row - foe_v, 1])
+                    cos_foe_flow = np.dot((foe2pt[0], foe2pt[1]), (flow_u, flow_v)) / (
+                        np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2) * flow_length
+                    )
+                    angle_diff_prob = min(
+                        1.0,
+                        max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MIN_MOVING_PROB),
+                    )
+                    self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
+
+        # Ensure sky mask remains 0 probability after calculations
+        self.moving_prob[self.sky_mask == True] = 0.0
 
     def _show_foe_flow_img(self, row, col, foe_u, foe_v, flow_u, flow_v):
         LENGTH_FACTOR = 10
@@ -509,7 +508,7 @@ class FoE:
                 (10, 30),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1,
-                (0, 0, 0),
+                (255, 255, 255),
                 2,
             )
         elif self.state == CameraState.ONLY_TRANSLATING:
@@ -520,7 +519,7 @@ class FoE:
                 (10, 30),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1,
-                (0, 0, 0),
+                (255, 255, 255),
                 2,
             )
         elif self.state == CameraState.ROTATING:
@@ -530,7 +529,7 @@ class FoE:
                 (10, 30),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1,
-                (0, 0, 0),
+                (255, 255, 255),
                 2,
             )
 

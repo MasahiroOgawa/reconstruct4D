@@ -19,10 +19,10 @@ OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
  # 5: run python debugger. push F5 after running the script.
-LOG_LEVEL=1
+LOG_LEVEL=5
 IMG_HEIGHT=480
-# FRAME 79 #parrallel moving track  #107 #stopping pedestrians for todaiura data.
-SKIP_FRAMES=0 
+# FRAME 79 #parallel moving track  #107 #stopping pedestrians for Todaiura data.
+SKIP_FRAMES=40 
 # SEG_MODEL_NAME options = {"upernet_internimage_t_512_160k_ade20k.pth", "upernet_internimage_xl_640_160k_ade20k.pth", 
 # "upernet_internimage_h_896_160k_ade20k.pth", "mask_rcnn_internimage_t_fpn_1x_coco.pth"}
 # "shi-labs/oneformer_coco_swin_large"
