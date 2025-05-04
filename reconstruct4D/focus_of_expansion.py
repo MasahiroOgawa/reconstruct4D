@@ -416,11 +416,7 @@ class FoE:
                         1.0,
                         max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MIN_MOVING_PROB),
                     )
-                    if angle_diff_prob > self.SAME_FLOWANGLE_MIN_MOVING_PROB:
-                        self.moving_prob[row, col] = angle_diff_prob
-                    else:
-                        # in case the angle is almost the same with the background, we will consider the length difference too.
-                        self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
+                    self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
 
         # Ensure sky mask remains 0 probability after calculations
         self.moving_prob[self.sky_mask == True] = 0.0
