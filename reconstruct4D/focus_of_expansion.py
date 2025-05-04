@@ -407,6 +407,7 @@ class FoE:
                     )
                 else:
                     # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
+                    # TODO: I must record mean oriantation against FoE. forward and backward orientation has 180 deg difference.
                     foe2pt = np.array([col - foe_u, row - foe_v, 1])
                     cos_foe_flow = np.dot((foe2pt[0], foe2pt[1]), (flow_u, flow_v)) / (
                         np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2) * flow_length
@@ -415,7 +416,11 @@ class FoE:
                         1.0,
                         max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MIN_MOVING_PROB),
                     )
-                    self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
+                    if angle_diff_prob > self.SAME_FLOWANGLE_MIN_MOVING_PROB:
+                        self.moving_prob[row, col] = angle_diff_prob
+                    else:
+                        # in case the angle is almost the same with the background, we will consider the length difference too.
+                        self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
 
         # Ensure sky mask remains 0 probability after calculations
         self.moving_prob[self.sky_mask == True] = 0.0
