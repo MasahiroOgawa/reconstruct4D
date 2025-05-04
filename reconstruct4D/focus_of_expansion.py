@@ -41,6 +41,7 @@ class FoE:
         self.mean_flow_length_in_static = 0.0
         self.inlier_rate = 0.0
         self.foe = None
+        self.foe_sign = 1  # +1 for source (the flow is expanding, which means camera is toward front), -1 for sink
         self.foe_camstate_img = None
         self.moving_prob = None  # 0: inlier=stop, 1: outlier=moving
         self.moving_prob_img = None
@@ -84,6 +85,7 @@ class FoE:
         )
         self.moving_prob[self.sky_mask == True] = 0.0
         self.foe = None
+        self.foe_sign = 1
 
     def comp_flow_existing_rate_in_static(self):
         num_flow_existing_pix_in_static = 0
@@ -140,12 +142,12 @@ class FoE:
 
     def comp_foe_by_ransac(self):
         """
-        compute FoE by RANSAC
+        compute FoE by RANSAC, determine it's sign.
         """
         # if we set below as 0.0, it caused a error in self.foe = self._comp_crosspt().
-        max_inlier_rate = 1e-6
+        self.inlier_rate = 1e-6
         self.foe = None
-        self.inlier_foe2pt_mat = None
+        best_inlier_mat = None
         if self.LOG_LEVEL > 3:
             # need to reset every time because it might be pressed 'q' to dkip the previous drawing image.
             self.display_foe_flow_img = True
@@ -157,32 +159,51 @@ class FoE:
                     f"[WARNING] foe_candi is None in ransac {try_num} trial. @ comp_foe_by_ransac"
                 )
                 continue
-            elif self.foe is None:
-                # initialize by the first candidate
-                self.foe = foe_candi
 
-            self.comp_inlier_rate(foe_candi)
+            inlier_rate_candi, mean_cos_candi, inlier_mat_candi = self.comp_inlier_rate(foe_candi)
 
-            if self.inlier_rate > max_inlier_rate:
+            if inlier_rate_candi > self.inlier_rate:
                 # update by the current best
-                max_inlier_rate = self.inlier_rate
-                self.inlier_foe2pt_mat = self.tmp_inlier_foe2pt_mat.copy()
+                self.inlier_rate = inlier_rate_candi
+                best_inlier_mat = inlier_mat_candi
+                self.foe = foe_candi
+                if mean_cos_candi < 0:
+                    self.foe_sign = -1
 
                 # stop if inlier rate is high enough
                 if self.inlier_rate > self.THRE_INLIER_RATE:
                     self.state = CameraState.ONLY_TRANSLATING
+                    if self.LOG_LEVEL > 0:  
+                        print(
+                            f"[INFO] RANSAC {try_num} trial: "
+                            f"FoE: {self.foe}, "
+                            f"FoE sign: {self.foe_sign}, "
+                        )
                     break
-
-        if self.RANSAC_ALL_INLIER_ESTIMATION and (self.inlier_foe2pt_mat.shape[0] > 1):
+                
+        if self.LOG_LEVEL > 0:  
+            print(
+                f"[INFO] RANSAC {try_num} trial: "
+                f"FoE: {self.foe}, "
+                f"FoE sign: {self.foe_sign}, "
+            )
+            
+        if self.RANSAC_ALL_INLIER_ESTIMATION and (best_inlier_mat.shape[0] > 1):
             # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
-            self.foe = self._comp_crosspt()
+            refined_foe = self._comp_crosspt(best_inlier_mat)
+            if refined_foe is not None:
+                self.foe = refined_foe
 
-            if self.LOG_LEVEL > 2:
+            if self.LOG_LEVEL > 0:
                 # check distance from foe_candi to foe
                 print(
-                    f"[INFO] distance from foe_candi to foe [pix] = "
+                    f"[INFO] RANSAC all inlier estimation: "
+                    f"FoE: {self.foe}, "
+                    f"FoE sign: {self.foe_sign}, "
+                    f"distance from foe_candi to foe [pix] = "
                     f"{np.linalg.norm(foe_candi[0:1] / foe_candi[2] - self.foe[0:1] / self.foe[2])}"
                 )
+            
 
     def comp_foe_candidate(self) -> np.ndarray:
         """
@@ -273,14 +294,16 @@ class FoE:
 
         return row, col
 
-    def _comp_crosspt(self) -> np.ndarray:
+    def _comp_crosspt(self, inlier_mat: np.ndarray) -> np.ndarray | None:
         """
         Compute the most probable crossing point (Focus of Expansion) from the inlier lines.
-        return:
+        Args:
+            inlier_mat: 2D array of inlier lines. shape = (num_lines, 3)
+        Returns:
             crossing_point: crossing point in 3D homogeneous coordinate.
         """
         # Check that there are enough lines to compute the crossing point
-        if (self.inlier_foe2pt_mat is None) or (self.inlier_foe2pt_mat.shape[0] < 2):
+        if (inlier_mat is None) of (inlier_mat.ndim != 2) or (inlier_mat.shape[0] < 2):
             print("[WARNING] Not enough lines to compute the crossing point.")
             return None
 
@@ -301,17 +324,19 @@ class FoE:
 
         return crossing_point
 
-    def comp_inlier_rate(self, foe: np.ndarray) -> float:
+    def comp_inlier_rate(self, foe: np.ndarray):
         """
         compute inlier rate except sky mask from a candidate FoE.
         args:
             foe: FoE in 3D homogeneous coordinate
         Returns:
-            float: _description_
+            tuple: (inlier_rate, mean_inlier_cos, tmp_inlier_foe2pt_mat)
+                   Returns (0, 0, None) if no flow exists.
         """
         num_inlier = 0
         num_flow_existingpix = 0
-        self.tmp_inlier_foe2pt_mat = None
+        sum_inlier_cos = 0.0
+        tmp_inlier_foe2pt_mat = None
 
         # treat candidate FoE is infinite case
         if foe[2] == 0:
@@ -327,7 +352,6 @@ class FoE:
                     # get flow
                     flow_u = self.flow[row, col, 0]
                     flow_v = self.flow[row, col, 1]
-
                     flow_length = np.sqrt(flow_u**2 + flow_v**2)
 
                     if flow_length > self.THRE_FLOWLENGTH:
@@ -340,32 +364,41 @@ class FoE:
 
                         # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
                         foe2pt = np.array([col - foe_u, row - foe_v, 1])
+                        foe2pt_length = np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2)
+                        if foe2pt_length < 1e-6: # avoid division by zero
+                            foe2pt_length = 1e-6:
                         cos_foe_flow = np.dot(
                             (foe2pt[0], foe2pt[1]), (flow_u, flow_v)
-                        ) / (np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2) * flow_length)
+                        ) / (foe2pt_length * flow_length)
+                        cos_foe_flow = np.clip(cos_foe_flow, -1.0, 1.0)
+                        
                         # count up as an inlier when the angle is close.
                         if cos_foe_flow > self.THRE_COS_INLIER:
                             num_inlier += 1
+                            sum_inlier_cos += cos_foe_flow
                             # add inlier foe2pt vector to matrix as a row vector to compute FoE by RANSAC
-                            if num_inlier == 1:
-                                self.tmp_inlier_foe2pt_mat = foe2pt
+                            if tmp_inlier_foe2pt_mat is None:
+                                tmp_inlier_foe2pt_mat = foe2pt
                             else:
-                                self.tmp_inlier_foe2pt_mat = np.vstack(
+                                tmp_inlier_foe2pt_mat = np.vstack(
                                     (self.tmp_inlier_foe2pt_mat, foe2pt)
                                 )
 
-        # when search_step > 1, flow_existing_rate_in_static=0, but num_flow_existingpix is not 0, so we add condition.
-        if self.flow_existing_rate_in_static == 0 or num_flow_existingpix == 0:
-            # this means the camera is stopping.
-            # But to avoid 'NoneType' object has no attribute 'copy' in line175, set it as 0.
-            self.inlier_rate = 0
-        else:
-            self.inlier_rate = num_inlier / num_flow_existingpix
+        # Calculate results
+        inlier_rate = 0.0
+        mean_inlier_cos = 0.0
+        if num_flow_existingpix > 0:
+            inlier_rate = num_inlier / num_flow_existingpix
+            if num_inlier > 0:
+                mean_inlier_cos = sum_inlier_cos / num_inlier
 
         if self.LOG_LEVEL > 0:
             print(
-                f"[INFO] FoE candidate: {foe}, inlier rate: {self.inlier_rate * 100:.2f} %"
+                f"[INFO] FoE candidate: {foe}, inlier rate: {inlier_rate * 100:.2f} %,"
+                f" mean inlier cos: {mean_inlier_cos:.2f}"
             )
+        
+        return inlier_rate, mean_inlier_cos, tmp_inlier_foe2pt_mat
 
     def comp_movpixprob(self, foe) -> float:
         """
@@ -377,18 +410,19 @@ class FoE:
             raise ValueError("FoE is None @ comp_movpixprob")
 
         # treat candidate FoE is infinite case
-        if foe[2] == 0:
+        if abs(foe[2]) < 1e-10:
             foe[2] = 1e-10
-        else:
-            foe_u = foe[0] / foe[2]
-            foe_v = foe[1] / foe[2]
+        foe_u = foe[0] / foe[2]
+        foe_v = foe[1] / foe[2]
+        
+        self.mean_flow_length_in_static = max(
+            self.mean_flow_length_in_static, 1e-10)
 
         for row in range(0, self.flow.shape[0]):
             for col in range(0, self.flow.shape[1]):
                 # get flow
                 flow_u = self.flow[row, col, 0]
                 flow_v = self.flow[row, col, 1]
-
                 flow_length = np.sqrt(flow_u**2 + flow_v**2)
                 # TODO: I need to check whether this (tanh) definition is OK.
                 # probably, e.g. 100 times difference should be more exaggerated than this.
@@ -406,15 +440,19 @@ class FoE:
                         length_diff_prob * self.SAME_FLOWANGLE_MIN_MOVING_PROB
                     )
                 else:
-                    # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
-                    # TODO: I must record mean oriantation against FoE. forward and backward orientation has 180 deg difference.
-                    foe2pt = np.array([col - foe_u, row - foe_v, 1])
-                    cos_foe_flow = np.dot((foe2pt[0], foe2pt[1]), (flow_u, flow_v)) / (
-                        np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2) * flow_length
+                    # check the angle between flow and expected flow direction (signed FoE-to-each-pixel) is lower than the threshold.
+                    expect_flowdir = self.foe_sign * np.array([col - foe_u, row - foe_v, 1])
+                    expect_flowdir_length = np.sqrt(
+                        expect_flowdir[0] ** 2 + expect_flowdir[1] ** 2
+                    )
+                    if expect_flowdir_length < 1e-6:  # avoid division by zero
+                        expect_flowdir_length = 1e-6
+                    cos_foe_flow = np.dot((expect_flowdir[0], expect_flowdir[1]), (flow_u, flow_v)) / (
+                        expect_flowdir_length * flow_length
                     )
                     angle_diff_prob = min(
                         1.0,
-                        max(1 - cos_foe_flow, self.SAME_FLOWANGLE_MIN_MOVING_PROB),
+                        max((1 - cos_foe_flow)/2.0, self.SAME_FLOWANGLE_MIN_MOVING_PROB),
                     )
                     self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
 
