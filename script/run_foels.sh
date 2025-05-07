@@ -108,6 +108,10 @@ deactivate_allenvs() {
 echo "[INFO] compute optical flow"
 source ${ROOT_DIR}/.venv/bin/activate
 echo "[INFO] env: $VIRTUAL_ENV"
+CMD_PREFIX=""
+if [ "$(uname -s)" = "Linux" ]; then
+       CMD_PREFIX="CUDA_VISIBLE_DEVICES=0 "
+fi
 if [ -d ${OUTPUT_FLOW_DIR} ] && [ -n "$(ls -A ${OUTPUT_FLOW_DIR}/*.mp4)" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
@@ -121,7 +125,7 @@ else
        export OMP_NUM_THREADS=1
        # to avoid CUDA out of memory error.
        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-       CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
+       ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
        --inference_dir ${INPUT} \
        --output_path ${OUTPUT_FLOW_DIR} \
        --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME} \
@@ -182,13 +186,13 @@ else
 
                      echo "[INFO] run segmentation using: ${SEG_MODEL_TYPE} ${SEG_TASK_TYPE}"
                      if [ "$SEG_TASK_TYPE" = "instance" ]; then
-                            CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/image_demo.py \
+                            ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/image_demo.py \
                             ${INPUT} \
                             ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/configs/coco/${SEG_MODEL_NAME%.*}.py  \
                             ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det/${SEG_MODEL_NAME} \
                             --out ${OUTPUT_SEG_DIR}
                      elif [ "$SEG_TASK_TYPE" = "semantic" ]; then
-                            CUDA_VISIBLE_DEVICES=0 python ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py \
+                            ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py \
                                    ${INPUT} \
                                    ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/${SEG_MODEL_NAME%.*}.py  \
                                    ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg/${SEG_MODEL_NAME} \
