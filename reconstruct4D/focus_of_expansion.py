@@ -160,17 +160,13 @@ class FoE:
                 )
                 continue
 
-            inlier_rate_candi, mean_cos_candi, inlier_mat_candi = self.comp_inlier_rate(
-                foe_candi
-            )
+            inlier_rate_candi, inlier_mat_candi = self.comp_inlier_rate(foe_candi)
 
             if inlier_rate_candi > self.inlier_rate:
                 # update by the current best
                 self.inlier_rate = inlier_rate_candi
                 best_inlier_mat = inlier_mat_candi
                 self.foe = foe_candi
-                if mean_cos_candi < 0:
-                    self.foe_sign = -1
 
                 # stop if inlier rate is high enough
                 if self.inlier_rate > self.THRE_INLIER_RATE:
@@ -331,8 +327,8 @@ class FoE:
         args:
             foe: FoE in 3D homogeneous coordinate
         Returns:
-            tuple: (inlier_rate, mean_inlier_cos, inlier_foe2pt_mat)
-                   Returns (0, 0, None) if no flow exists.
+            tuple: (inlier_rate, inlier_foe2pt_mat)
+                   Returns (0, None) if no flow exists.
         """
         num_inlier = 0
         num_flow_existingpix = 0
@@ -359,11 +355,6 @@ class FoE:
                     if flow_length > self.THRE_FLOWLENGTH:
                         num_flow_existingpix += 1
 
-                        if self.LOG_LEVEL > 3 and self.display_foe_flow_img:
-                            self._show_foe_flow_img(
-                                row, col, foe_u, foe_v, flow_u, flow_v
-                            )
-
                         # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
                         foe2pt = np.array([col - foe_u, row - foe_v, 1])
                         foe2pt_length = np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2)
@@ -387,6 +378,11 @@ class FoE:
                                     (inlier_foe2pt_mat, foe2pt)
                                 )
 
+                        if self.LOG_LEVEL > 3 and self.display_foe_flow_img:
+                            self._show_foe_flow_img(
+                                row, col, foe_u, foe_v, flow_u, flow_v, cos_foe_flow
+                            )
+
         # Calculate results
         inlier_rate = 0.0
         mean_inlier_cos = 0.0
@@ -395,13 +391,18 @@ class FoE:
             if num_inlier > 0:
                 mean_inlier_cos = sum_inlier_cos / num_inlier
 
+        if mean_inlier_cos < 0:
+            # if mean_inlier_cos is negative, it means the flow is opposite direction.
+            # so we need to change the sign of foe; default = 1.
+            self.foe_sign = -1
+
         if self.LOG_LEVEL > 0:
             print(
                 f"[INFO] FoE candidate: {foe}, inlier rate: {inlier_rate * 100:.2f} %,"
                 f" mean inlier cos: {mean_inlier_cos:.2f}"
             )
 
-        return inlier_rate, mean_inlier_cos, inlier_foe2pt_mat
+        return inlier_rate, inlier_foe2pt_mat
 
     def comp_movpixprob(self, foe) -> float:
         """
@@ -466,7 +467,7 @@ class FoE:
         # Ensure sky mask remains 0 probability after calculations
         self.moving_prob[self.sky_mask == True] = 0.0
 
-    def _show_foe_flow_img(self, row, col, foe_u, foe_v, flow_u, flow_v):
+    def _show_foe_flow_img(self, row, col, foe_u, foe_v, flow_u, flow_v, cos_foe_flow):
         LENGTH_FACTOR = 10
         foe_flow_img = self.intermediate_foe_img.copy()
 
@@ -474,13 +475,23 @@ class FoE:
         foe_flow_img[self.static_mask] = [128, 128, 128]
 
         # draw arrows.
-        cv2.arrowedLine(
-            foe_flow_img,
-            (int(foe_u), int(foe_v)),
-            (col, row),
-            (0, 255, 0),
-            3,
-        )
+        if cos_foe_flow > 0:
+            cv2.arrowedLine(
+                foe_flow_img,
+                (int(foe_u), int(foe_v)),
+                (col, row),
+                (0, 255, 0),
+                3,
+            )
+        else:
+            # FoE sign is negative, so the flow direction is point to FoE.
+            cv2.arrowedLine(
+                foe_flow_img,
+                (col, row),
+                (int(foe_u), int(foe_v)),
+                (0, 255, 0),
+                3,
+            )
         cv2.arrowedLine(
             foe_flow_img,
             (col, row),
