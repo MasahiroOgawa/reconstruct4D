@@ -231,6 +231,7 @@ MOVOBJEXT_OPTS="--input_dir ${INPUT_DIR} \
        --num_ransac ${NUM_RANSAC} \
        --loglevel ${LOG_LEVEL}"
 if [ $LOG_LEVEL -ge 5 ]; then
+       echo "[NOTE] Please press F5 to start debugging!"
        python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJEXT_OPTS}
 else
        python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJEXT_OPTS}

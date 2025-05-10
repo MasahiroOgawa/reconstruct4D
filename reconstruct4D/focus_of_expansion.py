@@ -397,8 +397,9 @@ class FoE:
             self.foe_sign = -1
 
         if self.LOG_LEVEL > 0:
+            foe_uvcoordi = foe[0:2] / foe[2]
             print(
-                f"[INFO] FoE candidate: {foe}, inlier rate: {inlier_rate * 100:.2f} %,"
+                f"[INFO] FoE candidate: {foe_uvcoordi}, inlier rate: {inlier_rate * 100:.2f} %,"
                 f" mean inlier cos: {mean_inlier_cos:.2f}"
             )
 
