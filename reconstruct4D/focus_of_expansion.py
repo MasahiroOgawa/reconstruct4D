@@ -171,12 +171,6 @@ class FoE:
                 # stop if inlier rate is high enough
                 if self.inlier_rate > self.THRE_INLIER_RATE:
                     self.state = CameraState.ONLY_TRANSLATING
-                    if self.LOG_LEVEL > 0:
-                        print(
-                            f"[INFO] RANSAC {try_num} trial: "
-                            f"FoE: {self.foe}, "
-                            f"FoE sign: {self.foe_sign}, "
-                        )
                     break
 
         if self.LOG_LEVEL > 0:
