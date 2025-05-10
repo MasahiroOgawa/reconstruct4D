@@ -171,14 +171,14 @@ class FoE:
                 # stop if inlier rate is high enough
                 if self.inlier_rate > self.THRE_INLIER_RATE:
                     self.state = CameraState.ONLY_TRANSLATING
+                    if self.LOG_LEVEL > 0:
+                        foe_candi_uvcoordi = foe_candi[0:2] / foe_candi[2]
+                        print(
+                            f"[INFO] RANSAC {try_num} trial: "
+                            f"FoE candidate: {foe_candi_uvcoordi}, "
+                            f"FoE candidate sign: {self.foe_sign}, "
+                        )
                     break
-
-        if self.LOG_LEVEL > 0:
-            print(
-                f"[INFO] RANSAC {try_num} trial: "
-                f"FoE: {self.foe}, "
-                f"FoE sign: {self.foe_sign}, "
-            )
 
         if self.RANSAC_ALL_INLIER_ESTIMATION and (best_inlier_mat.shape[0] > 1):
             # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
@@ -188,13 +188,12 @@ class FoE:
 
             if self.LOG_LEVEL > 0:
                 foe_uvcoordi = self.foe[0:2] / self.foe[2]
-                foe_candi_uvcoordi = foe_candi[0:2] / foe_candi[2]
                 # check distance from foe_candi to foe
                 print(
                     f"[INFO] RANSAC all inlier estimation: "
                     f"FoE: {foe_uvcoordi}, "
                     f"FoE sign: {self.foe_sign}, "
-                    f"distance from foe_candi to foe [pix] = "
+                    f"distance from FoE_candi to FoE [pix] = "
                     f"{np.linalg.norm(foe_candi_uvcoordi - foe_uvcoordi)}"
                 )
 
