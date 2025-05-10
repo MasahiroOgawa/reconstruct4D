@@ -5,7 +5,7 @@ echo $USAGE
 
 # -e: stop immediately when error occurred
 # -u: stop immediately when undefined variable is used
-set -eu
+set -eux
 
 # set root directory
 ROOT_DIR=$(dirname "$0")/..
@@ -19,10 +19,10 @@ OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
  # 5: run python debugger. push F5 after running the script.
-LOG_LEVEL=3
+LOG_LEVEL=5
 IMG_HEIGHT=480
 # FRAME 79 #parallel moving track  #107 #stopping pedestrians for Todaiura data.
-SKIP_FRAMES=40 
+SKIP_FRAMES=0 
 # SEG_MODEL_NAME options = {"upernet_internimage_t_512_160k_ade20k.pth", "upernet_internimage_xl_640_160k_ade20k.pth", 
 # "upernet_internimage_h_896_160k_ade20k.pth", "mask_rcnn_internimage_t_fpn_1x_coco.pth"}
 # "shi-labs/oneformer_coco_swin_large"
@@ -110,7 +110,7 @@ source ${ROOT_DIR}/.venv/bin/activate
 echo "[INFO] env: $VIRTUAL_ENV"
 CMD_PREFIX=""
 if [ "$(uname -s)" = "Linux" ]; then
-       CMD_PREFIX="CUDA_VISIBLE_DEVICES=0 "
+       CMD_PREFIX="env CUDA_VISIBLE_DEVICES=0"
 fi
 if [ -d ${OUTPUT_FLOW_DIR} ] && [ -n "$(ls -A ${OUTPUT_FLOW_DIR}/*.mp4)" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
