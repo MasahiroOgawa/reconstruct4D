@@ -5,7 +5,7 @@ echo $USAGE
 
 # -e: stop immediately when error occurred
 # -u: stop immediately when undefined variable is used
-set -eux
+set -eu
 
 # set root directory
 ROOT_DIR=$(dirname "$0")/..
@@ -34,6 +34,11 @@ RANSAC_ALL_INLIER_ESTIMATION=True
 # FOE_SEARCH_STEP: the number of steps to search the focus of expansion (FOE) in the image.
 FOE_SEARCH_STEP=5
 ####################
+
+if [ $LOG_LEVEL -ge 3 ]; then
+       echo "[INFO] set debug mode"
+       set -x
+fi
 
 # to define INPUT_DIR, we need to do below first.
 echo "[INFO] check input is whether a directory or movie."

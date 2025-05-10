@@ -193,13 +193,15 @@ class FoE:
                 self.foe = refined_foe
 
             if self.LOG_LEVEL > 0:
+                foe_uvcoordi = self.foe[0:1] / self.foe[2]
+                foe_candi_uvcoordi = foe_candi[0:1] / foe_candi[2]
                 # check distance from foe_candi to foe
                 print(
                     f"[INFO] RANSAC all inlier estimation: "
-                    f"FoE: {self.foe}, "
+                    f"FoE: {foe_uvcoordi}, "
                     f"FoE sign: {self.foe_sign}, "
                     f"distance from foe_candi to foe [pix] = "
-                    f"{np.linalg.norm(foe_candi[0:1] / foe_candi[2] - self.foe[0:1] / self.foe[2])}"
+                    f"{np.linalg.norm(foe_candi_uvcoordi - foe_uvcoordi)}"
                 )
 
     def comp_foe_candidate(self) -> np.ndarray:
