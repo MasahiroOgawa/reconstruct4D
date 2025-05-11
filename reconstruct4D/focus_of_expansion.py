@@ -289,6 +289,8 @@ class FoE:
     def _comp_crosspt(self, inlier_mat: np.ndarray) -> np.ndarray | None:
         """
         Compute the most probable crossing point (Focus of Expansion) from the inlier lines.
+        The FoE is the point p such that L @ p = 0 for all lines L in inlier_mat.
+        This corresponds to the right singular vector of L associated with the smallest singular value.
         Args:
             inlier_mat: 2D array of inlier lines. shape = (num_lines, 3)
         Returns:
@@ -298,21 +300,29 @@ class FoE:
         if (inlier_mat is None) or (inlier_mat.ndim != 2) or (inlier_mat.shape[0] < 2):
             print("[WARNING] Not enough lines to compute the crossing point.")
             return None
-
-        # to avoid _ArrayMemoryError, use scipy's svd instead of np.linalg.svd.
-        # Convert the matrix to a sparse representation
-        sparse_matrix = sparse.csr_matrix(inlier_mat)
-        # to avoid ValueError: `k` must be an integer satisfying `0 < k < min(A.shape)`"
-        if min(sparse_matrix.shape) < 2:
-            print(f"[WARNING] parse_matrix.shape = {sparse_matrix.shape} is too small.")
+        if inlier_mat.shape[1] != 3:
+            if self.LOG_LEVEL > 0:
+                print(
+                    f"[WARNING] _comp_crosspt: Inlier matrix columns "
+                    f"({inlier_mat.shape[1]}) not equal to 3."
+                )
             return None
-        U, S, Vt = sparse.linalg.svds(sparse_matrix, k=1)
 
-        # The crossing point is the last column of V (or Vt.T[-1])
-        crossing_point_homogeneous = Vt.T[:, -1]
+        # np.linalg.svd returns U, S, Vh (where Vh is V.T or V*)
+        # S contains singular values in descending order.
+        # The rows of Vh are the right singular vectors.
+        # The last row of Vh corresponds to the smallest singular value.
+        U, S, Vt = np.linalg.svd(inlier_mat, full_matrices=False)
+
+        # The crossing point is the last row of Vt
+        crossing_point_homogeneous = Vt.T[-1, :]
 
         # Normalize the homogeneous coordinates
-        crossing_point = crossing_point_homogeneous / crossing_point_homogeneous[-1]
+        w = crossing_point_homogeneous[-1]
+        if abs(w) < 1e-10:
+            w = np.sign(w) * 1e-10  # Preserve sign, or default to positive if zero
+
+        crossing_point = crossing_point_homogeneous / w
 
         return crossing_point
 
