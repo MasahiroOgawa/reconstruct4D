@@ -322,18 +322,19 @@ class FoE:
         args:
             foe: FoE in 3D homogeneous coordinate
         Returns:
-            tuple: (inlier_rate, inlier_foe2pt_mat)
+            tuple: (inlier_rate, inlier_flowlines_mat)
                    Returns (0, None) if no flow exists.
         """
         num_inlier = 0
         num_flow_existingpix = 0
         sum_inlier_cos = 0.0
-        # TODO: FoE should be computed by flow. not foe2pt. I have to fix this.
-        inlier_foe2pt_mat = None
+        inlier_flowlines_mat = None
 
         # treat candidate FoE is infinite case
-        if foe[2] == 0:
-            foe[2] = 1e-10
+        if abs(foe[2]) < 1e-10:
+            foe[2] = (
+                (np.sign(foe[2])) * 1e-10 if foe[2] != 0 else 1e-10
+            )  # Preserve sign, or default to positive if zero
 
         foe_u = foe[0] / foe[2]
         foe_v = foe[1] / foe[2]
@@ -351,7 +352,7 @@ class FoE:
                         num_flow_existingpix += 1
 
                         # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
-                        foe2pt = np.array([col - foe_u, row - foe_v, 1])
+                        foe2pt = np.array([col - foe_u, row - foe_v])
                         foe2pt_length = np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2)
                         foe2pt_length = max(
                             foe2pt_length, 1e-6
@@ -365,12 +366,16 @@ class FoE:
                         if cos_foe_flow > self.THRE_COS_INLIER:
                             num_inlier += 1
                             sum_inlier_cos += cos_foe_flow
-                            # add inlier foe2pt vector to matrix as a row vector to compute FoE by RANSAC
-                            if inlier_foe2pt_mat is None:
-                                inlier_foe2pt_mat = foe2pt
+
+                            # add inlier flow line vector to matrix as a row vector to compute FoE by RANSAC
+                            x_current = np.array([col, row, 1])
+                            x_prev = np.array([col - flow_u, row - flow_v, 1])
+                            flowline = np.cross(x_current, x_prev)
+                            if inlier_flowlines_mat is None:
+                                inlier_flowlines_mat = flowline.reshape(1, 3)
                             else:
-                                inlier_foe2pt_mat = np.vstack(
-                                    (inlier_foe2pt_mat, foe2pt)
+                                inlier_flowlines_mat = np.vstack(
+                                    (inlier_flowlines_mat, flowline.reshape(1, 3))
                                 )
 
                         if self.LOG_LEVEL > 3 and self.display_foe_flow_img:
@@ -398,7 +403,7 @@ class FoE:
                 f" mean inlier cos: {mean_inlier_cos:.2f}"
             )
 
-        return inlier_rate, inlier_foe2pt_mat
+        return inlier_rate, inlier_flowlines_mat
 
     def comp_movpixprob(self, foe) -> float:
         """
