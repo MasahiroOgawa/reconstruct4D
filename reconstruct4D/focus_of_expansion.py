@@ -34,6 +34,7 @@ class FoE:
         self.SAME_FLOWLENGTH_MIN_MOVING_PROB = same_flowlength_min_moving_prob
         self.RANSAC_ALL_INLIER_ESTIMATION = ransac_all_inlier_estimation
         self.SEARCH_STEP = search_step
+        self.THRE_FOE_W_INF = 1e-10
 
         # variables
         self.state = CameraState.ROTATING  # most unkown movement.
@@ -147,32 +148,36 @@ class FoE:
         # if we set below as 0.0, it caused a error in self.foe = self._comp_crosspt().
         self.inlier_rate = 1e-6
         self.foe = None
+        self.foe_sign = 1
         best_inlier_mat = None
         if self.LOG_LEVEL > 3:
             # need to reset every time because it might be pressed 'q' to dkip the previous drawing image.
             self.display_foe_flow_img = True
 
         for try_num in range(self.NUM_RANSAC):
-            foe_candi = self.comp_foe_candidate()
-            if foe_candi is None:  # this will unlikely happen.
+            foe_candi_hom, foe_candi_sign = self.comp_foe_candidate()
+            if foe_candi_hom is None:  # this will unlikely happen.
                 print(
                     f"[WARNING] foe_candi is None in ransac {try_num} trial. @ comp_foe_by_ransac"
                 )
                 continue
 
-            inlier_rate_candi, inlier_mat_candi = self.comp_inlier_rate(foe_candi)
+            inlier_rate_candi, inlier_mat_candi = self.comp_inlier_rate(
+                foe_candi_hom, foe_candi_sign
+            )
 
             if inlier_rate_candi > self.inlier_rate:
                 # update by the current best
                 self.inlier_rate = inlier_rate_candi
                 best_inlier_mat = inlier_mat_candi
-                self.foe = foe_candi
+                self.foe = foe_candi_hom
+                self.foe_sign = foe_candi_sign
 
                 # stop if inlier rate is high enough
                 if self.inlier_rate > self.THRE_INLIER_RATE:
                     self.state = CameraState.ONLY_TRANSLATING
                     if self.LOG_LEVEL > 0:
-                        foe_candi_uvcoordi = foe_candi[0:2] / foe_candi[2]
+                        foe_candi_uvcoordi = foe_candi_hom[0:2] / foe_candi_hom[2]
                         print(
                             f"[INFO] RANSAC {try_num} trial: "
                             f"FoE candidate: {foe_candi_uvcoordi}, "
@@ -181,13 +186,15 @@ class FoE:
                     break
 
         if self.RANSAC_ALL_INLIER_ESTIMATION and (best_inlier_mat.shape[0] > 1):
+            if self.LOG_LEVEL > 0 and self.foe[2] != 0:
+                foe_candi_uvcoordi = self.foe[0:2] / self.foe[2]
+
             # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
             refined_foe = self._comp_crosspt(best_inlier_mat)
             if refined_foe is not None:
                 self.foe = refined_foe
 
-            if self.LOG_LEVEL > 0:
-                foe_candi_uvcoordi = foe_candi[0:2] / foe_candi[2]
+            if self.LOG_LEVEL > 0 and self.foe[2] != 0:
                 foe_uvcoordi = self.foe[0:2] / self.foe[2]
                 # check distance from foe_candi to foe
                 print(
@@ -198,31 +205,54 @@ class FoE:
                     f"{np.linalg.norm(foe_candi_uvcoordi - foe_uvcoordi)}"
                 )
 
-    def comp_foe_candidate(self) -> np.ndarray:
+    def _get_random_flowline(
+        self, max_retries=1000
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Pick a random pixel from the static mask until a valid flow line is found.
+        Returns:
+            line: flow line in 3D homogeneous coordinate.
+            flow pt: flow destination point (row, col)
+            flow: flow at the pixel.
+        """
+        for _ in range(max_retries):
+            row, col = self.random_point_in_static_mask()
+            line = self.comp_flowline(row, col)
+            flow_pt = np.array([col, row])
+            if line is not None:
+                return line, flow_pt, self.flow[row, col]
+        raise RuntimeError(
+            "[ERROR] Failed to find a valid flow line after {max_retry} attempts @ comp_foe_candidate"
+        )
+
+    def comp_foe_candidate(self) -> tuple[np.ndarray, int]:
         """
         compute FoE from 2 flow lines only inside static mask.
         FoE is in 3D homogeneous coordinate.
         If candidate is None, reselect 2 flow lines.
         The camera is considered not stopping when this function is called, so there must exist 2 flow lines.
         return:
-            foe_candi: candidate FoE in 3D homogeneous coordinate.
+            foe_candi_hom: candidate FoE in 3D homogeneous coordinate.
+            foe_candi_sign: sign of candidate FoE. positive means source of the optical flow.
         """
-
-        def _get_random_flowline(max_retries=1000) -> np.ndarray:
-            """Pick a random pixel from the static mask until a valid flow line is found."""
-            for _ in range(max_retries):
-                row, col = self.random_point_in_static_mask()
-                line = self.comp_flowline(row, col)
-                if line is not None:
-                    return line
-            raise RuntimeError(
-                "[ERROR] Failed to find a valid flow line after {max_retry} attempts @ comp_foe_candidate"
-            )
-
         # Get two valid flow lines and compute their cross product as the candidate FoE.
-        l1 = _get_random_flowline()
-        l2 = _get_random_flowline()
-        foe_candi = np.cross(l1, l2)
+        l1, pt1, flow1 = self._get_random_flowline()
+        l2, pt2, flow2 = self._get_random_flowline()
+        foe_candi_hom = np.cross(l1, l2)
+
+        # compute foe_candi sign
+        if foe_candi_hom[2] == 0:
+            # this should not happen, but if it happens, set as 1.
+            foe_candi_hom[2] = 1e-10
+        foe_candi = foe_candi_hom[0:2] / foe_candi_hom[2]
+        dir1 = np.inner(flow1, pt1 - foe_candi)
+        dir2 = np.inner(flow2, pt2 - foe_candi)
+        if dir1 > 0 and dir2 > 0:
+            foe_candi_sign = 1
+        elif dir1 < 0 and dir2 < 0:
+            foe_candi_sign = -1
+        else:  # this should not happen.
+            foe_candi_sign = 1  # actually, it is unbiguous, but this need to be 1 or -1 when computing inlier late, so I  set it as 1.
 
         # draw debug image
         if self.LOG_LEVEL > 2:
@@ -231,17 +261,17 @@ class FoE:
             )
             self.draw_line(l1, self.intermediate_foe_img)
             self.draw_line(l2, self.intermediate_foe_img)
-            self.draw_homogeneous_point(foe_candi, self.intermediate_foe_img)
+            self.draw_homogeneous_point(foe_candi_hom, self.intermediate_foe_img)
             cv2.imshow("Debug", self.intermediate_foe_img)
             key = cv2.waitKey(1)
             if key == ord("q"):
                 exit()
 
-        return foe_candi
+        return foe_candi_hom, foe_candi_sign
 
     def comp_flowline(self, row: int, col: int) -> np.ndarray:
         """
-        compute flow line from flow at (row, col)
+        compute flow line from flow at (row, col), and its directive sign.
         args:
             row: row index of flow
             col: column index of flow
@@ -295,7 +325,9 @@ class FoE:
         Args:
             inlier_mat: 2D array of inlier lines. shape = (num_lines, 3)
         Returns:
-            crossing_point: crossing point in 3D homogeneous coordinate.
+            crossing_point_homogeneous: crossing point in 3D homogeneous coordinate  [x,y,w].
+                            If w is very small, FoE is at/near infinity.
+                            Returns None if computation fails..
         """
         # Check that there are enough lines to compute the crossing point
         if (inlier_mat is None) or (inlier_mat.ndim != 2) or (inlier_mat.shape[0] < 2):
@@ -309,46 +341,65 @@ class FoE:
                 )
             return None
 
-        # np.linalg.svd returns U, S, Vh (where Vh is V.T or V*)
-        # S contains singular values in descending order.
-        # The rows of Vh are the right singular vectors.
-        # The last row of Vh corresponds to the smallest singular value.
-        U, S, Vt = np.linalg.svd(inlier_mat, full_matrices=False)
+        try:
+            # np.linalg.svd returns U, S, Vh (where Vh is V.T or V*)
+            # S contains singular values in descending order.
+            # The rows of Vh are the right singular vectors.
+            # The last row of Vh corresponds to the smallest singular value.
+            U, S, Vt = np.linalg.svd(inlier_mat, full_matrices=False)
 
-        # The crossing point is the last row of Vt
-        crossing_point_homogeneous = Vt.T[-1, :]
+            if self.LOG_LEVEL > 1:
+                print(f"[DEBUG] _comp_crosspt: Singular values: {S}")
+                print(f"[DEBUG] _comp_crosspt: Vt = {Vt}")
 
-        # Normalize the homogeneous coordinates
-        w = crossing_point_homogeneous[-1]
-        if abs(w) < 1e-10:
-            w = np.sign(w) * 1e-10  # Preserve sign, or default to positive if zero
+            # The crossing point is the last row of Vt
+            crossing_point_homogeneous = Vt[-1, :]
 
-        crossing_point = crossing_point_homogeneous / w
+            return crossing_point_homogeneous
+        except np.linalg.LinAlgError as e:
+            if self.LOG_LEVEL > 0:
+                print(f"[ERROR] _comp_crosspt: SVD computation failed: {e}")
+            return None
+        except Exception as e:
+            if self.LOG_LEVEL > 0:
+                print(f"[ERROR] _comp_crosspt: Unexpected error during SVD: {e}")
+            return None
 
-        return crossing_point
-
-    def comp_inlier_rate(self, foe: np.ndarray):
+    def comp_inlier_rate(
+        self, foe_candi_hom: np.ndarray, foe_candi_sign: int
+    ) -> tuple[float, np.ndarray | None]:
         """
         compute inlier rate except sky mask from a candidate FoE.
         args:
-            foe: FoE in 3D homogeneous coordinate
+            foe_candi_hom: FoE candidate in 3D homogeneous coordinate
+            foe_candi_sign: sign of candidate FoE. positive means source of the optical flow.
+        The sign of the candidate FoE is used to determine the direction of the flow.
         Returns:
             tuple: (inlier_rate, inlier_flowlines_mat)
-                   Returns (0, None) if no flow exists.
+                inlier_rate: inlier rate of the candidate FoE.
+                inlier_flowlines_mat: inlier flow lines in 3D homogeneous coordinate.
         """
         num_inlier = 0
         num_flow_existingpix = 0
-        sum_inlier_cos = 0.0
         inlier_flowlines_mat = None
 
-        # treat candidate FoE is infinite case
-        if abs(foe[2]) < 1e-10:
-            foe[2] = (
-                (np.sign(foe[2])) * 1e-10 if foe[2] != 0 else 1e-10
-            )  # Preserve sign, or default to positive if zero
+        # judge FoE is initialized or not.
+        is_inf_foe = abs(foe_candi_hom[2]) < self.THRE_FOE_W_INF
 
-        foe_u = foe[0] / foe[2]
-        foe_v = foe[1] / foe[2]
+        if is_inf_foe:
+            foe_direction = foe_candi_hom[0:2] * np.sign(foe_candi_hom[2])
+            foe_direction_length = np.sqrt(
+                foe_direction[0] ** 2 + foe_direction[1] ** 2
+            )
+            if foe_direction_length == 0:
+                print(
+                    "[WARNING] comp_inlier_rate: Infinite FoE has near-zero direction."
+                )
+                return 0, None
+
+        else:
+            foe_u = foe_candi_hom[0] / foe_candi_hom[2]
+            foe_v = foe_candi_hom[1] / foe_candi_hom[2]
 
         # check pixels inside flow existing static mask area.
         for row in range(0, self.static_mask.shape[0], self.SEARCH_STEP):
@@ -362,21 +413,29 @@ class FoE:
                     if flow_length > self.THRE_FLOWLENGTH:
                         num_flow_existingpix += 1
 
-                        # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
-                        foe2pt = np.array([col - foe_u, row - foe_v])
-                        foe2pt_length = np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2)
-                        foe2pt_length = max(
-                            foe2pt_length, 1e-6
-                        )  # avoid division by zero
-                        cos_foe_flow = np.dot(
-                            (foe2pt[0], foe2pt[1]), (flow_u, flow_v)
-                        ) / (foe2pt_length * flow_length)
-                        cos_foe_flow = np.clip(cos_foe_flow, -1.0, 1.0)
+                        if is_inf_foe:
+                            # in case FoE is infinite, point canbe considered as 0,0. foe2pt ~ -foe_direction.
+                            cos_foe_flow = np.dot(
+                                -foe_candi_sign * (foe_direction[0], foe_direction[1]),
+                                (flow_u, flow_v),
+                            ) / (foe_direction_length * flow_length)
+                            cos_foe_flow = np.clip(cos_foe_flow, -1.0, 1.0)
+                        else:
+                            # check the angle between flow and FoE-to-each-pixel is lower than the threshold.
+                            foe2pt = np.array([col - foe_u, row - foe_v])
+                            foe2pt_length = np.sqrt(foe2pt[0] ** 2 + foe2pt[1] ** 2)
+                            foe2pt_length = max(
+                                foe2pt_length, 1e-6
+                            )  # avoid division by zero
+                            cos_foe_flow = np.dot(
+                                foe_candi_sign * foe2pt,
+                                (flow_u, flow_v),
+                            ) / (foe2pt_length * flow_length)
+                            cos_foe_flow = np.clip(cos_foe_flow, -1.0, 1.0)
 
                         # count up as an inlier when the angle is close.
                         if cos_foe_flow > self.THRE_COS_INLIER:
                             num_inlier += 1
-                            sum_inlier_cos += cos_foe_flow
 
                             # add inlier flow line vector to matrix as a row vector to compute FoE by RANSAC
                             x_current = np.array([col, row, 1])
@@ -399,16 +458,9 @@ class FoE:
         mean_inlier_cos = 0.0
         if num_flow_existingpix > 0:
             inlier_rate = num_inlier / num_flow_existingpix
-            if num_inlier > 0:
-                mean_inlier_cos = sum_inlier_cos / num_inlier
-
-        if mean_inlier_cos < 0:
-            # if mean_inlier_cos is negative, it means the flow is opposite direction.
-            # so we need to change the sign of foe; default = 1.
-            self.foe_sign = -1
 
         if self.LOG_LEVEL > 0:
-            foe_uvcoordi = foe[0:2] / foe[2]
+            foe_uvcoordi = foe_candi_hom[0:2] / foe_candi_hom[2]
             print(
                 f"[INFO] FoE candidate: {foe_uvcoordi}, inlier rate: {inlier_rate * 100:.2f} %,"
                 f" mean inlier cos: {mean_inlier_cos:.2f}"
