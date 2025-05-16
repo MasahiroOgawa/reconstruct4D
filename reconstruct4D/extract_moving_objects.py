@@ -19,9 +19,9 @@ class MovingObjectExtractor:
         # if flow length is lower than this value, the flow orientation will be ignored.
         THRE_FLOWLENGTH = 0.2
         # if angle between flow and foe-pos is lower than this value, the flow considered as an inlier.[radian]
-        THRE_INLIER_ANGLE = 10 * np.pi / 180
+        THRE_INLIER_ANGLE = 2 * np.pi / 180
         # if inlier rate is higher than this value, RANSAC will be stopped.
-        THRE_INLIER_RATE = 0.9
+        THRE_INLIER_RATE = 0.6
         # if flow existing pixel rate is lower than this value, the camera is considered as stopping.
         # the flow existing rate will be computed only inside static mask.
         THRE_FLOW_EXISTING_RATE = 0.01

@@ -10,7 +10,7 @@ class FoE:
     def __init__(
         self,
         thre_flowlength=4.0,
-        thre_inlier_angle=10 * np.pi / 180,
+        thre_inlier_angle=1 * np.pi / 180,
         thre_inlier_rate=0.9,
         thre_flow_existing_rate=0.1,
         num_ransac=100,
@@ -188,8 +188,13 @@ class FoE:
         if self.RANSAC_ALL_INLIER_ESTIMATION and (best_inlier_mat.shape[0] > 1):
             if self.LOG_LEVEL > 0 and self.foe[2] != 0:
                 foe_candi_uvcoordi = self.foe[0:2] / self.foe[2]
+            if self.LOG_LEVEL > 2:
+                self.intermediate_foe_img.fill(0)  # Clear previous drawings
+                skip_step = max(1, best_inlier_mat.shape[0] // 100)
+                for line in best_inlier_mat[::skip_step]:
+                    self.draw_line(line, self.intermediate_foe_img)
+                cv2.imshow("Debug", self.intermediate_foe_img)
 
-            # currently this function is very slow and performance becomes lower, so it might be better to comment out this function.
             refined_foe = self._comp_crosspt(best_inlier_mat)
             if refined_foe is not None:
                 self.foe = refined_foe
@@ -585,8 +590,7 @@ class FoE:
             )
         else:
             self.foe_camstate_img = self.bg_img.copy()
-            if self.LOG_LEVEL > 1:
-                self.draw_flowarrow(self.flow, self.foe_camstate_img)
+            self.draw_flowarrow(self.flow, self.foe_camstate_img)
             if self.LOG_LEVEL > 2:
                 self.intermediate_foe_img = self.bg_img.copy()
 
