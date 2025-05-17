@@ -158,15 +158,11 @@ class MovingObjectExtractor:
         overlay_img[self.moving_obj_mask == 1, 2] += 128
         self.result_img = overlay_img
 
-        # save the posterior mask image
-        # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
-        posterior_mask_img = self.moving_obj_mask * 255
-        posterior_mask_imgfname = f"{args.output_dir}/{base_imgname}_mask.png"
-        cv2.imwrite(posterior_mask_imgfname, posterior_mask_img)
-
         # combine intermediate images
         self.seg.draw(bg_img=self.cur_img)
         self.foe.draw(bg_img=self.optflow.flow_img)
+        posterior_mask_img = self.moving_obj_mask * 255
+        posterior_mask_color_img = cv2.cvtColor(posterior_mask_img, cv2.COLOR_GRAY2BGR)
 
         self._write_allimgtitles()
         row1_img = cv2.hconcat(
@@ -176,7 +172,7 @@ class MovingObjectExtractor:
             [self.optflow.flow_img, self.foe.foe_camstate_img, self.foe.moving_prob_img]
         )
         row3_img = cv2.hconcat(
-            [self.posterior_movpix_prob_img, posterior_mask_imgfname, self.result_img]
+            [self.posterior_movpix_prob_img, posterior_mask_color_img, self.result_img]
         )
         result_comb_img = cv2.vconcat([row1_img, row2_img, row3_img])
         # resize keeping result image aspect ratio
@@ -208,7 +204,12 @@ class MovingObjectExtractor:
                 f"{args.segment_result_dir}/{self.cur_imgname}", self.seg.result_img
             )
 
+        # save the posterior mask image
+        # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
         base_imgname = os.path.splitext(self.cur_imgname)[0]
+        posterior_mask_imgfname = f"{args.output_dir}/{base_imgname}_mask.png"
+        cv2.imwrite(posterior_mask_imgfname, posterior_mask_img)
+
         cv2.imwrite(self.fullpath_result_imgname, self.result_img)
         save_comb_imgname = f"{base_imgname}_result_comb.png"
         cv2.imwrite(f"{args.output_dir}/{save_comb_imgname}", result_comb_img)

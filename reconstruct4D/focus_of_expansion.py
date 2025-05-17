@@ -181,7 +181,7 @@ class FoE:
                         print(
                             f"[INFO] RANSAC {try_num} trial: "
                             f"FoE candidate: {foe_candi_uvcoordi}, "
-                            f"FoE candidate sign: {self.foe_sign}, "
+                            f"FoE sign: {self.foe_sign}, "
                         )
                     break
 
@@ -467,7 +467,7 @@ class FoE:
         if self.LOG_LEVEL > 0:
             foe_uvcoordi = foe_candi_hom[0:2] / foe_candi_hom[2]
             print(
-                f"[INFO] FoE candidate: {foe_uvcoordi}, inlier rate: {inlier_rate * 100:.2f} %,"
+                f"[INFO] FoE candidate = {foe_uvcoordi}, FoE sign = {foe_candi_sign}, inlier rate: {inlier_rate * 100:.2f} %,"
                 f" mean inlier cos: {mean_inlier_cos:.2f}"
             )
 

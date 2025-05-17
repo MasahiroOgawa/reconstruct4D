@@ -28,7 +28,7 @@ SKIP_FRAMES=2
 # "shi-labs/oneformer_coco_swin_large"
 SEG_MODEL_NAME="shi-labs/oneformer_coco_swin_large"
 # number of iteration in RANSAC
-NUM_RANSAC=50
+NUM_RANSAC=20
 # whether run ransac all inlier estimation or not.
 RANSAC_ALL_INLIER_ESTIMATION=True
 # FOE_SEARCH_STEP: the number of steps to search the focus of expansion (FOE) in the image.
