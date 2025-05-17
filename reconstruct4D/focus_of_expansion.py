@@ -76,6 +76,7 @@ class FoE:
         self.bg_img = bg_img
 
         self.prepare_canvas()
+        self.draw_flowarrow(self.flow, self.foe_camstate_img)
         self.draw_state()
         self.draw_moving_prob()
 
@@ -460,7 +461,6 @@ class FoE:
 
         # Calculate results
         inlier_rate = 0.0
-        mean_inlier_cos = 0.0
         if num_flow_existingpix > 0:
             inlier_rate = num_inlier / num_flow_existingpix
 
@@ -468,7 +468,6 @@ class FoE:
             foe_uvcoordi = foe_candi_hom[0:2] / foe_candi_hom[2]
             print(
                 f"[INFO] FoE candidate = {foe_uvcoordi}, FoE sign = {foe_candi_sign}, inlier rate: {inlier_rate * 100:.2f} %,"
-                f" mean inlier cos: {mean_inlier_cos:.2f}"
             )
 
         return inlier_rate, inlier_flowlines_mat
@@ -590,13 +589,15 @@ class FoE:
             )
         else:
             self.foe_camstate_img = self.bg_img.copy()
-            self.draw_flowarrow(self.flow, self.foe_camstate_img)
             if self.LOG_LEVEL > 2:
                 self.intermediate_foe_img = self.bg_img.copy()
 
     def draw_flowarrow(self, flow, img):
         """
-        draw flow as arrow
+        draw flow as arrow, colored by green:inlier, red:outlier.
+        args:
+            flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
+            img: image to draw on.
         """
         for row in range(0, flow.shape[0], self.FLOWARROW_STEP):
             for col in range(0, flow.shape[1], self.FLOWARROW_STEP):
