@@ -158,19 +158,25 @@ class MovingObjectExtractor:
         overlay_img[self.moving_obj_mask == 1, 2] += 128
         self.result_img = overlay_img
 
+        # save the posterior mask image
+        # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
+        posterior_mask_img = self.moving_obj_mask * 255
+        posterior_mask_imgfname = f"{args.output_dir}/{base_imgname}_mask.png"
+        cv2.imwrite(posterior_mask_imgfname, posterior_mask_img)
+
         # combine intermediate images
         self.seg.draw(bg_img=self.cur_img)
         self.foe.draw(bg_img=self.optflow.flow_img)
 
         self._write_allimgtitles()
         row1_img = cv2.hconcat(
-            [self.cur_img, self.seg.result_img, self.seg.result_movingmask_img]
+            [self.cur_img, self.seg.result_img, self.seg.moving_prob_img]
         )
         row2_img = cv2.hconcat(
-            [self.seg.moving_prob_img, self.optflow.flow_img, self.foe.foe_camstate_img]
+            [self.optflow.flow_img, self.foe.foe_camstate_img, self.foe.moving_prob_img]
         )
         row3_img = cv2.hconcat(
-            [self.foe.moving_prob_img, self.posterior_movpix_prob_img, self.result_img]
+            [self.posterior_movpix_prob_img, posterior_mask_imgfname, self.result_img]
         )
         result_comb_img = cv2.vconcat([row1_img, row2_img, row3_img])
         # resize keeping result image aspect ratio
@@ -206,22 +212,6 @@ class MovingObjectExtractor:
         cv2.imwrite(self.fullpath_result_imgname, self.result_img)
         save_comb_imgname = f"{base_imgname}_result_comb.png"
         cv2.imwrite(f"{args.output_dir}/{save_comb_imgname}", result_comb_img)
-
-        # save the posterior mask image
-        # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
-        posterior_mask_img = self.moving_obj_mask * 255
-        posterior_mask_imgfname = f"{args.output_dir}/{base_imgname}_mask.png"
-        cv2.imwrite(posterior_mask_imgfname, posterior_mask_img)
-
-        if args.loglevel > 2:
-            # check loaded image type.
-            loaded_posterior_mask_img = cv2.imread(
-                posterior_mask_imgfname, cv2.IMREAD_UNCHANGED
-            )
-            print(f"loaded_mask_img.shape={loaded_posterior_mask_img.shape}")
-            print(f"loaded_mask_img.dtype={loaded_posterior_mask_img.dtype}")
-            cv2.imshow("loaded_mask_img", loaded_posterior_mask_img)
-            cv2.waitKey(1)
 
     def _write_imgtitle(self, img, caption, color=(255, 255, 255)):
         cv2.putText(
