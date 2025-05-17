@@ -448,42 +448,47 @@ class FoE:
                     decision = self._inlier_decision(
                         row, col, foe_candi_hom, foe_candi_sign
                     )  # check if the pixel is inlier or outlier.
+
                     if decision == 1:
                         num_inlier += 1
+
+                        # add inlier flow line vector to matrix as a row vector to compute FoE by RANSAC
+                        x_current = np.array([col, row, 1])
+                        x_prev = np.array(
+                            [
+                                col - self.flow[row, col, 0],
+                                row - self.flow[row, col, 1],
+                                1,
+                            ]
+                        )
+                        flowline = np.cross(x_current, x_prev)
+                        if inlier_flowlines_mat is None:
+                            inlier_flowlines_mat = flowline.reshape(1, 3)
+                        else:
+                            inlier_flowlines_mat = np.vstack(
+                                (inlier_flowlines_mat, flowline.reshape(1, 3))
+                            )
+
+                        if self.LOG_LEVEL > 3 and self.display_foe_flow_arrow_img:
+                            if abs(foe_candi_hom[2]) < self.THRE_FOE_W_INF:
+                                # use simpified version because this is just debug image.
+                                foe_candi_hom[2] = self.THRE_FOE_W_INF * np.sign(
+                                    foe_candi_hom[2]
+                                )
+                            foe_u = foe_candi_hom[0] / foe_candi_hom[2]
+                            foe_v = foe_candi_hom[1] / foe_candi_hom[2]
+
+                            self._show_foe_flow_arrow_img(
+                                row,
+                                col,
+                                foe_u,
+                                foe_v,
+                                foe_candi_sign,
+                                self.flow[row, col, 0],
+                                self.flow[row, col, 1],
+                            )
                     elif decision == -1:
                         num_outlier += 1
-
-                    # add inlier flow line vector to matrix as a row vector to compute FoE by RANSAC
-                    x_current = np.array([col, row, 1])
-                    x_prev = np.array(
-                        [col - self.flow[row, col, 0], row - self.flow[row, col, 1], 1]
-                    )
-                    flowline = np.cross(x_current, x_prev)
-                    if inlier_flowlines_mat is None:
-                        inlier_flowlines_mat = flowline.reshape(1, 3)
-                    else:
-                        inlier_flowlines_mat = np.vstack(
-                            (inlier_flowlines_mat, flowline.reshape(1, 3))
-                        )
-
-                    if self.LOG_LEVEL > 3 and self.display_foe_flow_arrow_img:
-                        if abs(foe_candi_hom[2]) < self.THRE_FOE_W_INF:
-                            # use simpified version because this is just debug image.
-                            foe_candi_hom[2] = self.THRE_FOE_W_INF * np.sign(
-                                foe_candi_hom[2]
-                            )
-                        foe_u = foe_candi_hom[0] / foe_candi_hom[2]
-                        foe_v = foe_candi_hom[1] / foe_candi_hom[2]
-
-                        self._show_foe_flow_arrow_img(
-                            row,
-                            col,
-                            foe_u,
-                            foe_v,
-                            foe_candi_sign,
-                            self.flow[row, col, 0],
-                            self.flow[row, col, 1],
-                        )
 
         # Calculate results
         inlier_rate = 0.0
@@ -623,20 +628,28 @@ class FoE:
 
     def draw_flowarrow(self, flow, img):
         """
-        draw flow as arrow, colored by green:inlier, red:outlier.
+        draw flow as arrow, colored by green:inlier, red:outlier, gray: others.
         args:
             flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
             img: image to draw on.
         """
         for row in range(0, flow.shape[0], self.FLOWARROW_STEP):
             for col in range(0, flow.shape[1], self.FLOWARROW_STEP):
+                decision = self._inlier_decision(row, col, self.foe, self.foe_sign)
+                if decision == 1:
+                    color = (0, 255, 0)  # inlier: green
+                elif decision == -1:
+                    color = (0, 0, 255)  # outlier: red
+                else:
+                    color = (128, 128, 128)  # unknown: gray
+
                 u = flow[row, col, 0]
                 v = flow[row, col, 1]
                 cv2.arrowedLine(
                     img,
                     pt1=(int(col - u), int(row - v)),
                     pt2=(col, row),
-                    color=(0, 0, 255),
+                    color=color,
                     thickness=3,
                 )
 
