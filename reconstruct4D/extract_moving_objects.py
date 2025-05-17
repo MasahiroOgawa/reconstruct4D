@@ -26,7 +26,7 @@ class MovingObjectExtractor:
         # the flow existing rate will be computed only inside static mask.
         THRE_FLOW_EXISTING_RATE = 0.01
         # every this pixel, draw flow arrow.
-        FLOWARROW_STEP = 20
+        FLOWARROW_STEP = 50
         # minimum moving probability even when the angle is totally the same with FoE-position angle.
         SAME_FLOWANGLE_MIN_MOVING_PROB = 0.2
         # minimum moving probability even when the flow length is the same with background.
