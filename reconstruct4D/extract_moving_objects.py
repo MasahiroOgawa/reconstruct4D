@@ -161,8 +161,8 @@ class MovingObjectExtractor:
         # combine intermediate images
         self.seg.draw(bg_img=self.cur_img)
         self.foe.draw(bg_img=self.optflow.flow_img)
-        posterior_mask_img = self.moving_obj_mask * 255
-        posterior_mask_color_img = cv2.cvtColor(posterior_mask_img, cv2.COLOR_GRAY2BGR)
+        movobj_mask_img = self.moving_obj_mask * 255
+        self.movobj_mask_color_img = cv2.cvtColor(movobj_mask_img, cv2.COLOR_GRAY2BGR)
 
         self._write_allimgtitles()
         row1_img = cv2.hconcat(
@@ -172,7 +172,11 @@ class MovingObjectExtractor:
             [self.optflow.flow_img, self.foe.foe_camstate_img, self.foe.moving_prob_img]
         )
         row3_img = cv2.hconcat(
-            [self.posterior_movpix_prob_img, posterior_mask_color_img, self.result_img]
+            [
+                self.posterior_movpix_prob_img,
+                self.movobj_mask_color_img,
+                self.result_img,
+            ]
         )
         result_comb_img = cv2.vconcat([row1_img, row2_img, row3_img])
         # resize keeping result image aspect ratio
@@ -207,8 +211,8 @@ class MovingObjectExtractor:
         # save the posterior mask image
         # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
         base_imgname = os.path.splitext(self.cur_imgname)[0]
-        posterior_mask_imgfname = f"{args.output_dir}/{base_imgname}_mask.png"
-        cv2.imwrite(posterior_mask_imgfname, posterior_mask_img)
+        movobj_mask_imgfname = f"{args.output_dir}/{base_imgname}_mask.png"
+        cv2.imwrite(movobj_mask_imgfname, movobj_mask_img)
 
         cv2.imwrite(self.fullpath_result_imgname, self.result_img)
         save_comb_imgname = f"{base_imgname}_result_comb.png"
@@ -230,6 +234,7 @@ class MovingObjectExtractor:
         self._write_imgtitle(self.seg.result_img, "segmentation")
         self._write_imgtitle(self.optflow.flow_img, "optical flow")
         self._write_imgtitle(self.posterior_movpix_prob_img, "posterior")
+        self._write_imgtitle(self.movobj_mask_color_img, "moving_object_mask")
         # it might be better not to write "result" in final output image to display clean result.
         # self._write_imgtitle(self.result_img, "result")
 
