@@ -6,7 +6,7 @@ set -eu
 
 echo "[INFO] set parameters."
 ROOT_DIR=$(dirname "$0")/..
-ROOT_DATA_DIR=${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/download/DAVIS/JPEGImages/480p
+ROOT_DATA_DIR=${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/download/DAVIS2016/DAVIS/JPEGImages/480p
 DATASET_NAME="DAVIS2016"
 
 

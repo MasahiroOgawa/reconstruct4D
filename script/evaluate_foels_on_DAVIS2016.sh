@@ -17,4 +17,8 @@ else
 fi
 
 echo "[INFO] run evaluation on DAVIS dataset."
-${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/scripts/test_DAVIS2016_foels.sh
+set +eu
+eval "$(conda shell.bash activate contextual-information-separation)"
+set -eu
+echo "[INFO] env: $CONDA_DEFAULT_ENV"
+python ${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/scripts/test_DAVIS2016_foels.py
