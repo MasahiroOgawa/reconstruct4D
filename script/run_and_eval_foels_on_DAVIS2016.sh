@@ -31,13 +31,13 @@ echo "[INFO] run foels on the dataset."
 for DATA_DIR in ${ROOT_DATA_DIR}/*
 do
     echo "[INFO] read DATA_DIR=${DATA_DIR}"
-    $ROOT_DIR/script/run_foels.sh $DATA_DIR ${ROOT_DIR}/output/${DATASET_NAME}
+    $ROOT_DIR/script/run_foels.sh $DATA_DIR ${ROOT_DIR}/result/${DATASET_NAME}
 done
 
 echo "[INFO] run evaluation."
 $ROOT_DIR/script/evaluate_foels_on_${DATASET_NAME}.sh
 
-echo "[INFO] copy results to output directory."
-cp ${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/results/Foels/${DATASET_NAME}/result.txt ${ROOT_DIR}/output/${DATASET_NAME}
+echo "[INFO] copy results to result directory."
+cp ${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/results/Foels/${DATASET_NAME}/result.txt ${ROOT_DIR}/result/${DATASET_NAME}
 
 echo "[INFO] finish."
