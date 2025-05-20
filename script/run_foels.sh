@@ -132,7 +132,7 @@ else
        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
        ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
        --inference_dir ${INPUT} \
-       --result_path ${RESULT_FLOW_DIR} \
+       --output_path ${RESULT_FLOW_DIR} \
        --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME} \
        --padding_factor 32 \
        --upsample_factor 4 \
