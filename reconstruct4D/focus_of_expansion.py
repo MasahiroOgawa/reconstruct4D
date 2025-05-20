@@ -1,7 +1,7 @@
-import numpy as np
-import cv2
 from enum import Enum
-from scipy import sparse
+
+import cv2
+import numpy as np
 
 CameraState = Enum("CameraState", ["STOPPING", "ROTATING", "ONLY_TRANSLATING"])
 
@@ -16,7 +16,8 @@ class FoE:
         num_ransac=100,
         same_flowangle_min_moving_prob=0.1,
         same_flowlength_min_moving_prob=0.4,
-        flowarrow_step=20,
+        flowarrow_step_forvis=20,
+        flowlength_factor_forvis=1,
         ransac_all_inlier_estimation=False,
         search_step=1,
         log_level=0,
@@ -29,7 +30,8 @@ class FoE:
         self.THRE_INLIER_RATE = thre_inlier_rate
         self.THRE_FLOW_EXISTING_RATE = thre_flow_existing_rate
         self.NUM_RANSAC = num_ransac
-        self.FLOWARROW_STEP = flowarrow_step
+        self.FLOWARROW_STEP_FORVIS = flowarrow_step_forvis
+        self.FLOWLENGTH_FACTOR_FORVIS = flowlength_factor_forvis
         self.SAME_FLOWANGLE_MIN_MOVING_PROB = same_flowangle_min_moving_prob
         self.SAME_FLOWLENGTH_MIN_MOVING_PROB = same_flowlength_min_moving_prob
         self.RANSAC_ALL_INLIER_ESTIMATION = ransac_all_inlier_estimation
@@ -41,7 +43,7 @@ class FoE:
         self.flow_existing_rate_in_static = 0.0
         self.mean_flow_length_in_static = 0.0
         self.inlier_rate = 0.0
-        self.foe = None
+        self.foe_hom = None
         self.foe_sign = 1  # +1 for source (the flow is expanding, which means camera is toward front), -1 for sink
         self.foe_camstate_img = None
         self.moving_prob = None  # 0: inlier=stop, 1: outlier=moving
@@ -70,7 +72,7 @@ class FoE:
         else:
             # camera is considered as moving (set as rotating by default)
             self.comp_foe_by_ransac()
-            self.comp_movpixprob(self.foe)
+            self.comp_movpixprob(self.foe_hom)
 
     def draw(self, bg_img=None):
         self.bg_img = bg_img
@@ -86,7 +88,7 @@ class FoE:
             np.ones((self.flow.shape[0], self.flow.shape[1]), dtype=np.float16) * 0.5
         )
         self.moving_prob[self.sky_mask == True] = 0.0
-        self.foe = None
+        self.foe_hom = None
         self.foe_sign = 1
 
     def comp_flow_existing_rate_in_static(self):
@@ -148,7 +150,7 @@ class FoE:
         """
         # if we set below as 0.0, it caused a error in self.foe = self._comp_crosspt().
         self.inlier_rate = 1e-6
-        self.foe = None
+        self.foe_hom = None
         self.foe_sign = 1
         best_inlier_mat = None
         if self.LOG_LEVEL > 3:
@@ -171,24 +173,15 @@ class FoE:
                 # update by the current best
                 self.inlier_rate = inlier_rate_candi
                 best_inlier_mat = inlier_mat_candi
-                self.foe = foe_candi_hom
+                self.foe_hom = foe_candi_hom
                 self.foe_sign = foe_candi_sign
 
                 # stop if inlier rate is high enough
                 if self.inlier_rate > self.THRE_INLIER_RATE:
                     self.state = CameraState.ONLY_TRANSLATING
-                    if self.LOG_LEVEL > 0:
-                        foe_candi_uvcoordi = foe_candi_hom[0:2] / foe_candi_hom[2]
-                        print(
-                            f"[INFO] RANSAC {try_num} trial: "
-                            f"FoE candidate: {foe_candi_uvcoordi}, "
-                            f"FoE sign: {self.foe_sign}, "
-                        )
                     break
 
         if self.RANSAC_ALL_INLIER_ESTIMATION and (best_inlier_mat.shape[0] > 1):
-            if self.LOG_LEVEL > 0 and self.foe[2] != 0:
-                foe_candi_uvcoordi = self.foe[0:2] / self.foe[2]
             if self.LOG_LEVEL > 2:
                 self.intermediate_foe_img.fill(0)  # Clear previous drawings
                 skip_step = max(1, best_inlier_mat.shape[0] // 100)
@@ -196,19 +189,41 @@ class FoE:
                     self.draw_line(line, self.intermediate_foe_img)
                 cv2.imshow("Debug", self.intermediate_foe_img)
 
-            refined_foe = self._comp_crosspt(best_inlier_mat)
-            if refined_foe is not None:
-                self.foe = refined_foe
+            refined_foe_hom = self._comp_crosspt(best_inlier_mat)
 
-            if self.LOG_LEVEL > 0 and self.foe[2] != 0:
-                foe_uvcoordi = self.foe[0:2] / self.foe[2]
-                # check distance from foe_candi to foe
+            if refined_foe_hom is not None:
+                # we need to refine FoE sign too.
+                # Because if FoE is very far and flow is almost parallel case, and the candidate and refined FoE
+                # is at the opposite direction case, the sign must be changed.
+                is_far_foe = False
+                if refined_foe_hom[2] != 0 and self.foe_hom[2] != 0:
+                    refined_foe = refined_foe_hom[0:2] / refined_foe_hom[2]
+                    best_foe_candi = self.foe_hom[0:2] / self.foe_hom[2]
+                    refined_dist = np.linalg.norm(refined_foe - best_foe_candi)
+                    # Let's use image withth+hight as a threshold.
+                    if refined_dist > (self.flow.shape[0] + self.flow.shape[1]):
+                        is_far_foe = True
+                    if is_far_foe and np.dot(refined_foe, best_foe_candi) < 0:
+                        # if the sign is changed, we need to change the sign.
+                        self.foe_sign *= -1
+                        if self.LOG_LEVEL > 0:
+                            print(
+                                f"[INFO] best FoE candidate: {best_foe_candi}, refined FoE: {refined_foe}, "
+                                f"[INFO] (refinedFoE, bestFoEcandi) = { np.dot(refined_foe, best_foe_candi)}, so FoE signe is flipped."
+                            )
+
+                self.foe_hom = refined_foe_hom
+
+            if self.LOG_LEVEL > 0 and (
+                abs(refined_foe_hom[2]) >= self.THRE_FOE_W_INF
+            ):  # check distance from foe_candi to foe
                 print(
                     f"[INFO] RANSAC all inlier estimation: "
-                    f"FoE: {foe_uvcoordi}, "
-                    f"FoE sign: {self.foe_sign}, "
-                    f"distance from FoE_candi to FoE [pix] = "
-                    f"{np.linalg.norm(foe_candi_uvcoordi - foe_uvcoordi)}"
+                    f"best FoE candidate: {best_foe_candi}, "
+                    f"refined FoE: {refined_foe}, "
+                    f"refined FoE sign: {self.foe_sign}, "
+                    f"distance from best FoE_candi to FoE [pix] = "
+                    f"{refined_dist}"
                 )
 
     def _get_random_flowline(
@@ -361,7 +376,6 @@ class FoE:
 
             if self.LOG_LEVEL > 1:
                 print(f"[DEBUG] _comp_crosspt: Singular values: {S}")
-                print(f"[DEBUG] _comp_crosspt: Vt = {Vt}")
 
             # The crossing point is the last row of Vt
             crossing_point_homogeneous = Vt[-1, :]
@@ -472,11 +486,11 @@ class FoE:
                         if self.LOG_LEVEL > 3 and self.display_foe_flow_arrow_img:
                             if abs(foe_candi_hom[2]) < self.THRE_FOE_W_INF:
                                 # use simpified version because this is just debug image.
-                                foe_candi_hom[2] = self.THRE_FOE_W_INF * np.sign(
-                                    foe_candi_hom[2]
-                                )
-                            foe_u = foe_candi_hom[0] / foe_candi_hom[2]
-                            foe_v = foe_candi_hom[1] / foe_candi_hom[2]
+                                w = self.THRE_FOE_W_INF * np.sign(foe_candi_hom[2])
+                            else:
+                                w = foe_candi_hom[2]
+                            foe_u = foe_candi_hom[0] / w
+                            foe_v = foe_candi_hom[1] / w
 
                             self._show_foe_flow_arrow_img(
                                 row,
@@ -633,9 +647,9 @@ class FoE:
             flow: optical flow. shape = (height, width, 2): 2 channel corresponds to (u, v)
             img: image to draw on.
         """
-        for row in range(0, flow.shape[0], self.FLOWARROW_STEP):
-            for col in range(0, flow.shape[1], self.FLOWARROW_STEP):
-                decision = self._inlier_decision(row, col, self.foe, self.foe_sign)
+        for row in range(0, flow.shape[0], self.FLOWARROW_STEP_FORVIS):
+            for col in range(0, flow.shape[1], self.FLOWARROW_STEP_FORVIS):
+                decision = self._inlier_decision(row, col, self.foe_hom, self.foe_sign)
                 if decision == 1:
                     color = (0, 255, 0)  # inlier: green
                 elif decision == -1:
@@ -647,7 +661,10 @@ class FoE:
                 v = flow[row, col, 1]
                 cv2.arrowedLine(
                     img,
-                    pt1=(int(col - u), int(row - v)),
+                    pt1=(
+                        int(col - u * self.FLOWLENGTH_FACTOR_FORVIS),
+                        int(row - v * self.FLOWLENGTH_FACTOR_FORVIS),
+                    ),
                     pt2=(col, row),
                     color=color,
                     thickness=3,
@@ -680,7 +697,7 @@ class FoE:
                 2,
             )
         elif self.state == CameraState.ONLY_TRANSLATING:
-            self.draw_homogeneous_point(self.foe, self.foe_camstate_img)
+            self.draw_homogeneous_point(self.foe_hom, self.foe_camstate_img)
             cv2.putText(
                 self.foe_camstate_img,
                 "Camera is only translating",

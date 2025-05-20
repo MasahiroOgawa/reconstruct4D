@@ -26,7 +26,9 @@ class MovingObjectExtractor:
         # the flow existing rate will be computed only inside static mask.
         THRE_FLOW_EXISTING_RATE = 0.01
         # every this pixel, draw flow arrow.
-        FLOWARROW_STEP = 50
+        FLOWARROW_STEP_FORVIS = 20
+        # flow arrow length factor for visualization
+        FLOWLENGTH_FACTOR_FORVIS = 1
         # minimum moving probability even when the angle is totally the same with FoE-position angle.
         SAME_FLOWANGLE_MIN_MOVING_PROB = 0.2
         # minimum moving probability even when the flow length is the same with background.
@@ -79,7 +81,8 @@ class MovingObjectExtractor:
             args.num_ransac,
             SAME_FLOWANGLE_MIN_MOVING_PROB,
             SAME_FLOWLENGTH_MIN_MOVING_PROB,
-            FLOWARROW_STEP,
+            FLOWARROW_STEP_FORVIS,
+            FLOWLENGTH_FACTOR_FORVIS,
             args.ransac_all_inlier_estimation,
             args.foe_search_step,
             log_level=args.loglevel,
@@ -101,7 +104,7 @@ class MovingObjectExtractor:
             # skip if the result image is already saved.
             base_imgname = os.path.splitext(self.cur_imgname)[0]
             self.fullpath_result_imgname = (
-                f"{args.output_dir}/{base_imgname}_result.png"
+                f"{args.result_dir}/{base_imgname}_result.png"
             )
             if os.path.exists(self.fullpath_result_imgname):
                 continue
@@ -211,12 +214,12 @@ class MovingObjectExtractor:
         # save the posterior mask image
         # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
         base_imgname = os.path.splitext(self.cur_imgname)[0]
-        movobj_mask_imgfname = f"{args.output_dir}/{base_imgname}_mask.png"
+        movobj_mask_imgfname = f"{args.result_dir}/{base_imgname}_mask.png"
         cv2.imwrite(movobj_mask_imgfname, movobj_mask_img)
 
         cv2.imwrite(self.fullpath_result_imgname, self.result_img)
         save_comb_imgname = f"{base_imgname}_result_comb.png"
-        cv2.imwrite(f"{args.output_dir}/{save_comb_imgname}", result_comb_img)
+        cv2.imwrite(f"{args.result_dir}/{save_comb_imgname}", result_comb_img)
 
     def _write_imgtitle(self, img, caption, color=(255, 255, 255)):
         cv2.putText(
@@ -235,7 +238,7 @@ class MovingObjectExtractor:
         self._write_imgtitle(self.optflow.flow_img, "optical flow")
         self._write_imgtitle(self.posterior_movpix_prob_img, "posterior")
         self._write_imgtitle(self.movobj_mask_color_img, "moving_object_mask")
-        # it might be better not to write "result" in final output image to display clean result.
+        # it might be better not to write "result" in final result image to display clean result.
         # self._write_imgtitle(self.result_img, "result")
 
     def _compute_moving_obj_mask(self):
@@ -277,7 +280,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--flow_result_dir",
         type=str,
-        default="../output/sample/flow",
+        default="../result/sample/flow",
         help="optical flow result directory",
     )
     parser.add_argument(
@@ -298,14 +301,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--segment_result_dir",
         type=str,
-        default="../output/sample/segment",
+        default="../result/sample/segment",
         help="segmentation result directory",
     )
     parser.add_argument(
-        "--output_dir",
+        "--result_dir",
         type=str,
-        default="../output/sample/final",
-        help="output image directory",
+        default="../result/sample/final",
+        help="result image directory",
     )
     parser.add_argument(
         "--loglevel",

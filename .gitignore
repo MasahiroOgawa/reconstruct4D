@@ -164,9 +164,9 @@ cython_debug/
 *.orig
 
 # Results
-output/
+result/
 #simbolic link case
-output 
+result 
 *.png
 
 # Input data

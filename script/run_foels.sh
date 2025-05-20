@@ -1,6 +1,6 @@
 #!/bin/bash
 ###
-USAGE="Usage: $0 [input image directory or movie (default: data/sample)] [output directory (default: output)]"
+USAGE="Usage: $0 [input image directory or movie (default: data/sample)] [result directory (default: result)]"
 echo $USAGE
 
 # -e: stop immediately when error occurred
@@ -15,7 +15,7 @@ ROOT_DIR=$(dirname "$0")/..
 ####################
 # input image directory or video variables. You can change this.
 INPUT=${1:-${ROOT_DIR}/data/sample}
-OUTPUT_PARENT_DIR=${2:-${ROOT_DIR}/output}
+RESULT_PARENT_DIR=${2:-${ROOT_DIR}/result}
  # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
  # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
  # 5: run python debugger. push F5 after running the script.
@@ -56,10 +56,10 @@ else
 fi
 
 # automatically defined variables from INPUT
-OUTPUT_PARENT_DIR=${OUTPUT_PARENT_DIR}/$(basename ${INPUT_DIR})
-OUTPUT_FLOW_DIR=${OUTPUT_PARENT_DIR}/flow
-OUTPUT_SEG_DIR=${OUTPUT_PARENT_DIR}/segmentation
-OUTPUT_MOVOBJ_DIR=${OUTPUT_PARENT_DIR}/moving_object
+RESULT_PARENT_DIR=${RESULT_PARENT_DIR}/$(basename ${INPUT_DIR})
+RESULT_FLOW_DIR=${RESULT_PARENT_DIR}/flow
+RESULT_SEG_DIR=${RESULT_PARENT_DIR}/segmentation
+RESULT_MOVOBJ_DIR=${RESULT_PARENT_DIR}/moving_object
 FLOW_MODEL_NAME=gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
 case ${SEG_MODEL_NAME} in
        "upernet_internimage_t_512_160k_ade20k.pth" |\
@@ -84,10 +84,10 @@ esac
 if [ $LOG_LEVEL -ge 1 ]; then
        echo "[INFO] print all variables"
        echo -e "\tINPUT_DIR: ${INPUT_DIR}"
-       echo -e "\tOUTPUT_PARENT_DIR: ${OUTPUT_PARENT_DIR}"
-       echo -e "\tOUTPUT_FLOW_DIR: ${OUTPUT_FLOW_DIR}"
-       echo -e "\tOUTPUT_SEG_DIR: ${OUTPUT_SEG_DIR}"
-       echo -e "\tOUTPUT_MOVOBJ_DIR: ${OUTPUT_MOVOBJ_DIR}"
+       echo -e "\tRESULT_PARENT_DIR: ${RESULT_PARENT_DIR}"
+       echo -e "\tRESULT_FLOW_DIR: ${RESULT_FLOW_DIR}"
+       echo -e "\tRESULT_SEG_DIR: ${RESULT_SEG_DIR}"
+       echo -e "\tRESULT_MOVOBJ_DIR: ${RESULT_MOVOBJ_DIR}"
        echo -e "\tFLOW_MODEL_NAME: ${FLOW_MODEL_NAME}"
        echo -e "\tSEG_MODEL_NAME: ${SEG_MODEL_NAME}"
        echo -e "\tSEG_MODEL_TYPE: ${SEG_MODEL_TYPE}"
@@ -117,7 +117,7 @@ CMD_PREFIX=""
 if [ "$(uname -s)" = "Linux" ]; then
        CMD_PREFIX="env CUDA_VISIBLE_DEVICES=0"
 fi
-if [ -d ${OUTPUT_FLOW_DIR} ] && [ -n "$(ls -A ${OUTPUT_FLOW_DIR}/*.mp4)" ]; then
+if [ -d ${RESULT_FLOW_DIR} ] && [ -n "$(ls -A ${RESULT_FLOW_DIR}/*.mp4)" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
        if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth ]; then
@@ -126,13 +126,13 @@ else
               wget https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME} -P ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
        fi
 
-       mkdir -p ${OUTPUT_FLOW_DIR}
+       mkdir -p ${RESULT_FLOW_DIR}
        export OMP_NUM_THREADS=1
        # to avoid CUDA out of memory error.
        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
        ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
        --inference_dir ${INPUT} \
-       --output_path ${OUTPUT_FLOW_DIR} \
+       --result_path ${RESULT_FLOW_DIR} \
        --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME} \
        --padding_factor 32 \
        --upsample_factor 4 \
@@ -143,18 +143,18 @@ else
        --reg_refine \
        --num_reg_refine 6 \
        --save_flo_flow
-       echo "[INFO] save optical flow to ${OUTPUT_FLOW_DIR}"
+       echo "[INFO] save optical flow to ${RESULT_FLOW_DIR}"
        echo "[INFO] creating a flow movie"
-       ffmpeg -framerate 30  -pattern_type glob -i "${OUTPUT_FLOW_DIR}/*.png" \
-              -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_FLOW_DIR}/flow.mp4
+       ffmpeg -framerate 30  -pattern_type glob -i "${RESULT_FLOW_DIR}/*.png" \
+              -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${RESULT_FLOW_DIR}/flow.mp4
 fi
 
 
 echo "[INFO] run segmentation"
-if [ -d ${OUTPUT_SEG_DIR} ] && [ -n "$(ls -A ${OUTPUT_SEG_DIR}/*.mp4)" ]; then
+if [ -d ${RESULT_SEG_DIR} ] && [ -n "$(ls -A ${RESULT_SEG_DIR}/*.mp4)" ]; then
        echo "[INFO] segmentation output files already exist. Skip running segmentation."
 else
-       mkdir -p ${OUTPUT_SEG_DIR}
+       mkdir -p ${RESULT_SEG_DIR}
        case ${SEG_MODEL_TYPE} in
               "internimage")
                      echo "[INFO] activate InternImage conda env"
@@ -195,13 +195,13 @@ else
                             ${INPUT} \
                             ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/configs/coco/${SEG_MODEL_NAME%.*}.py  \
                             ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det/${SEG_MODEL_NAME} \
-                            --out ${OUTPUT_SEG_DIR}
+                            --out ${RESULT_SEG_DIR}
                      elif [ "$SEG_TASK_TYPE" = "semantic" ]; then
                             ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py \
                                    ${INPUT} \
                                    ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/${SEG_MODEL_NAME%.*}.py  \
                                    ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg/${SEG_MODEL_NAME} \
-                                   --palette ade20k --out ${OUTPUT_SEG_DIR}
+                                   --palette ade20k --out ${RESULT_SEG_DIR}
                      else
                             echo "[ERROR] unknown segmentation task type: ${SEG_TASK_TYPE}"
                             exit 1
@@ -218,18 +218,18 @@ fi
 echo "[INFO] run extract moving objects"
 source ${ROOT_DIR}/.venv/bin/activate
 echo "[INFO] env: $VIRTUAL_ENV"
-if [ -n "$(ls -A ${OUTPUT_MOVOBJ_DIR}/*.mp4)" ]; then
+if [ -n "$(ls -A ${RESULT_MOVOBJ_DIR}/*.mp4)" ]; then
        echo "[INFO] moving objects output files already exist. So skip running extract moving objects."
        exit 0
 fi
-mkdir -p ${OUTPUT_MOVOBJ_DIR}
+mkdir -p ${RESULT_MOVOBJ_DIR}
 MOVOBJEXT_OPTS="--input_dir ${INPUT_DIR} \
-       --flow_result_dir ${OUTPUT_FLOW_DIR} \
+       --flow_result_dir ${RESULT_FLOW_DIR} \
        --segment_model_type ${SEG_MODEL_TYPE} \
        --segment_model_name ${SEG_MODEL_NAME} \
        --segment_task_type ${SEG_TASK_TYPE} \
-       --segment_result_dir ${OUTPUT_SEG_DIR} \
-       --output_dir ${OUTPUT_MOVOBJ_DIR} \
+       --segment_result_dir ${RESULT_SEG_DIR} \
+       --result_dir ${RESULT_MOVOBJ_DIR} \
        --skip_frames ${SKIP_FRAMES} \
        --ransac_all_inlier_estimation ${RANSAC_ALL_INLIER_ESTIMATION} \
        --foe_search_step ${FOE_SEARCH_STEP} \
@@ -246,24 +246,24 @@ fi
 echo "[INFO] creating a segmentation movie (ffmpeg in InternImage conda env doesn't support libx264, so we create it here.)"
 # for segmentation, the image file format is jpg or png. so detect it first.
 IMG_EXT=
-if [ $(ls -1 ${OUTPUT_SEG_DIR}/*.jpg 2>/dev/null | wc -l) != 0 ]; then
+if [ $(ls -1 ${RESULT_SEG_DIR}/*.jpg 2>/dev/null | wc -l) != 0 ]; then
        IMG_EXT=jpg
-elif [ $(ls -1 ${OUTPUT_SEG_DIR}/*.png 2>/dev/null | wc -l) != 0 ]; then
+elif [ $(ls -1 ${RESULT_SEG_DIR}/*.png 2>/dev/null | wc -l) != 0 ]; then
        IMG_EXT=png
 else
-       echo "[INFO] no jpg or png image file in ${OUTPUT_SEG_DIR}\
+       echo "[INFO] no jpg or png image file in ${RESULT_SEG_DIR}\
         So skip creating a segmentation movie."
 fi
-if [ $(ls -1 ${OUTPUT_SEG_DIR}/*.${IMG_EXT} 2>/dev/null | wc -l) != 0 ]; then
-       ffmpeg -y -framerate 30  -pattern_type glob -i "${OUTPUT_SEG_DIR}/*.${IMG_EXT}" \
-       -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_SEG_DIR}/segmentation.mp4
+if [ $(ls -1 ${RESULT_SEG_DIR}/*.${IMG_EXT} 2>/dev/null | wc -l) != 0 ]; then
+       ffmpeg -y -framerate 30  -pattern_type glob -i "${RESULT_SEG_DIR}/*.${IMG_EXT}" \
+       -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${RESULT_SEG_DIR}/segmentation.mp4
 fi
 
 echo "[INFO] creating a final movie"
-ffmpeg -y -framerate 30  -pattern_type glob -i "${OUTPUT_MOVOBJ_DIR}/*_result.png" \
-       -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${OUTPUT_MOVOBJ_DIR}/moving_object.mp4
+ffmpeg -y -framerate 30  -pattern_type glob -i "${RESULT_MOVOBJ_DIR}/*_result.png" \
+       -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${RESULT_MOVOBJ_DIR}/moving_object.mp4
 
 if [ $LOG_LEVEL -ge 4 ]; then
        echo "[INFO] display the final movie"
-       vlc ${OUTPUT_MOVOBJ_DIR}/moving_object.mp4
+       vlc ${RESULT_MOVOBJ_DIR}/moving_object.mp4
 fi
