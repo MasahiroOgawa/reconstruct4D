@@ -497,7 +497,7 @@
     {
         "class_name": "river",
         "class_id": 99,
-        "moving_prob": 0.9
+        "moving_prob": 0.09
     },
     {
         "class_name": "road",
@@ -517,7 +517,7 @@
     {
         "class_name": "sea",
         "class_id": 103,
-        "moving_prob": 0.8
+        "moving_prob": 0.09
     },
     {
         "class_name": "shelf",
@@ -527,7 +527,7 @@
     {
         "class_name": "snow",
         "class_id": 105,
-        "moving_prob": 0.1
+        "moving_prob": 0.09
     },
     {
         "class_name": "stairs",
@@ -567,7 +567,7 @@
     {
         "class_name": "water-other",
         "class_id": 113,
-        "moving_prob": 0.5
+        "moving_prob": 0.09
     },
     {
         "class_name": "window-blind",
@@ -582,7 +582,7 @@
     {
         "class_name": "tree-merged",
         "class_id": 116,
-        "moving_prob": 0.1
+        "moving_prob": 0.09
     },
     {
         "class_name": "fence-merged",
@@ -627,7 +627,7 @@
     {
         "class_name": "grass-merged",
         "class_id": 125,
-        "moving_prob": 0.1
+        "moving_prob": 0.09
     },
     {
         "class_name": "dirt-merged",

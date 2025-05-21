@@ -1,11 +1,13 @@
-from focus_of_expansion import FoE
+import argparse
+import logging
+import os
+import time
+
+import cv2
+import numpy as np
 import opticalflow
 import segmentator
-import argparse
-import cv2
-import os
-import numpy as np
-import time
+from focus_of_expansion import FoE
 
 
 class MovingObjectExtractor:
@@ -33,10 +35,11 @@ class MovingObjectExtractor:
         SAME_FLOWANGLE_MIN_MOVING_PROB = 0.2
         # minimum moving probability even when the flow length is the same with background.
         SAME_FLOWLENGTH_MIN_MOVING_PROB = 0.4
-        # in moving pixel region, it is considered as moving object if the same object id exists over this rate.
-        self.THRE_MOVINGOBJ_AREA_RATE = 0.2
+        #
+        self.THRE_FRACTION_PIX_MOVING_IN_OBJ = args.thre_fraction_pix_moving_in_obj
 
         # variables
+        self.logger = logging.getLogger(__name__)
         self.imgfiles = sorted(
             [
                 file
@@ -107,6 +110,9 @@ class MovingObjectExtractor:
                 f"{args.result_dir}/{base_imgname}_result.png"
             )
             if os.path.exists(self.fullpath_result_imgname):
+                self.logger.info(
+                    f"[INFO] {self.fullpath_result_imgname} already exists. skipping."
+                )
                 continue
 
             self.process_image()
@@ -243,33 +249,22 @@ class MovingObjectExtractor:
 
     def _compute_moving_obj_mask(self):
         """
-        Compute moving object mask based on the posterior probability of moving pixels.
-        Moving object is defined as segmented object which has some moving pixel area. The detail definition is below.
-        In a moving pixels connected region, if the same object id exists over thresold percentage, the object is considered as moving object.
-        object id can get from seg.id_mask, which is torch.tensor.
+        Compute moving object mask.
+        An object (defined by self.seg.id_mask) is considered moving if a sufficient fraction
+        of its total pixels are determined to be moving by self.posterior_movpix_mask.
         """
         self.moving_obj_mask = np.zeros_like(self.posterior_movpix_mask, dtype=np.uint8)
-        # find connected regions of moving pixels
-        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-            self.posterior_movpix_mask.astype(np.uint8), connectivity=8
-        )
-        # compute moving object mask by looping each connected region.
-        for label in range(1, num_labels):
-            # extract current label area mask
-            label_mask = labels == label
-            label_area = stats[label, cv2.CC_STAT_AREA]
-            # get object ids in the label region
-            obj_ids, obj_areas = np.unique(
-                self.seg.id_mask[label_mask], return_counts=True
-            )
-            # get the object id which has over threshold area in the label region.
-            dominant_obj_ids = obj_ids[
-                obj_areas > self.THRE_MOVINGOBJ_AREA_RATE * label_area
-            ]
-            # update moving object mask by adding whole object which has the dominant object id.
-            self.moving_obj_mask = (
-                np.isin(self.seg.id_mask, dominant_obj_ids) | self.moving_obj_mask
-            )
+        unique_seg_ids = np.unique(self.seg.id_mask)
+
+        for seg_id in unique_seg_ids:
+            current_seg_mask = np.asarray(self.seg.id_mask) == seg_id
+            total_area = np.sum(current_seg_mask)
+            if total_area == 0:
+                continue
+            moving_area = np.sum(current_seg_mask & self.posterior_movpix_mask)
+            moving_area_rate = moving_area / total_area
+            if moving_area_rate > self.THRE_FRACTION_PIX_MOVING_IN_OBJ:
+                self.moving_obj_mask[current_seg_mask] = 1
 
 
 if __name__ == "__main__":
@@ -339,6 +334,12 @@ if __name__ == "__main__":
         type=int,
         default=30,
         help="number of RANSAC iterations for FoE estimation",
+    )
+    parser.add_argument(
+        "--thre_fraction_pix_moving_in_obj",
+        type=float,
+        default=0.1,
+        help="threshold of fraction of moving pixels in an object to be considered as moving",
     )
     args = parser.parse_args()
 

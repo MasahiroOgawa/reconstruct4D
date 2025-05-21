@@ -1,8 +1,12 @@
+import logging
 from enum import Enum
 
 import cv2
 import numpy as np
 
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 CameraState = Enum("CameraState", ["STOPPING", "ROTATING", "ONLY_TRANSLATING"])
 
 
@@ -49,6 +53,8 @@ class FoE:
         self.moving_prob = None  # 0: inlier=stop, 1: outlier=moving
         self.moving_prob_img = None
         self.intermediate_foe_img = None
+
+        self.logger = logging.getLogger(__name__)
 
     def compute(self, flow, sky_mask, static_mask):
         """..ext.
@@ -649,6 +655,11 @@ class FoE:
         """
         for row in range(0, flow.shape[0], self.FLOWARROW_STEP_FORVIS):
             for col in range(0, flow.shape[1], self.FLOWARROW_STEP_FORVIS):
+                if self.foe_hom is None:
+                    self.logger.warning(
+                        "[WARNING] FoE is None. Cannot draw flow arrow."
+                    )
+                    return
                 decision = self._inlier_decision(row, col, self.foe_hom, self.foe_sign)
                 if decision == 1:
                     color = (0, 255, 0)  # inlier: green
