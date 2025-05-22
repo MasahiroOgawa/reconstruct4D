@@ -15,7 +15,7 @@ class MovingObjectExtractor:
         # constants
         self.RESULTIMG_WIDTH = args.resultimg_width
         # if moving probability is lower than this value, the pixel is considered as static. default value = prior(0.5) * angle likelihood(0.5) * length likelihood(0.5).
-        self.THRE_MOVING_PROB = 0.5**3
+        self.THRE_MOVING_PROB = 0.5**2
         THRE_STATIC_PROB = 0.1
         THRE_DOMINANTFLOW_ANGLE = 10 * np.pi / 180
         # if flow length is lower than this value, the flow orientation will be ignored.
@@ -31,12 +31,9 @@ class MovingObjectExtractor:
         FLOWARROW_STEP_FORVIS = 20
         # flow arrow length factor for visualization
         FLOWLENGTH_FACTOR_FORVIS = 1
-        # minimum moving probability even when the angle is totally the same with FoE-position angle.
-        SAME_FLOWANGLE_MIN_MOVING_PROB = 0.2
-        # minimum moving probability even when the flow length is the same with background.
-        SAME_FLOWLENGTH_MIN_MOVING_PROB = 0.4
-        #
         self.THRE_FRACTION_PIX_MOVING_IN_OBJ = args.thre_fraction_pix_moving_in_obj
+        self.RAD_LENGTHFACTOR_COEFF = args.rad_lengthfactor_coeff
+        self.THRE_MOVPROB_COS = args.thre_movprob_cos
 
         # variables
         self.logger = logging.getLogger(__name__)
@@ -82,8 +79,6 @@ class MovingObjectExtractor:
             THRE_INLIER_RATE,
             THRE_FLOW_EXISTING_RATE,
             args.num_ransac,
-            SAME_FLOWANGLE_MIN_MOVING_PROB,
-            SAME_FLOWLENGTH_MIN_MOVING_PROB,
             FLOWARROW_STEP_FORVIS,
             FLOWLENGTH_FACTOR_FORVIS,
             args.ransac_all_inlier_estimation,
@@ -340,6 +335,18 @@ if __name__ == "__main__":
         type=float,
         default=0.1,
         help="threshold of fraction of moving pixels in an object to be considered as moving",
+    )
+    parser.add_argument(
+        "--rad_lengthfactor_coeff",
+        type=float,
+        default=0.05,
+        help="length factor coefficient for flow length in radian. e.g. if the target flow length is 100 times compared with mean of static background flow, factor is 2, and it will be comberted to 2* this coeff [rad] ",
+    )
+    parser.add_argument(
+        "--thre_movprob_cos",
+        type=float,
+        default=0.995,  # ~cos(6 degree)
+        help="threshold of moving probability of cosine of angle between flow and foe-pos to be considered as moving",
     )
     args = parser.parse_args()
 

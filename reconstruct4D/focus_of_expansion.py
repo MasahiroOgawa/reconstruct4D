@@ -13,18 +13,18 @@ CameraState = Enum("CameraState", ["STOPPING", "ROTATING", "ONLY_TRANSLATING"])
 class FoE:
     def __init__(
         self,
-        thre_flowlength=4.0,
+        thre_flowlength=0.2,
         thre_inlier_angle=1 * np.pi / 180,
         thre_inlier_rate=0.9,
         thre_flow_existing_rate=0.1,
         num_ransac=100,
-        same_flowangle_min_moving_prob=0.1,
-        same_flowlength_min_moving_prob=0.4,
         flowarrow_step_forvis=20,
         flowlength_factor_forvis=1,
         ransac_all_inlier_estimation=False,
         search_step=1,
         log_level=0,
+        rad_lengthfactor_coeff=0.05,
+        thre_movprob_cos=0.1,
     ) -> None:
         # constants
         self.LOG_LEVEL = log_level
@@ -36,11 +36,11 @@ class FoE:
         self.NUM_RANSAC = num_ransac
         self.FLOWARROW_STEP_FORVIS = flowarrow_step_forvis
         self.FLOWLENGTH_FACTOR_FORVIS = flowlength_factor_forvis
-        self.SAME_FLOWANGLE_MIN_MOVING_PROB = same_flowangle_min_moving_prob
-        self.SAME_FLOWLENGTH_MIN_MOVING_PROB = same_flowlength_min_moving_prob
         self.RANSAC_ALL_INLIER_ESTIMATION = ransac_all_inlier_estimation
         self.SEARCH_STEP = search_step
         self.THRE_FOE_W_INF = 1e-10
+        self.RAD_LENGTHFACTOR_COEFF = rad_lengthfactor_coeff
+        self.THRE_MOVPROB_COS = thre_movprob_cos
 
         # variables
         self.state = CameraState.ROTATING  # most unkown movement.
@@ -524,6 +524,10 @@ class FoE:
 
         return inlier_rate, inlier_flowlines_mat
 
+    @staticmethod
+    def sigmoid(x):
+        return 1 / (1 + np.exp(-x))
+
     def comp_movpixprob(self, foe) -> float:
         """
         compute moving pixel probability by length and angle difference.
@@ -539,50 +543,43 @@ class FoE:
         foe_u = foe[0] / foe[2]
         foe_v = foe[1] / foe[2]
 
-        self.mean_flow_length_in_static = max(self.mean_flow_length_in_static, 1e-10)
-
         for row in range(0, self.flow.shape[0]):
             for col in range(0, self.flow.shape[1]):
                 # get flow
                 flow_u = self.flow[row, col, 0]
                 flow_v = self.flow[row, col, 1]
                 flow_length = np.sqrt(flow_u**2 + flow_v**2)
-                # TODO: I need to check whether this (tanh) definition is OK.
-                # probably, e.g. 100 times difference should be more exaggerated than this.
-                length_diff_prob = min(
-                    1.0,
-                    max(
-                        np.tanh(abs(flow_length / self.mean_flow_length_in_static - 1)),
-                        self.SAME_FLOWLENGTH_MIN_MOVING_PROB,
-                    ),
-                )
-                if flow_length < self.THRE_FLOWLENGTH:
-                    # Currently the camera is judged as moving in the former process,
-                    # so this means that the former considered static object moves with the camera.
-                    self.moving_prob[row, col] = (
-                        length_diff_prob * self.SAME_FLOWANGLE_MIN_MOVING_PROB
-                    )
+                # compute length factor for adding length difference when the angle difference is small case.
+                if self.mean_flow_length_in_static < self.THRE_FLOWLENGTH:
+                    maen_length = self.THRE_FLOWLENGTH
                 else:
-                    # check the angle between flow and expected flow direction (signed FoE-to-each-pixel) is lower than the threshold.
-                    expect_flowdir = self.foe_sign * np.array(
-                        [col - foe_u, row - foe_v, 1]
-                    )
-                    expect_flowdir_length = np.sqrt(
-                        expect_flowdir[0] ** 2 + expect_flowdir[1] ** 2
-                    )
-                    if expect_flowdir_length < 1e-6:  # avoid division by zero
-                        expect_flowdir_length = 1e-6
+                    mean_length = self.mean_flow_length_in_static
+                length_factor = np.log10(abs(flow_length / mean_length))
+
+                # check the angle between flow and expected flow direction (signed FoE-to-each-pixel) is lower than the threshold.
+                expect_flowdir = self.foe_sign * np.array([col - foe_u, row - foe_v, 1])
+                expect_flowdir_length = np.sqrt(
+                    expect_flowdir[0] ** 2 + expect_flowdir[1] ** 2
+                )
+                # avoid division by zero
+                expect_flowdir_length = max(expect_flowdir_length, self.THRE_FOE_W_INF)
+                if flow_length < self.THRE_FLOWLENGTH:
+                    cos_foe_flow = 1.0  # let it be the same angle because it cannot compute angle difference.
+                else:
                     cos_foe_flow = np.dot(
                         (expect_flowdir[0], expect_flowdir[1]), (flow_u, flow_v)
                     ) / (expect_flowdir_length * flow_length)
-                    angle_diff_prob = min(
-                        1.0,
-                        max(
-                            (1 - cos_foe_flow) / 2.0,
-                            self.SAME_FLOWANGLE_MIN_MOVING_PROB,
-                        ),
-                    )
-                    self.moving_prob[row, col] = angle_diff_prob * length_diff_prob
+                # map cosine difference to moving probability.
+                angle_diff_prob = FoE.sigmoid(
+                    (self.THRE_MOVPROB_COS - cos_foe_flow) * 10
+                )
+
+                # finally add length factor to moving probability
+                self.moving_prob[row, col] = np.clip(
+                    angle_diff_prob + self.RAD_LENGTHFACTOR_COEFF * length_factor,
+                    0.0,
+                    1.0,
+                )
 
         # Ensure sky mask remains 0 probability after calculations
         self.moving_prob[self.sky_mask == True] = 0.0
