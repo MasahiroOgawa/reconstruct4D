@@ -32,8 +32,6 @@ class MovingObjectExtractor:
         # flow arrow length factor for visualization
         FLOWLENGTH_FACTOR_FORVIS = 1
         self.THRE_FRACTION_PIX_MOVING_IN_OBJ = args.thre_fraction_pix_moving_in_obj
-        self.RAD_LENGTHFACTOR_COEFF = args.rad_lengthfactor_coeff
-        self.THRE_MOVPROB_COS = args.thre_movprob_cos
 
         # variables
         self.logger = logging.getLogger(__name__)
@@ -84,6 +82,8 @@ class MovingObjectExtractor:
             args.ransac_all_inlier_estimation,
             args.foe_search_step,
             log_level=args.loglevel,
+            rad_lengthfactor_coeff=args.rad_lengthfactor_coeff,
+            thre_movprob_deg=args.thre_movprob_deg,
         )
         self.cur_imgname = None
         self.cur_img = None
@@ -343,10 +343,10 @@ if __name__ == "__main__":
         help="length factor coefficient for flow length in radian. e.g. if the target flow length is 100 times compared with mean of static background flow, factor is 2, and it will be comberted to 2* this coeff [rad] ",
     )
     parser.add_argument(
-        "--thre_movprob_cos",
+        "--thre_movprob_deg",
         type=float,
-        default=0.995,  # ~cos(6 degree)
-        help="threshold of moving probability of cosine of angle between flow and foe-pos to be considered as moving",
+        default=5,
+        help="threshold of moving probability of angle difference between flow and foe-pos to be considered as moving probabiity =0.5",
     )
     args = parser.parse_args()
 

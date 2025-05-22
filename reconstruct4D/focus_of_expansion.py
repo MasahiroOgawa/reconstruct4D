@@ -24,7 +24,7 @@ class FoE:
         search_step=1,
         log_level=0,
         rad_lengthfactor_coeff=0.05,
-        thre_movprob_cos=0.1,
+        thre_movprob_deg=6,
     ) -> None:
         # constants
         self.LOG_LEVEL = log_level
@@ -40,7 +40,11 @@ class FoE:
         self.SEARCH_STEP = search_step
         self.THRE_FOE_W_INF = 1e-10
         self.RAD_LENGTHFACTOR_COEFF = rad_lengthfactor_coeff
-        self.THRE_MOVPROB_COS = thre_movprob_cos
+        self.THRE_MOVPROB_DEG = thre_movprob_deg
+        # we will map self.THRE_MOVPROB_COS) differnece to 0.5 moving probability by using ((1-cos)/2)**(1/n).
+        self.ANGLE_FACTOR_N = np.log(
+            (1 - np.cos(self.THRE_MOVPROB_DEG * np.pi / 180)) / 2
+        ) / np.log(0.5)
 
         # variables
         self.state = CameraState.ROTATING  # most unkown movement.
@@ -570,9 +574,7 @@ class FoE:
                         (expect_flowdir[0], expect_flowdir[1]), (flow_u, flow_v)
                     ) / (expect_flowdir_length * flow_length)
                 # map cosine difference to moving probability.
-                angle_diff_prob = FoE.sigmoid(
-                    (self.THRE_MOVPROB_COS - cos_foe_flow) * 10
-                )
+                angle_diff_prob = ((1 - cos_foe_flow) / 2) ** (1 / self.ANGLE_FACTOR_N)
 
                 # finally add length factor to moving probability
                 self.moving_prob[row, col] = np.clip(
