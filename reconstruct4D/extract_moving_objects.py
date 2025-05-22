@@ -82,7 +82,7 @@ class MovingObjectExtractor:
             args.ransac_all_inlier_estimation,
             args.foe_search_step,
             log_level=args.loglevel,
-            rad_lengthfactor_coeff=args.rad_lengthfactor_coeff,
+            movprob_lengthfactor_coeff=args.movprob_lengthfactor_coeff,
             thre_movprob_deg=args.thre_movprob_deg,
         )
         self.cur_imgname = None
@@ -337,15 +337,15 @@ if __name__ == "__main__":
         help="threshold of fraction of moving pixels in an object to be considered as moving",
     )
     parser.add_argument(
-        "--rad_lengthfactor_coeff",
+        "--movprob_lengthfactor_coeff",
         type=float,
-        default=0.05,
-        help="length factor coefficient for flow length in radian. e.g. if the target flow length is 100 times compared with mean of static background flow, factor is 2, and it will be comberted to 2* this coeff [rad] ",
+        default=0.25,
+        help="length factor coefficient for moving probability. e.g. if the target flow length is 100 times compared with mean of static background flow, factor is 2, and moving probability will be increase to 2* this coeff ",
     )
     parser.add_argument(
         "--thre_movprob_deg",
         type=float,
-        default=5,
+        default=30,
         help="threshold of moving probability of angle difference between flow and foe-pos to be considered as moving probabiity =0.5",
     )
     args = parser.parse_args()

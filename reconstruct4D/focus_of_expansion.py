@@ -23,8 +23,8 @@ class FoE:
         ransac_all_inlier_estimation=False,
         search_step=1,
         log_level=0,
-        rad_lengthfactor_coeff=0.05,
-        thre_movprob_deg=6,
+        movprob_lengthfactor_coeff=0.25,
+        thre_movprob_deg=30,
     ) -> None:
         # constants
         self.LOG_LEVEL = log_level
@@ -39,7 +39,7 @@ class FoE:
         self.RANSAC_ALL_INLIER_ESTIMATION = ransac_all_inlier_estimation
         self.SEARCH_STEP = search_step
         self.THRE_FOE_W_INF = 1e-10
-        self.RAD_LENGTHFACTOR_COEFF = rad_lengthfactor_coeff
+        self.MOVPROB_LENGTHFACTOR_COEFF = movprob_lengthfactor_coeff
         self.THRE_MOVPROB_DEG = thre_movprob_deg
         # we will map self.THRE_MOVPROB_COS) differnece to 0.5 moving probability by using ((1-cos)/2)**(1/n).
         self.ANGLE_FACTOR_N = np.log(
@@ -558,7 +558,7 @@ class FoE:
                     maen_length = self.THRE_FLOWLENGTH
                 else:
                     mean_length = self.mean_flow_length_in_static
-                length_factor = np.log10(abs(flow_length / mean_length))
+                length_factor = abs(np.log10(abs(flow_length / mean_length)))
 
                 # check the angle between flow and expected flow direction (signed FoE-to-each-pixel) is lower than the threshold.
                 expect_flowdir = self.foe_sign * np.array([col - foe_u, row - foe_v, 1])
@@ -578,7 +578,7 @@ class FoE:
 
                 # finally add length factor to moving probability
                 self.moving_prob[row, col] = np.clip(
-                    angle_diff_prob + self.RAD_LENGTHFACTOR_COEFF * length_factor,
+                    angle_diff_prob + self.MOVPROB_LENGTHFACTOR_COEFF * length_factor,
                     0.0,
                     1.0,
                 )
