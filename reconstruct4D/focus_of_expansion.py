@@ -41,10 +41,7 @@ class FoE:
         self.THRE_FOE_W_INF = 1e-10
         self.MOVPROB_LENGTHFACTOR_COEFF = movprob_lengthfactor_coeff
         self.THRE_MOVPROB_DEG = thre_movprob_deg
-        # we will map self.THRE_MOVPROB_COS) differnece to 0.5 moving probability by using ((1-cos)/2)**(1/n).
-        self.ANGLE_FACTOR_N = np.log(
-            (1 - np.cos(self.THRE_MOVPROB_DEG * np.pi / 180)) / 2
-        ) / np.log(0.5)
+        self.THRE_MOVPROB_RAD = self.THRE_MOVPROB_DEG * np.pi / 180
 
         # variables
         self.state = CameraState.ROTATING  # most unkown movement.
@@ -555,7 +552,7 @@ class FoE:
                 flow_length = np.sqrt(flow_u**2 + flow_v**2)
                 # compute length factor for adding length difference when the angle difference is small case.
                 if self.mean_flow_length_in_static < self.THRE_FLOWLENGTH:
-                    maen_length = self.THRE_FLOWLENGTH
+                    mean_length = self.THRE_FLOWLENGTH
                 else:
                     mean_length = self.mean_flow_length_in_static
                 length_factor = abs(np.log10(abs(flow_length / mean_length)))
@@ -574,7 +571,10 @@ class FoE:
                         (expect_flowdir[0], expect_flowdir[1]), (flow_u, flow_v)
                     ) / (expect_flowdir_length * flow_length)
                 # map cosine difference to moving probability.
-                angle_diff_prob = ((1 - cos_foe_flow) / 2) ** (1 / self.ANGLE_FACTOR_N)
+                angle_diff_prob = min(
+                    np.arccos(cos_foe_flow) / (2 * self.THRE_MOVPROB_RAD),
+                    1.0,
+                )
 
                 # finally add length factor to moving probability
                 self.moving_prob[row, col] = np.clip(
