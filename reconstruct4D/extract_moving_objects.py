@@ -127,7 +127,7 @@ class MovingObjectExtractor:
 
         if args.loglevel > 0:
             print(
-                f"------------\n[INFO] processing {self.cur_imgname} : {self.cur_img.shape}"
+                f"------------\n[INFO] processing {args.input_dir}/{self.cur_imgname} : {self.cur_img.shape}"
             )
 
         # currently just read flow from corresponding image file name.
