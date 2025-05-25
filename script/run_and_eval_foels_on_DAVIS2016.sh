@@ -38,6 +38,6 @@ echo "[INFO] run evaluation."
 $ROOT_DIR/script/evaluate_foels_on_${DATASET_NAME}.sh
 
 echo "[INFO] copy results to result directory."
-cp ${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/results/Foels/${DATASET_NAME}/result.txt ${ROOT_DIR}/result/${DATASET_NAME}
+cp ${ROOT_DIR}/reconstruct4D/ext/unsupervised_detection/results/Foels/${DATASET_NAME}/result.csv ${ROOT_DIR}/result/${DATASET_NAME}
 
 echo "[INFO] finish."
