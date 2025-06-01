@@ -33,7 +33,7 @@ NUM_RANSAC=20
 RANSAC_ALL_INLIER_ESTIMATION=True
 # FOE_SEARCH_STEP: the number of steps to search the focus of expansion (FOE) in the image.
 FOE_SEARCH_STEP=5
-THRE_FRACTION_PIX_MOVING_IN_OBJ=0.01
+THRE_MOVING_FRACTION_IN_OBJ=0.01
 ####################
 
 if [ $LOG_LEVEL -ge 3 ]; then
@@ -235,7 +235,7 @@ MOVOBJEXT_OPTS="--input_dir ${INPUT_DIR} \
        --ransac_all_inlier_estimation ${RANSAC_ALL_INLIER_ESTIMATION} \
        --foe_search_step ${FOE_SEARCH_STEP} \
        --num_ransac ${NUM_RANSAC} \
-       --thre_fraction_pix_moving_in_obj ${THRE_FRACTION_PIX_MOVING_IN_OBJ}\
+       --thre_moving_fraction_in_obj ${THRE_MOVING_FRACTION_IN_OBJ}\
        --loglevel ${LOG_LEVEL}"
 if [ $LOG_LEVEL -ge 5 ]; then
        echo "[NOTE] Please press F5 to start debugging!"

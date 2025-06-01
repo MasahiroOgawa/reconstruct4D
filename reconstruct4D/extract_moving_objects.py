@@ -31,7 +31,7 @@ class MovingObjectExtractor:
         FLOWARROW_STEP_FORVIS = 20
         # flow arrow length factor for visualization
         FLOWLENGTH_FACTOR_FORVIS = 1
-        self.THRE_FRACTION_PIX_MOVING_IN_OBJ = args.thre_fraction_pix_moving_in_obj
+        self.THRE_MOVING_FRACTION_IN_OBJ = args.thre_moving_fraction_in_obj
 
         # variables
         self.logger = logging.getLogger(__name__)
@@ -258,7 +258,7 @@ class MovingObjectExtractor:
                 continue
             moving_area = np.sum(current_seg_mask & self.posterior_movpix_mask)
             moving_area_rate = moving_area / total_area
-            if moving_area_rate > self.THRE_FRACTION_PIX_MOVING_IN_OBJ:
+            if moving_area_rate > self.THRE_MOVING_FRACTION_IN_OBJ:
                 self.moving_obj_mask[current_seg_mask] = 1
 
 
@@ -331,10 +331,10 @@ if __name__ == "__main__":
         help="number of RANSAC iterations for FoE estimation",
     )
     parser.add_argument(
-        "--thre_fraction_pix_moving_in_obj",
+        "--thre_moving_fraction_in_obj",
         type=float,
         default=0.1,
-        help="threshold of fraction of moving pixels in an object to be considered as moving",
+        help="threshold of moving pixel fraction in an object to be considered as moving",
     )
     parser.add_argument(
         "--movprob_lengthfactor_coeff",
