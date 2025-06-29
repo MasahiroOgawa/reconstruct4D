@@ -13,7 +13,7 @@ CameraState = Enum("CameraState", ["STOPPING", "ROTATING", "ONLY_TRANSLATING"])
 class FoE:
     def __init__(
         self,
-        thre_flowlength=0.2,
+        thre_flowlength=1.0,
         thre_inlier_angle=1 * np.pi / 180,
         thre_inlier_rate=0.9,
         thre_flow_existing_rate=0.1,
@@ -216,7 +216,7 @@ class FoE:
                         if self.LOG_LEVEL > 0:
                             print(
                                 f"[INFO] best FoE candidate: {best_foe_candi}, refined FoE: {refined_foe}, "
-                                f"[INFO] (refinedFoE, bestFoEcandi) = { np.dot(refined_foe, best_foe_candi)}, so FoE signe is flipped."
+                                f"[INFO] (refinedFoE, bestFoEcandi) = {np.dot(refined_foe, best_foe_candi)}, so FoE signe is flipped."
                             )
 
                 self.foe_hom = refined_foe_hom
@@ -555,7 +555,7 @@ class FoE:
                     mean_length = self.THRE_FLOWLENGTH
                 else:
                     mean_length = self.mean_flow_length_in_static
-                length_factor = abs(np.log10(abs(flow_length / mean_length)))
+                length_factor = abs(np.log10(abs(flow_length - mean_length)))
 
                 # check the angle between flow and expected flow direction (signed FoE-to-each-pixel) is lower than the threshold.
                 expect_flowdir = self.foe_sign * np.array([col - foe_u, row - foe_v, 1])

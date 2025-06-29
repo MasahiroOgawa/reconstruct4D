@@ -19,7 +19,7 @@ class MovingObjectExtractor:
         THRE_STATIC_PROB = 0.1
         THRE_DOMINANTFLOW_ANGLE = 10 * np.pi / 180
         # if flow length is lower than this value, the flow orientation will be ignored.
-        THRE_FLOWLENGTH = 0.2
+        THRE_FLOWLENGTH = 1.0
         # if angle between flow and foe-pos is lower than this value, the flow considered as an inlier.[radian]
         THRE_INLIER_ANGLE = 2 * np.pi / 180
         # if inlier rate is higher than this value, RANSAC will be stopped.
