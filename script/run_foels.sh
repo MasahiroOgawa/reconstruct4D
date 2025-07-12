@@ -27,6 +27,10 @@ SEG_MODEL_NAME=$(yq ' .SEG_MODEL_NAME ' "$PARAM_FILE")
 # Strip quotes and whitespace from SEG_MODEL_NAME
 SEG_MODEL_NAME=$(echo "$SEG_MODEL_NAME" | sed -e 's/^\s*//;s/\s*$//' -e 's/^"//;s/"$//' -e "s/^'//;s/'$//")
 NUM_RANSAC=$(yq ' .NUM_RANSAC ' "$PARAM_FILE")
+# Read FLOW_MODEL_NAME from YAML
+FLOW_MODEL_NAME=$(yq ' .FLOW_MODEL_NAME ' "$PARAM_FILE")
+# Strip quotes and whitespace from FLOW_MODEL_NAME
+FLOW_MODEL_NAME=$(echo "$FLOW_MODEL_NAME" | sed -e 's/^\s*//;s/\s*$//' -e 's/^"//;s/"$//' -e "s/^'//;s/'$//")
 RANSAC_ALL_INLIER_ESTIMATION=$(yq ' .RANSAC_ALL_INLIER_ESTIMATION ' "$PARAM_FILE")
 FOE_SEARCH_STEP=$(yq ' .FOE_SEARCH_STEP ' "$PARAM_FILE")
 THRE_MOVING_FRACTION_IN_OBJ=$(yq ' .THRE_MOVING_FRACTION_IN_OBJ ' "$PARAM_FILE")
@@ -57,7 +61,6 @@ RESULT_PARENT_DIR=${RESULT_PARENT_DIR}/$(basename ${INPUT_DIR})
 RESULT_FLOW_DIR=${RESULT_PARENT_DIR}/flow
 RESULT_SEG_DIR=${RESULT_PARENT_DIR}/segmentation
 RESULT_MOVOBJ_DIR=${RESULT_PARENT_DIR}/moving_object
-FLOW_MODEL_NAME=gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth
 case ${SEG_MODEL_NAME} in
        "upernet_internimage_t_512_160k_ade20k.pth" |\
        "upernet_internimage_xl_640_160k_ade20k.pth" |\
@@ -217,12 +220,19 @@ fi
 echo "[INFO] run extract moving objects"
 source ${ROOT_DIR}/.venv/bin/activate
 echo "[INFO] env: $VIRTUAL_ENV"
-if [ -n "$(ls -A ${RESULT_MOVOBJ_DIR}/*.mp4)" ]; then
-       echo "[INFO] moving objects output files already exist. So skip running extract moving objects."
-       exit 0
+
+# Count input frames
+NUM_INPUT_FRAMES=$(ls -1 ${INPUT_DIR}/*.jpg 2>/dev/null | wc -l)
+if [ "$NUM_INPUT_FRAMES" -eq 0 ]; then
+    NUM_INPUT_FRAMES=$(ls -1 ${INPUT_DIR}/*.png 2>/dev/null | wc -l)
 fi
-mkdir -p ${RESULT_MOVOBJ_DIR}
-MOVOBJEXT_OPTS="--input_dir ${INPUT_DIR} \
+
+if [ "$SKIP_FRAMES" -ge "$NUM_INPUT_FRAMES" ]; then
+    echo "[WARNING] SKIP_FRAMES (${SKIP_FRAMES}) >= number of input frames (${NUM_INPUT_FRAMES}). No frames will be processed. Skipping moving object extraction."
+    exit 0
+else
+    mkdir -p ${RESULT_MOVOBJ_DIR}
+    MOVOBJEXT_OPTS="--input_dir ${INPUT_DIR} \
        --flow_result_dir ${RESULT_FLOW_DIR} \
        --segment_model_type ${SEG_MODEL_TYPE} \
        --segment_model_name ${SEG_MODEL_NAME} \
@@ -235,11 +245,12 @@ MOVOBJEXT_OPTS="--input_dir ${INPUT_DIR} \
        --num_ransac ${NUM_RANSAC} \
        --thre_moving_fraction_in_obj ${THRE_MOVING_FRACTION_IN_OBJ}\
        --loglevel ${LOG_LEVEL}"
-if [ $LOG_LEVEL -ge 5 ]; then
+    if [ $LOG_LEVEL -ge 5 ]; then
        echo "[NOTE] Please press F5 to start debugging!"
        python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJEXT_OPTS}
-else
+    else
        python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJEXT_OPTS}
+    fi
 fi
 
 
@@ -260,10 +271,13 @@ if [ $(ls -1 ${RESULT_SEG_DIR}/*.${IMG_EXT} 2>/dev/null | wc -l) != 0 ]; then
 fi
 
 echo "[INFO] creating a final movie"
-ffmpeg -y -framerate 30  -pattern_type glob -i "${RESULT_MOVOBJ_DIR}/*_result.png" \
-       -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${RESULT_MOVOBJ_DIR}/moving_object.mp4
-
-if [ $LOG_LEVEL -ge 4 ]; then
-       echo "[INFO] display the final movie"
-       vlc ${RESULT_MOVOBJ_DIR}/moving_object.mp4
+if [ $(ls -1 ${RESULT_MOVOBJ_DIR}/*_result.png 2>/dev/null | wc -l) != 0 ]; then
+       ffmpeg -y -framerate 30  -pattern_type glob -i "${RESULT_MOVOBJ_DIR}/*_result.png" \
+              -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${RESULT_MOVOBJ_DIR}/moving_object.mp4
+       if [ $LOG_LEVEL -ge 4 ]; then
+              echo "[INFO] display the final movie"
+              vlc ${RESULT_MOVOBJ_DIR}/moving_object.mp4
+       fi
+else
+       echo "[INFO] No *_result.png files found in ${RESULT_MOVOBJ_DIR}. Skipping final movie creation."
 fi

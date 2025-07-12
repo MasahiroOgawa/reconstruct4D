@@ -555,7 +555,7 @@ class FoE:
                     mean_length = self.THRE_FLOWLENGTH
                 else:
                     mean_length = self.mean_flow_length_in_static
-                length_factor = abs(np.log10(abs(flow_length - mean_length)))
+                length_factor = abs(np.log10(1+abs(flow_length - mean_length))) # totally the same case should bo 0 = log(1).
 
                 # check the angle between flow and expected flow direction (signed FoE-to-each-pixel) is lower than the threshold.
                 expect_flowdir = self.foe_sign * np.array([col - foe_u, row - foe_v, 1])
