@@ -2,7 +2,7 @@
 
 LOG_LEVEL: 2                # 0: no log, 1: print log, 2: display image, 3+: debug
 IMG_HEIGHT: 480             # Height for resizing input images
-SKIP_FRAMES: 469              # Number of frames to skip at the start
+SKIP_FRAMES: 0              # Number of frames to skip at the start
 SEG_MODEL_NAME: "shi-labs/oneformer_coco_swin_large"  # Segmentation model name
 NUM_RANSAC: 20              # Number of RANSAC iterations
 RANSAC_ALL_INLIER_ESTIMATION: true   # Whether to run all-inlier estimation in RANSAC
