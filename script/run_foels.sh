@@ -11,30 +11,26 @@ set -eu
 ROOT_DIR=$(dirname "$0")/..
 
 
-# parameters
-####################
+
+# Load parameters from YAML file
+PARAM_FILE="${ROOT_DIR}/script/foels_param.yaml"
+
 # input image directory or video variables. You can change this.
 INPUT=${1:-${ROOT_DIR}/data/sample}
 RESULT_PARENT_DIR=${2:-${ROOT_DIR}/result}
- # LOG_LEVEL=0: no log but save the result images, 1: print log, 2: display image
- # 3: display detailed debug image but without stopping, 4: display debug image and stop every frame.
- # 5: run python debugger. push F5 after running the script.
-LOG_LEVEL=1
-IMG_HEIGHT=480
-# FRAME 79 #parallel moving track  #107 #stopping pedestrians for Todaiura data.
-SKIP_FRAMES=0 
-# SEG_MODEL_NAME options = {"upernet_internimage_t_512_160k_ade20k.pth", "upernet_internimage_xl_640_160k_ade20k.pth", 
-# "upernet_internimage_h_896_160k_ade20k.pth", "mask_rcnn_internimage_t_fpn_1x_coco.pth"}
-# "shi-labs/oneformer_coco_swin_large"
-SEG_MODEL_NAME="shi-labs/oneformer_coco_swin_large"
-# number of iteration in RANSAC
-NUM_RANSAC=20
-# whether run ransac all inlier estimation or not.
-RANSAC_ALL_INLIER_ESTIMATION=True
-# FOE_SEARCH_STEP: the number of steps to search the focus of expansion (FOE) in the image.
-FOE_SEARCH_STEP=5
-THRE_MOVING_FRACTION_IN_OBJ=0.01
-####################
+
+# Read parameters from YAML
+LOG_LEVEL=$(yq ' .LOG_LEVEL ' "$PARAM_FILE")
+IMG_HEIGHT=$(yq ' .IMG_HEIGHT ' "$PARAM_FILE")
+SKIP_FRAMES=$(yq ' .SKIP_FRAMES ' "$PARAM_FILE")
+SEG_MODEL_NAME=$(yq ' .SEG_MODEL_NAME ' "$PARAM_FILE")
+# Strip quotes and whitespace from SEG_MODEL_NAME
+SEG_MODEL_NAME=$(echo "$SEG_MODEL_NAME" | sed -e 's/^\s*//;s/\s*$//' -e 's/^"//;s/"$//' -e "s/^'//;s/'$//")
+NUM_RANSAC=$(yq ' .NUM_RANSAC ' "$PARAM_FILE")
+RANSAC_ALL_INLIER_ESTIMATION=$(yq ' .RANSAC_ALL_INLIER_ESTIMATION ' "$PARAM_FILE")
+FOE_SEARCH_STEP=$(yq ' .FOE_SEARCH_STEP ' "$PARAM_FILE")
+THRE_MOVING_FRACTION_IN_OBJ=$(yq ' .THRE_MOVING_FRACTION_IN_OBJ ' "$PARAM_FILE")
+
 
 if [ $LOG_LEVEL -ge 3 ]; then
        echo "[INFO] set debug mode"
@@ -207,7 +203,9 @@ else
                             echo "[ERROR] unknown segmentation task type: ${SEG_TASK_TYPE}"
                             exit 1
                      fi
-                     eval "$(conda shell.bash deactivate)";;
+                     # Deactivate all environments using the provided function
+                     deactivate_allenvs
+                     ;;
               "oneformer")
                      echo "[INFO] you choose segmentation: ${SEG_MODEL_TYPE} ${SEG_TASK_TYPE}\
                       The process will be done during moving object extraction."

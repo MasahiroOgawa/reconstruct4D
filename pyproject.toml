@@ -20,6 +20,7 @@ dependencies = [
     "torchvision>=0.19.1",
     "transformers>=4.45.1",
     "yacs>=0.1.8",
+    "yq>=3.4.3",
 ]
 
 [tool.uv]
