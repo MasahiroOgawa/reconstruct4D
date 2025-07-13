@@ -12,29 +12,11 @@ from focus_of_expansion import FoE
 
 class MovingObjectExtractor:
     def __init__(self, args) -> None:
-        # constants
-        self.RESULTIMG_WIDTH = args.resultimg_width
-        # if moving probability is lower than this value, the pixel is considered as static. default value = prior(0.5) * angle likelihood(0.5) * length likelihood(0.5).
-        self.THRE_MOVING_PROB = 0.5**2
-        THRE_STATIC_PROB = 0.1
-        THRE_DOMINANTFLOW_ANGLE = 10 * np.pi / 180
-        # if flow length is lower than this value, the flow orientation will be ignored.
-        THRE_FLOWLENGTH = 1.0
-        # if angle between flow and foe-pos is lower than this value, the flow considered as an inlier.[radian]
-        THRE_INLIER_ANGLE = 2 * np.pi / 180
-        # if inlier rate is higher than this value, RANSAC will be stopped.
-        THRE_INLIER_RATE = 0.6
-        # if flow existing pixel rate is lower than this value, the camera is considered as stopping.
-        # the flow existing rate will be computed only inside static mask.
-        THRE_FLOW_EXISTING_RATE = 0.01
-        # every this pixel, draw flow arrow.
-        FLOWARROW_STEP_FORVIS = 20
-        # flow arrow length factor for visualization
-        FLOWLENGTH_FACTOR_FORVIS = 1
-        self.THRE_MOVING_FRACTION_IN_OBJ = args.thre_moving_fraction_in_obj
+        # constants from args
+        self.args = args
+        self.logger = logging.getLogger(__name__)
 
         # variables
-        self.logger = logging.getLogger(__name__)
         self.imgfiles = sorted(
             [
                 file
@@ -47,7 +29,7 @@ class MovingObjectExtractor:
         print(f"[INFO] reading input image files: {self.imgfiles}")
         self.optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
         self.undominantflow = opticalflow.UndominantFlowAngleExtractor(
-            THRE_FLOWLENGTH, THRE_DOMINANTFLOW_ANGLE, args.loglevel
+            args.thre_flowlength, args.thre_dominantflow_angle, args.loglevel
         )
         # Segmentator initialization based on the model type
         if args.segment_model_type == "internimage":
@@ -55,7 +37,7 @@ class MovingObjectExtractor:
                 model_name=None,
                 input_dir=None,
                 result_dir=args.segment_result_dir,
-                thre_static_prob=THRE_STATIC_PROB,
+                thre_static_prob=args.thre_static_prob,
                 log_level=args.loglevel,
             )
         elif args.segment_model_type == "oneformer":
@@ -64,7 +46,7 @@ class MovingObjectExtractor:
                 task_type=args.segment_task_type,
                 input_dir=args.input_dir,
                 result_dir=args.segment_result_dir,
-                thre_static_prob=THRE_STATIC_PROB,
+                thre_static_prob=args.thre_static_prob,
                 log_level=args.loglevel,
             )
         else:
@@ -72,13 +54,13 @@ class MovingObjectExtractor:
             self.seg = None
         self.seg.load_prior()
         self.foe = FoE(
-            THRE_FLOWLENGTH,
-            THRE_INLIER_ANGLE,
-            THRE_INLIER_RATE,
-            THRE_FLOW_EXISTING_RATE,
+            args.thre_flowlength,
+            args.thre_inlier_angle,
+            args.thre_inlier_rate,
+            args.thre_flow_existing_rate,
             args.num_ransac,
-            FLOWARROW_STEP_FORVIS,
-            FLOWLENGTH_FACTOR_FORVIS,
+            args.flowarrow_step_forvis,
+            args.flowlength_factor_forvis,
             args.ransac_all_inlier_estimation,
             args.foe_search_step,
             log_level=args.loglevel,
@@ -95,14 +77,14 @@ class MovingObjectExtractor:
             start_time = time.time()
 
             # skip frames at the beginning if it is specified.
-            if args.skip_frames > 0:
-                args.skip_frames -= 1
+            if self.args.skip_frames > 0:
+                self.args.skip_frames -= 1
                 continue
 
             # skip if the result image is already saved.
             base_imgname = os.path.splitext(self.cur_imgname)[0]
             self.fullpath_result_imgname = (
-                f"{args.result_dir}/{base_imgname}_result.png"
+                f"{self.args.result_dir}/{base_imgname}_result.png"
             )
             if os.path.exists(self.fullpath_result_imgname):
                 self.logger.info(
@@ -115,7 +97,7 @@ class MovingObjectExtractor:
             self.draw()
 
             end_time = time.time()
-            if args.loglevel > 0:
+            if self.args.loglevel > 0:
                 print(f"[INFO] processing time = {process_time - start_time:.2f} [sec]")
                 print(f"[INFO] drawing time = {end_time - process_time:.2f} [sec]")
                 print(f"[INFO] total time = {end_time - start_time:.2f} [sec]")
@@ -123,11 +105,11 @@ class MovingObjectExtractor:
         cv2.destroyAllWindows()
 
     def process_image(self):
-        self.cur_img = cv2.imread(os.path.join(args.input_dir, self.cur_imgname))
+        self.cur_img = cv2.imread(os.path.join(self.args.input_dir, self.cur_imgname))
 
-        if args.loglevel > 0:
+        if self.args.loglevel > 0:
             print(
-                f"------------\n[INFO] processing {args.input_dir}/{self.cur_imgname} : {self.cur_img.shape}"
+                f"------------\n[INFO] processing {self.args.input_dir}/{self.cur_imgname} : {self.cur_img.shape}"
             )
 
         # currently just read flow from corresponding image file name.
@@ -144,7 +126,7 @@ class MovingObjectExtractor:
 
         # compute posterior probability of moving pixels
         self.posterior_movpix_prob = self.seg.moving_prob * self.foe.moving_prob
-        self.posterior_movpix_mask = self.posterior_movpix_prob > self.THRE_MOVING_PROB
+        self.posterior_movpix_mask = self.posterior_movpix_prob > self.args.thre_moving_prob
 
         self._compute_moving_obj_mask()
 
@@ -185,21 +167,21 @@ class MovingObjectExtractor:
         result_comb_img = cv2.vconcat([row1_img, row2_img, row3_img])
         # resize keeping result image aspect ratio
         comb_imgsize = (
-            self.RESULTIMG_WIDTH,
+            self.args.resultimg_width,
             int(
-                self.RESULTIMG_WIDTH
+                self.args.resultimg_width
                 * self.result_img.shape[0]
                 / self.result_img.shape[1]
             ),
         )
         result_comb_img = cv2.resize(result_comb_img, comb_imgsize)
 
-        if args.loglevel > 0:
+        if self.args.loglevel > 0:
             print(f"imgshape={self.cur_img.shape}")
             print(f"comb_imgsize={comb_imgsize}")
 
         # display the result image
-        if args.loglevel > 1:
+        if self.args.loglevel > 1:
             cv2.imshow("result", result_comb_img)
             key = cv2.waitKey(1)
             if key == ord("q"):
@@ -207,20 +189,20 @@ class MovingObjectExtractor:
 
         # create the result image and save it.
         # save segmentation image if it is not saved yet.
-        if not os.path.exists(f"{args.segment_result_dir}/{self.cur_imgname}"):
+        if not os.path.exists(f"{self.args.segment_result_dir}/{self.cur_imgname}"):
             cv2.imwrite(
-                f"{args.segment_result_dir}/{self.cur_imgname}", self.seg.result_img
+                f"{self.args.segment_result_dir}/{self.cur_imgname}", self.seg.result_img
             )
 
         # save the posterior mask image
         # the mask value should be 0 or 255 becuase it will be automatically /255 in evaluation time.
         base_imgname = os.path.splitext(self.cur_imgname)[0]
-        movobj_mask_imgfname = f"{args.result_dir}/{base_imgname}_mask.png"
+        movobj_mask_imgfname = f"{self.args.result_dir}/{base_imgname}_mask.png"
         cv2.imwrite(movobj_mask_imgfname, movobj_mask_img)
 
         cv2.imwrite(self.fullpath_result_imgname, self.result_img)
         save_comb_imgname = f"{base_imgname}_result_comb.png"
-        cv2.imwrite(f"{args.result_dir}/{save_comb_imgname}", result_comb_img)
+        cv2.imwrite(f"{self.args.result_dir}/{save_comb_imgname}", result_comb_img)
 
     def _write_imgtitle(self, img, caption, color=(255, 255, 255)):
         cv2.putText(
@@ -258,7 +240,7 @@ class MovingObjectExtractor:
                 continue
             moving_area = np.sum(current_seg_mask & self.posterior_movpix_mask)
             moving_area_rate = moving_area / total_area
-            if moving_area_rate > self.THRE_MOVING_FRACTION_IN_OBJ:
+            if moving_area_rate > self.args.thre_moving_fraction_in_obj:
                 self.moving_obj_mask[current_seg_mask] = 1
 
 
@@ -348,7 +330,62 @@ if __name__ == "__main__":
         default=30,
         help="threshold of moving probability of angle difference between flow and foe-pos to be considered as moving probabiity =0.5",
     )
+    parser.add_argument(
+        "--thre_moving_prob",
+        type=float,
+        default=0.25,
+        help="if moving probability is lower than this value, the pixel is considered as static. default value = prior(0.5) * angle likelihood(0.5) * length likelihood(0.5).",
+    )
+    parser.add_argument(
+        "--thre_static_prob",
+        type=float,
+        default=0.1,
+        help="threshold of static probability",
+    )
+    parser.add_argument(
+        "--thre_dominantflow_angle",
+        type=float,
+        default=0.17453292519943295,
+        help="if flow angle is lower than this value, the flow is ignored. [radian]",
+    )
+    parser.add_argument(
+        "--thre_flowlength",
+        type=float,
+        default=1.0,
+        help="if flow length is lower than this value, the flow orientation will be ignored.",
+    )
+    parser.add_argument(
+        "--thre_inlier_angle",
+        type=float,
+        default=0.03490658503988659,
+        help="if angle between flow and foe-pos is lower than this value, the flow considered as an inlier.[radian]",
+    )
+    parser.add_argument(
+        "--thre_inlier_rate",
+        type=float,
+        default=0.6,
+        help="if inlier rate is higher than this value, RANSAC will be stopped.",
+    )
+    parser.add_argument(
+        "--thre_flow_existing_rate",
+        type=float,
+        default=0.01,
+        help="if flow existing pixel rate is lower than this value, the camera is considered as stopping.",
+    )
+    parser.add_argument(
+        "--flowarrow_step_forvis",
+        type=int,
+        default=20,
+        help="every this pixel, draw flow arrow.",
+    )
+    parser.add_argument(
+        "--flowlength_factor_forvis",
+        type=int,
+        default=1,
+        help="flow arrow length factor for visualization",
+    )
     args = parser.parse_args()
+
 
     print("[INFO] Parameters passed to MovingObjectExtractor:")
     for key, value in vars(args).items():
