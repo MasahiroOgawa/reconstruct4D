@@ -20,15 +20,16 @@ INPUT=${1:-${ROOT_DIR}/data/sample}
 RESULT_PARENT_DIR=${2:-${ROOT_DIR}/result}
 
 # Read parameters from YAML
-LOG_LEVEL=$(yq ' .LOG_LEVEL ' "$PARAM_FILE")
-IMG_HEIGHT=$(yq ' .IMG_HEIGHT ' "$PARAM_FILE")
-SKIP_FRAMES=$(yq ' .SKIP_FRAMES ' "$PARAM_FILE")
-SEG_MODEL_NAME=$(yq ' .SEG_MODEL_NAME ' "$PARAM_FILE")
+LOG_LEVEL=$(yq -r ' .MovingObjectExtractor.loglevel' "${PARAM_FILE}")
+IMG_WIDTH=$(yq -r ' .CreateImage.width ' "$PARAM_FILE")
+IN_FPS=$(yq -r ' .CreateImage.fps ' "$PARAM_FILE")
+SKIP_FRAMES=$(yq -r ' .MovingObjectExtractor.skip_frames ' "$PARAM_FILE")
+SEG_MODEL_NAME=$(yq -r ' .MovingObjectExtractor.segment_model_name ' "$PARAM_FILE")
 # Strip quotes and whitespace from SEG_MODEL_NAME
 SEG_MODEL_NAME=$(echo "$SEG_MODEL_NAME" | sed -e 's/^\s*//;s/\s*$//' -e 's/^"//;s/"$//' -e "s/^'//;s/'$//")
 NUM_RANSAC=$(yq ' .NUM_RANSAC ' "$PARAM_FILE")
 # Read FLOW_MODEL_NAME from YAML
-FLOW_MODEL_NAME=$(yq ' .FLOW_MODEL_NAME ' "$PARAM_FILE")
+FLOW_MODEL_NAME=$(yq -r ' .OpticalFlow.model ' "$PARAM_FILE")
 # Strip quotes and whitespace from FLOW_MODEL_NAME
 FLOW_MODEL_NAME=$(echo "$FLOW_MODEL_NAME" | sed -e 's/^\s*//;s/\s*$//' -e 's/^"//;s/"$//' -e "s/^'//;s/'$//")
 RANSAC_ALL_INLIER_ESTIMATION=$(yq ' .RANSAC_ALL_INLIER_ESTIMATION ' "$PARAM_FILE")
@@ -50,7 +51,7 @@ elif [ -f ${INPUT} ]; then
        echo "[INFO] input is a movie."
        echo "[INFO] convert movie to images"
        INPUT_DIR=$(dirname ${INPUT})
-       ffmpeg -i ${INPUT} -r 30 -vf scale=-1:${IMG_HEIGHT} ${INPUT_DIR}/%06d.png
+       ffmpeg -i ${INPUT} -r ${IN_FPS} -vf scale=${IMG_WIDTH}:-1 ${INPUT_DIR}/%06d.png
 else
        echo "[ERROR] input is neither a directory nor a movie."
        exit 1
@@ -80,22 +81,6 @@ case ${SEG_MODEL_NAME} in
               exit 1;;
 esac
 
-# print variables
-if [ $LOG_LEVEL -ge 1 ]; then
-       echo "[INFO] print all variables"
-       echo -e "\tINPUT_DIR: ${INPUT_DIR}"
-       echo -e "\tRESULT_PARENT_DIR: ${RESULT_PARENT_DIR}"
-       echo -e "\tRESULT_FLOW_DIR: ${RESULT_FLOW_DIR}"
-       echo -e "\tRESULT_SEG_DIR: ${RESULT_SEG_DIR}"
-       echo -e "\tRESULT_MOVOBJ_DIR: ${RESULT_MOVOBJ_DIR}"
-       echo -e "\tFLOW_MODEL_NAME: ${FLOW_MODEL_NAME}"
-       echo -e "\tSEG_MODEL_NAME: ${SEG_MODEL_NAME}"
-       echo -e "\tSEG_MODEL_TYPE: ${SEG_MODEL_TYPE}"
-       echo -e "\tSEG_TASK_TYPE: ${SEG_TASK_TYPE}"
-fi
-if [ $LOG_LEVEL -ge 5 ]; then
-       echo "[NOTE] Please press F5 to start debugging!"
-fi
 
 deactivate_allenvs() {
        while [ -n "$VIRTUAL_ENV" ]; do
@@ -232,29 +217,17 @@ if [ "$SKIP_FRAMES" -ge "$NUM_INPUT_FRAMES" ]; then
     exit 0
 else
     mkdir -p ${RESULT_MOVOBJ_DIR}
-    MOVOBJEXT_OPTS="--input_dir ${INPUT_DIR} \
-       --flow_result_dir ${RESULT_FLOW_DIR} \
-       --segment_model_type ${SEG_MODEL_TYPE} \
-       --segment_model_name ${SEG_MODEL_NAME} \
-       --segment_task_type ${SEG_TASK_TYPE} \
-       --segment_result_dir ${RESULT_SEG_DIR} \
-       --result_dir ${RESULT_MOVOBJ_DIR} \
-       --skip_frames ${SKIP_FRAMES} \
-       --ransac_all_inlier_estimation ${RANSAC_ALL_INLIER_ESTIMATION} \
-       --foe_search_step ${FOE_SEARCH_STEP} \
-       --num_ransac ${NUM_RANSAC} \
-       --thre_moving_fraction_in_obj ${THRE_MOVING_FRACTION_IN_OBJ}\
-       --loglevel ${LOG_LEVEL}"
     if [ $LOG_LEVEL -ge 5 ]; then
        echo "[NOTE] Please press F5 to start debugging!"
-       python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJEXT_OPTS}
+       python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py --config ${PARAM_FILE}
     else
-       python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJEXT_OPTS}
+       python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py --config ${PARAM_FILE}
     fi
 fi
 
 
 echo "[INFO] creating a segmentation movie (ffmpeg in InternImage conda env doesn't support libx264, so we create it here.)"
+OUT_FPS=$(yq -r '.CreateVideo.fps' "${PARAM_FILE}")
 # for segmentation, the image file format is jpg or png. so detect it first.
 IMG_EXT=
 if [ $(ls -1 ${RESULT_SEG_DIR}/*.jpg 2>/dev/null | wc -l) != 0 ]; then
@@ -266,14 +239,15 @@ else
         So skip creating a segmentation movie."
 fi
 if [ $(ls -1 ${RESULT_SEG_DIR}/*.${IMG_EXT} 2>/dev/null | wc -l) != 0 ]; then
-       ffmpeg -y -framerate 30  -pattern_type glob -i "${RESULT_SEG_DIR}/*.${IMG_EXT}" \
+       ffmpeg -y -framerate ${OUT_FPS}  -pattern_type glob -i "${RESULT_SEG_DIR}/*.${IMG_EXT}" \
        -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${RESULT_SEG_DIR}/segmentation.mp4
 fi
 
 echo "[INFO] creating a final movie"
+RESULT_FILENAME=$(yq -r '.CreateVideo.result_filename' "${PARAM_FILE}")
 if [ $(ls -1 ${RESULT_MOVOBJ_DIR}/*_result.png 2>/dev/null | wc -l) != 0 ]; then
-       ffmpeg -y -framerate 30  -pattern_type glob -i "${RESULT_MOVOBJ_DIR}/*_result.png" \
-              -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${RESULT_MOVOBJ_DIR}/moving_object.mp4
+       ffmpeg -y -framerate ${OUT_FPS}  -pattern_type glob -i "${RESULT_MOVOBJ_DIR}/*_result.png" \
+              -vcodec libx264 -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" -pix_fmt yuv420p ${RESULT_MOVOBJ_DIR}/${RESULT_FILENAME}
        if [ $LOG_LEVEL -ge 4 ]; then
               echo "[INFO] display the final movie"
               vlc ${RESULT_MOVOBJ_DIR}/moving_object.mp4
