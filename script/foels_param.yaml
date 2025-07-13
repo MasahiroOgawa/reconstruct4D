@@ -9,3 +9,41 @@ RANSAC_ALL_INLIER_ESTIMATION: true   # Whether to run all-inlier estimation in R
 FOE_SEARCH_STEP: 5          # Step size for searching focus of expansion (FOE)
 THRE_MOVING_FRACTION_IN_OBJ: 0.01    # Threshold for moving fraction in object
 FLOW_MODEL_NAME: gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth  # Optical flow model filename
+
+MovingObjectExtractor:
+  # input/output directories
+  input_dir: "../data/sample"
+  flow_result_dir: "../result/sample/flow"
+  segment_result_dir: "../result/sample/segment"
+  result_dir: "../result/sample/final"
+  
+  # segmentation model settings
+  segment_model_type: "oneformer" # segmentation model type: internimage or oneformer
+  segment_model_name: "shi-labs/oneformer_coco_swin_large" # segmentation model name
+  segment_task_type: "panoptic" # segmentation task type: panoptic or semantic or instance
+  
+  # general settings
+  loglevel: 1 # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
+  resultimg_width: 1280 # result image width [pix]
+  skip_frames: 0 # skip frames at the beginning
+  
+  # Focus of Expansion (FoE) settings
+  ransac_all_inlier_estimation: false # whether all inlier estimation at the RANSAC final step
+  foe_search_step: 1 # search step size when computing FoE inlier
+  num_ransac: 30 # number of RANSAC iterations for FoE estimation
+  thre_inlier_angle: 0.03490658503988659 # if angle between flow and foe-pos is lower than this value, the flow considered as an inlier [radian]
+  thre_inlier_rate: 0.6 # if inlier rate is higher than this value, RANSAC will be stopped
+  thre_flow_existing_rate: 0.01 # if flow existing pixel rate is lower than this value, the camera is considered as stopping
+  
+  # moving object detection thresholds
+  thre_moving_fraction_in_obj: 0.1 # threshold of moving pixel fraction in an object to be considered as moving
+  movprob_lengthfactor_coeff: 0.25 # coefficient for moving probability based on flow length
+  thre_movprob_deg: 30 # threshold of moving probability of angle difference between flow and foe-pos
+  thre_moving_prob: 0.25 # if moving probability is lower than this value, the pixel is considered as static
+  thre_static_prob: 0.1 # threshold of static probability
+  thre_dominantflow_angle: 0.17453292519943295 # if flow angle is lower than this value, the flow is ignored [radian]
+  thre_flowlength: 1.0 # if flow length is lower than this value, the flow orientation will be ignored
+  
+  # visualization settings
+  flowarrow_step_forvis: 20 # every this pixel, draw flow arrow
+  flowlength_factor_forvis: 1 # flow arrow length factor for visualization

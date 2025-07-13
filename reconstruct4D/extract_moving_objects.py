@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 import time
-import yaml  # YAMLを扱うためにインポート
+import yaml 
 
 import cv2
 import numpy as np
@@ -248,7 +248,6 @@ class MovingObjectExtractor:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="extract moving objects")
     
-    # YAML設定ファイル用の引数を追加
     parser.add_argument(
         "--config",
         type=str,
@@ -256,18 +255,15 @@ if __name__ == "__main__":
         help="path to the YAML config file",
     )
 
-    # まずはconfig引数だけをパース
     temp_args, _ = parser.parse_known_args()
 
-    # YAMLファイルから設定を読み込む
     config = {}
     if os.path.exists(temp_args.config):
         with open(temp_args.config, 'r') as f:
-            config = yaml.safe_load(f)
+            config = yaml.safe_load(f).get('MovingObjectExtractor', {})
 
-    # YAMLの値でデフォルト値を更新し、引数を再定義
     parser = argparse.ArgumentParser(description="extract moving objects")
-    
+
     parser.add_argument(
         "--input_dir", type=str, default=config.get("input_dir", "../data/sample"), help="input image directory"
     )
