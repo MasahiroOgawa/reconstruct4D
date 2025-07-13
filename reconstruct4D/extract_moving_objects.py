@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import time
+import yaml  # YAMLを扱うためにインポート
 
 import cv2
 import numpy as np
@@ -246,144 +247,167 @@ class MovingObjectExtractor:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="extract moving objects")
+    
+    # YAML設定ファイル用の引数を追加
     parser.add_argument(
-        "--input_dir", type=str, default="../data/sample", help="input image directory"
+        "--config",
+        type=str,
+        default="../script/foels_param.yaml",
+        help="path to the YAML config file",
+    )
+
+    # まずはconfig引数だけをパース
+    temp_args, _ = parser.parse_known_args()
+
+    # YAMLファイルから設定を読み込む
+    config = {}
+    if os.path.exists(temp_args.config):
+        with open(temp_args.config, 'r') as f:
+            config = yaml.safe_load(f)
+
+    # YAMLの値でデフォルト値を更新し、引数を再定義
+    parser = argparse.ArgumentParser(description="extract moving objects")
+    
+    parser.add_argument(
+        "--input_dir", type=str, default=config.get("input_dir", "../data/sample"), help="input image directory"
     )
     parser.add_argument(
         "--flow_result_dir",
         type=str,
-        default="../result/sample/flow",
+        default=config.get("flow_result_dir", "../result/sample/flow"),
         help="optical flow result directory",
     )
     parser.add_argument(
         "--segment_model_type",
         type=str,
-        default="internimage",
+        default=config.get("segment_model_type", "internimage"),
         help="segmentation model type: internimage or oneformer",
     )
     parser.add_argument(
-        "--segment_model_name", type=str, default=None, help="segmentation model name"
+        "--segment_model_name", type=str, default=config.get("segment_model_name"), help="segmentation model name"
     )
     parser.add_argument(
         "--segment_task_type",
         type=str,
-        default="panoptic",
+        default=config.get("segment_task_type", "panoptic"),
         help="segmentation task type: panoptic or semantic or instance",
     )
     parser.add_argument(
         "--segment_result_dir",
         type=str,
-        default="../result/sample/segment",
+        default=config.get("segment_result_dir", "../result/sample/segment"),
         help="segmentation result directory",
     )
     parser.add_argument(
         "--result_dir",
         type=str,
-        default="../result/sample/final",
+        default=config.get("result_dir", "../result/sample/final"),
         help="result image directory",
     )
     parser.add_argument(
         "--loglevel",
         type=int,
-        default=3,
+        default=config.get("loglevel", 3),
         help="log level:0: no log but save the result images, 1: print log, 2: display image, 3: debug with detailed image",
     )
     parser.add_argument(
-        "--resultimg_width", type=int, default=1280, help="result image width.[pix]"
+        "--resultimg_width", type=int, default=config.get("resultimg_width", 1280), help="result image width.[pix]"
     )
     parser.add_argument(
-        "--skip_frames", type=int, default=0, help="skip frames at the beginning"
+        "--skip_frames", type=int, default=config.get("skip_frames", 0), help="skip frames at the beginning"
     )
     parser.add_argument(
         "--ransac_all_inlier_estimation",
         type=bool,
-        default=False,
+        default=config.get("ransac_all_inlier_estimation", False),
         help="whether all inlier estimation at the RANSAC final step.",
     )
     parser.add_argument(
         "--foe_search_step",
         type=int,
-        default=1,
+        default=config.get("foe_search_step", 1),
         help="search step size when computing FoE inlier",
     )
     parser.add_argument(
         "--num_ransac",
         type=int,
-        default=30,
+        default=config.get("num_ransac", 30),
         help="number of RANSAC iterations for FoE estimation",
     )
     parser.add_argument(
         "--thre_moving_fraction_in_obj",
         type=float,
-        default=0.1,
+        default=config.get("thre_moving_fraction_in_obj", 0.1),
         help="threshold of moving pixel fraction in an object to be considered as moving",
     )
     parser.add_argument(
         "--movprob_lengthfactor_coeff",
         type=float,
-        default=0.25,
+        default=config.get("movprob_lengthfactor_coeff", 0.25),
         help="length factor coefficient for moving probability. e.g. if the target flow length is 100 times compared with mean of static background flow, factor is 2, and moving probability will be increase to 2* this coeff ",
     )
     parser.add_argument(
         "--thre_movprob_deg",
         type=float,
-        default=30,
+        default=config.get("thre_movprob_deg", 30),
         help="threshold of moving probability of angle difference between flow and foe-pos to be considered as moving probabiity =0.5",
     )
     parser.add_argument(
         "--thre_moving_prob",
         type=float,
-        default=0.25,
+        default=config.get("thre_moving_prob", 0.25),
         help="if moving probability is lower than this value, the pixel is considered as static. default value = prior(0.5) * angle likelihood(0.5) * length likelihood(0.5).",
     )
     parser.add_argument(
         "--thre_static_prob",
         type=float,
-        default=0.1,
+        default=config.get("thre_static_prob", 0.1),
         help="threshold of static probability",
     )
     parser.add_argument(
         "--thre_dominantflow_angle",
         type=float,
-        default=0.17453292519943295,
+        default=config.get("thre_dominantflow_angle", 0.17453292519943295),
         help="if flow angle is lower than this value, the flow is ignored. [radian]",
     )
     parser.add_argument(
         "--thre_flowlength",
         type=float,
-        default=1.0,
+        default=config.get("thre_flowlength", 1.0),
         help="if flow length is lower than this value, the flow orientation will be ignored.",
     )
     parser.add_argument(
         "--thre_inlier_angle",
         type=float,
-        default=0.03490658503988659,
+        default=config.get("thre_inlier_angle", 0.03490658503988659),
         help="if angle between flow and foe-pos is lower than this value, the flow considered as an inlier.[radian]",
     )
     parser.add_argument(
         "--thre_inlier_rate",
         type=float,
-        default=0.6,
+        default=config.get("thre_inlier_rate", 0.6),
         help="if inlier rate is higher than this value, RANSAC will be stopped.",
     )
     parser.add_argument(
         "--thre_flow_existing_rate",
         type=float,
-        default=0.01,
+        default=config.get("thre_flow_existing_rate", 0.01),
         help="if flow existing pixel rate is lower than this value, the camera is considered as stopping.",
     )
     parser.add_argument(
         "--flowarrow_step_forvis",
         type=int,
-        default=20,
+        default=config.get("flowarrow_step_forvis", 20),
         help="every this pixel, draw flow arrow.",
     )
     parser.add_argument(
         "--flowlength_factor_forvis",
         type=int,
-        default=1,
+        default=config.get("flowlength_factor_forvis", 1),
         help="flow arrow length factor for visualization",
     )
+    
+    # 最終的に引数をパース
     args = parser.parse_args()
 
 
