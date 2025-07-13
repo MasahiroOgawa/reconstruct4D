@@ -207,21 +207,23 @@ source ${ROOT_DIR}/.venv/bin/activate
 echo "[INFO] env: $VIRTUAL_ENV"
 
 # Count input frames
-NUM_INPUT_FRAMES=$(ls -1 ${INPUT_DIR}/*.jpg 2>/dev/null | wc -l)
-if [ "$NUM_INPUT_FRAMES" -eq 0 ]; then
-    NUM_INPUT_FRAMES=$(ls -1 ${INPUT_DIR}/*.png 2>/dev/null | wc -l)
-fi
+NUM_INPUT_FRAMES=$(ls -1 ${INPUT_DIR}/*.{jpg,png} 2>/dev/null | wc -l)
 
 if [ "$SKIP_FRAMES" -ge "$NUM_INPUT_FRAMES" ]; then
     echo "[WARNING] SKIP_FRAMES (${SKIP_FRAMES}) >= number of input frames (${NUM_INPUT_FRAMES}). No frames will be processed. Skipping moving object extraction."
     exit 0
 else
     mkdir -p ${RESULT_MOVOBJ_DIR}
+    MOVOBJ_OPTS="--config ${PARAM_FILE} \
+    --input_dir ${INPUT_DIR} \
+    --flow_result_dir ${RESULT_FLOW_DIR} \
+    --segment_result_dir ${RESULT_SEG_DIR} \
+    --result_dir ${RESULT_MOVOBJ_DIR}" # overwrite result dirs based on input data.
     if [ $LOG_LEVEL -ge 5 ]; then
        echo "[NOTE] Please press F5 to start debugging!"
-       python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py --config ${PARAM_FILE}
+       python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJ_OPTS}
     else
-       python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py --config ${PARAM_FILE}
+       python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJ_OPTS}
     fi
 fi
 

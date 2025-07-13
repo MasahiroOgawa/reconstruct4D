@@ -6,7 +6,6 @@ CreateImage:
   fps: 30 # frames per second
 
 OpticalFlow:
-  input_dir: "data/sample"
   flow_result_dir: "result/sample/flow"
   model: "gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth" # unimatch model
   weights: "weights/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth"
