@@ -3,6 +3,7 @@ import logging
 import os
 import time
 import yaml 
+import math
 
 import cv2
 import numpy as np
@@ -29,9 +30,11 @@ class MovingObjectExtractor:
         self.imgfiles.pop()
         print(f"[INFO] reading input image files: {self.imgfiles}")
         self.optflow = opticalflow.UnimatchFlow(args.flow_result_dir)
-        self.undominantflow = opticalflow.UndominantFlowAngleExtractor(
-            args.thre_flowlength, args.thre_dominantflow_angle, args.loglevel
-        )
+        # currently undominant flow is not used.
+        # self.undominantflow = opticalflow.UndominantFlowAngleExtractor(
+        #     args.thre_flowlength, math.radians(args.thre_dominantflow_angle_deg), args.loglevel
+        # )
+
         # Segmentator initialization based on the model type
         if args.segment_model_type == "internimage":
             self.seg = segmentator.InternImageSegmentatorWrapper(
@@ -55,18 +58,18 @@ class MovingObjectExtractor:
             self.seg = None
         self.seg.load_prior()
         self.foe = FoE(
-            args.thre_flowlength,
-            args.thre_inlier_angle,
-            args.thre_inlier_rate,
-            args.thre_flow_existing_rate,
-            args.num_ransac,
-            args.flowarrow_step_forvis,
-            args.flowlength_factor_forvis,
-            args.ransac_all_inlier_estimation,
-            args.foe_search_step,
+            thre_flowlength=args.thre_flowlength,
+            thre_inlier_angle=math.radians(args.thre_inlier_angle_deg),
+            thre_inlier_rate=args.thre_inlier_rate,
+            thre_flow_existing_rate=args.thre_flow_existing_rate,
+            num_ransac=args.num_ransac,
+            flowarrow_step_forvis=args.flowarrow_step_forvis,
+            flowlength_factor_forvis=args.flowlength_factor_forvis,
+            ransac_all_inlier_estimation=args.ransac_all_inlier_estimation,
+            foe_search_step=args.foe_search_step,
             log_level=args.loglevel,
             movprob_lengthfactor_coeff=args.movprob_lengthfactor_coeff,
-            thre_movprob_deg=args.thre_movprob_deg,
+            middle_theta=math.radians(args.middle_theta_deg),
         )
         self.cur_imgname = None
         self.cur_img = None
@@ -275,12 +278,12 @@ if __name__ == "__main__":
     parser.add_argument("--num_ransac", type=int, default=config.get("num_ransac"))
     parser.add_argument("--thre_moving_fraction_in_obj", type=float, default=config.get("thre_moving_fraction_in_obj"))
     parser.add_argument("--movprob_lengthfactor_coeff", type=float, default=config.get("movprob_lengthfactor_coeff"))
-    parser.add_argument("--thre_movprob_deg", type=float, default=config.get("thre_movprob_deg"))
+    parser.add_argument("--middle_theta_deg", type=float, default=config.get("middle_theta_deg"))
     parser.add_argument("--thre_moving_prob", type=float, default=config.get("thre_moving_prob"))
     parser.add_argument("--thre_static_prob", type=float, default=config.get("thre_static_prob"))
-    parser.add_argument("--thre_dominantflow_angle", type=float, default=config.get("thre_dominantflow_angle"))
+    # parser.add_argument("--thre_dominantflow_angle_deg", type=float, default=config.get("thre_dominantflow_angle_deg"))
     parser.add_argument("--thre_flowlength", type=float, default=config.get("thre_flowlength"))
-    parser.add_argument("--thre_inlier_angle", type=float, default=config.get("thre_inlier_angle"))
+    parser.add_argument("--thre_inlier_angle_deg", type=float, default=config.get("thre_inlier_angle_deg"))
     parser.add_argument("--thre_inlier_rate", type=float, default=config.get("thre_inlier_rate"))
     parser.add_argument("--thre_flow_existing_rate", type=float, default=config.get("thre_flow_existing_rate"))
     parser.add_argument("--flowarrow_step_forvis", type=int, default=config.get("flowarrow_step_forvis"))

@@ -32,25 +32,23 @@ MovingObjectExtractor:
   ransac_all_inlier_estimation: true # whether all inlier estimation at the RANSAC final step
   foe_search_step: 5 # search step size when computing FoE inlier
   num_ransac: 20 # number of RANSAC iterations for FoE estimation
-  thre_inlier_angle: 0.03490658503988659 # if angle between flow and foe-pos is lower than this value, the flow considered as an inlier [radian]
+  thre_inlier_angle_deg: 2.0 # if angle between flow and foe-pos is lower than this value, the flow considered as an inlier [degree]
   thre_inlier_rate: 0.6 # if inlier rate is higher than this value, RANSAC will be stopped
   thre_flow_existing_rate: 0.01 # if flow existing pixel rate is lower than this value, the camera is considered as stopping
+  thre_flowlength: 2.0 # if flow length is lower than this value, the flow orientation will be ignored, and considered as coinside with mean flow angle.
   
   # moving object detection thresholds
   thre_moving_fraction_in_obj: 0.01 # threshold of moving pixel fraction in an object to be considered as moving
   movprob_lengthfactor_coeff: 0.25 # coefficient for moving probability based on flow length
-  thre_movprob_deg: 30 # threshold of moving probability of angle difference between flow and foe-pos
+  middle_theta_deg: 30 # if the angle difference between flow and foe-pos becomes this value, the moving probability set to 0.5  [degree]
   thre_moving_prob: 0.25 # if moving probability is lower than this value, the pixel is considered as static
   thre_static_prob: 0.1 # threshold of static probability
-  thre_dominantflow_angle: 0.17453292519943295 # if flow angle is lower than this value, the flow is ignored [radian]
-  thre_flowlength: 1.0 # if flow length is lower than this value, the flow orientation will be ignored
+  # thre_dominantflow_angle_deg: 10 # when computing undominant flow, if the angle differenct between the flow and median is larger than this value, the flow is considered as outlier [degree] currently unused.
   
   # visualization settings
-  flowarrow_step_forvis: 20 # every this pixel, draw flow arrow
-  flowlength_factor_forvis: 1 # flow arrow length factor for visualization
+  flowarrow_step_forvis: 60 # every this pixel, draw flow arrow
+  flowlength_factor_forvis: 10 # flow arrow length factor for visualization
 
 CreateVideo:
-  # ffmpeg for video creation
-  # Note: img_dir and img_suffix are taken from MovingObjectExtractor section for consistency.
   result_filename: "moving_object.mp4"
   fps: 30

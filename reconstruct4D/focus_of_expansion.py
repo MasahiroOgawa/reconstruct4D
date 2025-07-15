@@ -1,5 +1,6 @@
 import logging
 from enum import Enum
+import math
 
 import cv2
 import numpy as np
@@ -21,10 +22,10 @@ class FoE:
         flowarrow_step_forvis=20,
         flowlength_factor_forvis=1,
         ransac_all_inlier_estimation=False,
-        search_step=1,
+        foe_search_step=1,
         log_level=0,
         movprob_lengthfactor_coeff=0.25,
-        thre_movprob_deg=30,
+        middle_theta=30 * np.pi / 180,
     ) -> None:
         # constants
         self.LOG_LEVEL = log_level
@@ -37,11 +38,10 @@ class FoE:
         self.FLOWARROW_STEP_FORVIS = flowarrow_step_forvis
         self.FLOWLENGTH_FACTOR_FORVIS = flowlength_factor_forvis
         self.RANSAC_ALL_INLIER_ESTIMATION = ransac_all_inlier_estimation
-        self.SEARCH_STEP = search_step
+        self.SEARCH_STEP = foe_search_step
         self.THRE_FOE_W_INF = 1e-10
         self.MOVPROB_LENGTHFACTOR_COEFF = movprob_lengthfactor_coeff
-        self.THRE_MOVPROB_DEG = thre_movprob_deg
-        self.THRE_MOVPROB_RAD = self.THRE_MOVPROB_DEG * np.pi / 180
+        self.MIDDLE_THETA = middle_theta
 
         # variables
         self.state = CameraState.ROTATING  # most unkown movement.
@@ -572,7 +572,7 @@ class FoE:
                     ) / (expect_flowdir_length * flow_length)
                 # map cosine difference to moving probability.
                 angle_diff_prob = min(
-                    np.arccos(cos_foe_flow) / (2 * self.THRE_MOVPROB_RAD),
+                    np.arccos(cos_foe_flow) / (2 * self.MIDDLE_THETA),
                     1.0,
                 )
 
