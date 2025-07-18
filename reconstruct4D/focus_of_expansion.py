@@ -146,9 +146,10 @@ class FoE:
                 u = self.flow[row, col, 0]
                 v = self.flow[row, col, 1]
 
-                flow_lentgh = np.sqrt(u**2 + v**2)
+                flow_length = np.sqrt(u**2 + v**2)
+                # we use the similar probability as camera is moving case.
                 self.moving_prob[row, col] = min(
-                    1.0, abs(flow_lentgh / self.THRE_FLOWLENGTH)
+                    1.0, self.MOVPROB_LENGTHFACTOR_COEFF * abs(np.log10(1+abs(flow_length - self.THRE_FLOWLENGTH)))
                 )
 
     def comp_foe_by_ransac(self):
