@@ -657,10 +657,12 @@ class FoE:
             for col in range(0, flow.shape[1], self.FLOWARROW_STEP_FORVIS):
                 if self.foe_hom is None:
                     self.logger.warning(
-                        "[WARNING] FoE is None. Cannot draw flow arrow."
+                        "[WARNING] FoE is None."
                     )
-                    return
-                decision = self._inlier_decision(row, col, self.foe_hom, self.foe_sign)
+                    decision = 0
+                else:
+                    decision = self._inlier_decision(row, col, self.foe_hom, self.foe_sign)
+                
                 if decision == 1:
                     color = (0, 255, 0)  # inlier: green
                 elif decision == -1:
