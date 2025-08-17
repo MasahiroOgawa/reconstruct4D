@@ -2,6 +2,15 @@
 This is a 4D reconstruction project of Masahiro Ogawa.
 
 # Setup
+## Using docker
+This is the easiest way.
+Just clone this repositoy as;
+```bash
+git clone git@github.com:MasahiroOgawa/reconstruct4D.git
+```
+And start devcontainer by opening vscode and selecting "reopen in devcontainer".
+
+## local setup
 clone
 ```bash
 git clone git@github.com:MasahiroOgawa/reconstruct4D.git

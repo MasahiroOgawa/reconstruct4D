@@ -33,7 +33,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   ffmpeg \
   curl \
   wget \
+  locales \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install yq for YAML processing
+RUN wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && \
+  chmod +x /usr/local/bin/yq
+
+# Configure locale to avoid warnings
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
+  locale-gen
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 
 # Install UV package manager as root for all users
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
