@@ -6,6 +6,7 @@ ENV TZ="$TZ"
 ARG CLAUDE_CODE_VERSION=latest
 
 # Install basic development tools and iptables/ipset
+# Also install Python and FFmpeg for reconstruct4D
 RUN apt-get update && apt-get install -y --no-install-recommends \
   less \
   git \
@@ -25,7 +26,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   jq \
   nano \
   vim \
+  python3 \
+  python3-pip \
+  python3-dev \
+  build-essential \
+  ffmpeg \
+  curl \
+  wget \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install UV package manager as root for all users
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+  mv /root/.local/bin/uv /usr/local/bin/uv && \
+  mv /root/.local/bin/uvx /usr/local/bin/uvx && \
+  chmod +x /usr/local/bin/uv /usr/local/bin/uvx
 
 # Ensure default node user has access to /usr/local/share
 RUN mkdir -p /usr/local/share/npm-global && \
@@ -65,8 +79,8 @@ ENV PATH=$PATH:/usr/local/share/npm-global/bin
 ENV SHELL=/bin/zsh
 
 # Set the default editor and visual
-ENV EDITOR nano
-ENV VISUAL nano
+ENV EDITOR=nano
+ENV VISUAL=nano
 
 # Default powerline10k theme
 ARG ZSH_IN_DOCKER_VERSION=1.2.0
@@ -81,6 +95,9 @@ RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/
 # Install Claude
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}
 
+# Set up UV for the node user
+RUN echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.zshrc && \
+    echo 'export PATH="/usr/local/bin:$PATH"' >> ~/.bashrc
 
 # Copy and set up firewall script
 COPY init-firewall.sh /usr/local/bin/
