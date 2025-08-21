@@ -14,7 +14,7 @@
     }
 
     .project-title {
-      font-size: 3.5rem;
+      font-size: 2.6rem;
       font-weight: bold;
       margin-top: 2.5rem;
       margin-bottom: 0.5rem;
@@ -108,7 +108,8 @@
     <div class="row">
       <div class="col-md-10 offset-md-1 text-center">
 
-        <h1 class="project-title">FoELS: Moving Object Detection from Moving Camera Using Focus of Expansion Likelihood and Segmentation</h1>
+        <h1 class="project-title">FoELS<br>Moving Object Detection from Moving Camera Using Focus of Expansion Likelihood
+          and Segmentation</h1>
 
         <div class="author-list">
           <a href="https://github.com/MasahiroOgawa">Masahiro Ogawa</a><sup>1</sup>,
@@ -117,8 +118,10 @@
         </div>
 
         <div class="affiliation">
-          <sup>1</sup>Department of Precision Engineering, Graduate School of Engineering, The University of Tokyo, Japan<br>
-          <sup>2</sup>Department of Human and Engineered Environmental Studies, Graduate School of Frontier Sciences, The University of Tokyo, Japan
+          <sup>1</sup>Department of Precision Engineering, Graduate School of Engineering, The University of Tokyo,
+          Japan<br>
+          <sup>2</sup>Department of Human and Engineered Environmental Studies, Graduate School of Frontier Sciences,
+          The University of Tokyo, Japan
         </div>
 
         <div class="link-buttons my-4">
@@ -156,29 +159,43 @@
         <div class="text-start">
           <h2 class="section-title">Method</h2>
           <p>
-            FoELS (Focus of Expansion Likelihood and Segmentation) integrates optical flow and segmentation to overcome limitations of previous methods that rely primarily on optical flow alone. The proposed pipeline consists of six main stages:
+            FoELS (Focus of Expansion Likelihood and Segmentation) integrates optical flow and segmentation to overcome
+            limitations of previous methods that rely primarily on optical flow alone. The proposed pipeline consists of
+            six main stages:
           </p>
           <ol>
-            <li><strong>Optical Flow Estimation:</strong> Captures pixel-wise motion cues between consecutive frames using UniMatch.</li>
-            <li><strong>Segmentation:</strong> Uses OneFormer for panoptic segmentation, assigning class-specific prior moving probabilities to each pixel.</li>
-            <li><strong>Camera Motion Detection:</strong> Determines if the camera is in motion by analyzing the optical flow ratio within static regions.</li>
-            <li><strong>FoE Computation:</strong> Utilizes RANSAC to compute the Focus of Expansion from optical flow within static regions.</li>
-            <li><strong>Moving Pixel Probability Estimation:</strong> Computes FoE-based moving pixel likelihood from RANSAC outliers and multiplies it with segmentation-derived priors.</li>
-            <li><strong>Object-Level Refinement:</strong> Validates moving pixel regions against panoptic segmentation results to ensure entire objects are classified as moving.</li>
+            <li><strong>Optical Flow Estimation:</strong> Captures pixel-wise motion cues between consecutive frames
+              using UniMatch.</li>
+            <li><strong>Segmentation:</strong> Uses OneFormer for panoptic segmentation, assigning class-specific prior
+              moving probabilities to each pixel.</li>
+            <li><strong>Camera Motion Detection:</strong> Determines if the camera is in motion by analyzing the optical
+              flow ratio within static regions.</li>
+            <li><strong>FoE Computation:</strong> Utilizes RANSAC to compute the Focus of Expansion from optical flow
+              within static regions.</li>
+            <li><strong>Moving Pixel Probability Estimation:</strong> Computes FoE-based moving pixel likelihood from
+              RANSAC outliers and multiplies it with segmentation-derived priors.</li>
+            <li><strong>Object-Level Refinement:</strong> Validates moving pixel regions against panoptic segmentation
+              results to ensure entire objects are classified as moving.</li>
           </ol>
           <p>
-            The key innovation is the integration of FoE-based flow analysis with segmentation priors. The moving pixel probability is computed as: <em>P<sub>M</sub> ∝ P<sub>seg</sub> · P<sub>FoE</sub></em>, where P<sub>seg</sub> is the segmentation-based prior and P<sub>FoE</sub> is the FoE-based likelihood that considers both flow angle and length differences to handle parallel motion scenarios.
+            The key innovation is the integration of FoE-based flow analysis with segmentation priors. The moving pixel
+            probability is computed as: <em>P<sub>M</sub> ∝ P<sub>seg</sub> · P<sub>FoE</sub></em>, where
+            P<sub>seg</sub> is the segmentation-based prior and P<sub>FoE</sub> is the FoE-based likelihood that
+            considers both flow angle and length differences to handle parallel motion scenarios.
           </p>
           <img src="assets/method.png" alt="Method diagram" class="img-fluid rounded">
-          <p class="caption">System overview of the FoELS pipeline showing the integration of optical flow and segmentation.</p>
+          <p class="caption">System overview of the FoELS pipeline showing the integration of optical flow and
+            segmentation.</p>
         </div>
 
         <div class="text-start">
           <h2 class="section-title">Results</h2>
           <p>
-            FoELS demonstrates superior performance compared to state-of-the-art methods on standard benchmarks and challenging real-world scenarios. Our comprehensive evaluation includes quantitative results on DAVIS 2016 and FBMS-59 datasets, as well as qualitative assessment on custom traffic videos.
+            FoELS demonstrates superior performance compared to state-of-the-art methods on standard benchmarks and
+            challenging real-world scenarios. Our comprehensive evaluation includes quantitative results on DAVIS 2016
+            and FBMS-59 datasets, as well as qualitative assessment on custom traffic videos.
           </p>
-          
+
           <h3>Quantitative Results</h3>
           <p>
             FoELS significantly outperforms the Adversarial Network baseline on both evaluation datasets:
@@ -206,30 +223,37 @@
               </tbody>
             </table>
           </div>
-          
+
           <h3>Key Capabilities</h3>
           <p>
             FoELS successfully handles challenging scenarios that previous methods struggle with:
           </p>
           <ul>
-            <li><strong>Complex Structured Scenes:</strong> Accurately detects moving objects while ignoring nearby static objects with large optical flow</li>
-            <li><strong>Parallel Motion:</strong> Successfully identifies objects moving parallel to camera trajectory using flow length information</li>
-            <li><strong>Low-textured Environments:</strong> Leverages segmentation priors to detect motion in regions with insufficient optical flow</li>
-            <li><strong>Camera Zoom Operations:</strong> Robustly handles zoom scenarios that challenge existing methods</li>
-            <li><strong>Partially Moving Objects:</strong> Detects entire objects even when only small parts exhibit motion through object-level refinement</li>
+            <li><strong>Complex Structured Scenes:</strong> Accurately detects moving objects while ignoring nearby
+              static objects with large optical flow</li>
+            <li><strong>Parallel Motion:</strong> Successfully identifies objects moving parallel to camera trajectory
+              using flow length information</li>
+            <li><strong>Low-textured Environments:</strong> Leverages segmentation priors to detect motion in regions
+              with insufficient optical flow</li>
+            <li><strong>Camera Zoom Operations:</strong> Robustly handles zoom scenarios that challenge existing methods
+            </li>
+            <li><strong>Partially Moving Objects:</strong> Detects entire objects even when only small parts exhibit
+              motion through object-level refinement</li>
           </ul>
-          
+
           <div class="row align-items-center">
             <div class="col-md-6 mb-4">
               <img src="assets/result1.png" class="img-fluid rounded">
-              <p class="caption">Comparison with Adversarial Network showing FoELS correctly identifies moving objects while avoiding false positives from nearby vegetation.</p>
+              <p class="caption">Comparison with Adversarial Network showing FoELS correctly identifies moving objects
+                while avoiding false positives from nearby vegetation.</p>
             </div>
             <div class="col-md-6 mb-4">
               <img src="assets/result2.png" class="img-fluid rounded">
-              <p class="caption">FoELS successfully detects a moving train during camera zoom while the Adversarial Network fails to detect any moving objects.</p>
+              <p class="caption">FoELS successfully detects a moving train during camera zoom while the Adversarial
+                Network fails to detect any moving objects.</p>
             </div>
           </div>
-          
+
         </div>
 
         <div class="text-start">
