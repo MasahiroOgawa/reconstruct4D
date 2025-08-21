@@ -42,7 +42,7 @@ conda env create -f reconstruct4D/ext/unsupervised_detection/environment.yml
 ```
 
 # Debug 
-set LOG_LEVEL=5 in run_foels.sh, then
+set LOG_LEVEL=5 in script/foels_param.yaml, then
 ```
 ./script/run_foels.sh
 ```
