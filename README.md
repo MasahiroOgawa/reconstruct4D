@@ -37,9 +37,44 @@ conda env create -f reconstruct4D/ext/unsupervised_detection/environment.yml
 ```
 
 # Run demo
+To run the demo with sample data:
 ```
 ./script/run_foels.sh
 ```
+This will process the sample data in `data/sample/` directory.
+
+# Run on your own data
+There are two ways to specify your input data:
+
+## Method 1: Edit configuration file (recommended for repeated use)
+Edit `script/foels_param.yaml` and set your input directory:
+```yaml
+MovingObjectExtractor:
+  input_dir: "path/to/your/data"  # can be relative or absolute path
+```
+Then run without arguments:
+```
+./script/run_foels.sh
+```
+
+## Method 2: Command line arguments (quick one-time use)
+Pass input directly as arguments:
+```
+./script/run_foels.sh [input_video_or_images] [result_directory]
+```
+Examples:
+```bash
+# Process images in a directory
+./script/run_foels.sh /path/to/image/directory
+
+# Process a video file
+./script/run_foels.sh /path/to/video.mp4
+
+# Specify both input and output directories
+./script/run_foels.sh /path/to/input /path/to/output
+```
+
+**Note:** Command line arguments will override the configuration file settings.
 
 # Debug 
 set LOG_LEVEL=5 in script/foels_param.yaml, then
