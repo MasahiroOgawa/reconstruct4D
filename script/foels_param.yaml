@@ -6,16 +6,13 @@ CreateImage:
   fps: 30 # frames per second
 
 OpticalFlow:
-  flow_result_dir: "result/sample/flow"
   model: "gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth" # unimatch model
   weights: "weights/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth"
 
 MovingObjectExtractor:
   # input/output directories
   input_dir: "data/sample"
-  flow_result_dir: "result/sample/flow"
-  segment_result_dir: "result/sample/segment"
-  result_dir: "result/sample/moving_object"
+  result_dir: "result" # parent directory for all results (flow, segment, moving_object subdirs will be created in data name under this directory; e.g., result/sample/flow)
 
   # segmentation model settings
   segment_model_type: "oneformer" # segmentation model type: internimage or oneformer

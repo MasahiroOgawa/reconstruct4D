@@ -31,13 +31,11 @@ fi
 # Read result_dir from YAML file if no second argument provided
 if [ $# -le 1 ]; then
     RESULT_FROM_YAML=$(yq -r '.MovingObjectExtractor.result_dir' "${PARAM_FILE}")
-    # Extract parent directory from result_dir (remove last directory component)
-    RESULT_FROM_YAML_PARENT=$(dirname "${RESULT_FROM_YAML}")
     # Convert relative path to absolute path if needed
-    if [[ ! "$RESULT_FROM_YAML_PARENT" = /* ]]; then
-        RESULT_PARENT_DIR="${ROOT_DIR}/${RESULT_FROM_YAML_PARENT}"
+    if [[ ! "$RESULT_FROM_YAML" = /* ]]; then
+        RESULT_PARENT_DIR="${ROOT_DIR}/${RESULT_FROM_YAML}"
     else
-        RESULT_PARENT_DIR="${RESULT_FROM_YAML_PARENT}"
+        RESULT_PARENT_DIR="${RESULT_FROM_YAML}"
     fi
 else
     RESULT_PARENT_DIR="${2}"
