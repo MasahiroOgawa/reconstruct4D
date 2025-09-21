@@ -178,17 +178,23 @@ else
                      --vis_dir ${OUTPUT_ABS}
                      cd ${ROOT_DIR}
 
-                     # Rename flow files from 0-indexed to 1-indexed for compatibility
-                     echo "[INFO] Renaming flow files for compatibility..."
-                     for file in ${OUTPUT_ABS}/00000*_pred.flo; do
-                         if [ -f "$file" ]; then
-                             # Extract the number and increment it
-                             num=$(basename "$file" | cut -c1-6)
-                             newnum=$(printf "%05d" $((10#$num + 1)))
-                             newname="${OUTPUT_ABS}/${newnum}_pred.flo"
-                             mv "$file" "$newname"
-                         fi
-                     done
+                     # Check if input images start from 00000 or 00001 to determine renaming strategy
+                     if [ -f "${INPUT_ABS}/00000.jpg" ] || [ -f "${INPUT_ABS}/00000.png" ]; then
+                         echo "[INFO] Input images start from 00000, keeping 0-indexed flow files"
+                         # No renaming needed for DAVIS2016 and similar datasets
+                     else
+                         # Rename flow files from 0-indexed to 1-indexed for compatibility
+                         echo "[INFO] Renaming flow files for 1-indexed compatibility..."
+                         for file in ${OUTPUT_ABS}/00000*_pred.flo; do
+                             if [ -f "$file" ]; then
+                                 # Extract the number and increment it
+                                 num=$(basename "$file" | cut -c1-6)
+                                 newnum=$(printf "%05d" $((10#$num + 1)))
+                                 newname="${OUTPUT_ABS}/${newnum}_pred.flo"
+                                 mv "$file" "$newname"
+                             fi
+                         done
+                     fi
 
                      # Reactivate main environment
                      conda deactivate
