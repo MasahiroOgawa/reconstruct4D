@@ -7,8 +7,14 @@ CreateImage:
 
 OpticalFlow:
   flow_result_dir: "result/sample/flow"
-  model: "gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth" # unimatch model
-  weights: "weights/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth"
+  flow_type: "unimatch"  # optical flow method: "unimatch" or "memflow"
+  # Unimatch settings
+  unimatch_model: "gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth" # unimatch model
+  unimatch_weights: "weights/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth"
+  # MemFlow settings
+  memflow_model: "MemFlowNet"  # MemFlowNet or MemFlowNet_T
+  memflow_stage: "things"  # things, sintel, kitti, spring
+  memflow_weights: "reconstruct4D/ext/memflow/ckpts/MemFlowNet_things.pth"
 
 MovingObjectExtractor:
   # input/output directories
