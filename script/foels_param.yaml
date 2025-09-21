@@ -7,13 +7,13 @@ CreateImage:
 
 OpticalFlow:
   flow_result_dir: "result/sample/flow"
-  flow_type: "unimatch"  # optical flow method: "unimatch" or "memflow"
+  flow_type: "memflow" # optical flow method: "unimatch" or "memflow"
   # Unimatch settings
   unimatch_model: "gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth" # unimatch model
   unimatch_weights: "weights/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth"
   # MemFlow settings
-  memflow_model: "MemFlowNet"  # MemFlowNet or MemFlowNet_T
-  memflow_stage: "things"  # things, sintel, kitti, spring
+  memflow_model: "MemFlowNet" # MemFlowNet or MemFlowNet_T
+  memflow_stage: "things" # things, sintel, kitti, spring
   memflow_weights: "reconstruct4D/ext/memflow/ckpts/MemFlowNet_things.pth"
 
 MovingObjectExtractor:
@@ -22,7 +22,7 @@ MovingObjectExtractor:
   flow_result_dir: "result/sample/flow"
   segment_result_dir: "result/sample/segment"
   result_dir: "result/sample/moving_object"
-  
+
   # segmentation model settings
   segment_model_type: "oneformer" # segmentation model type: internimage or oneformer
   segment_model_name: "shi-labs/oneformer_coco_swin_large" # segmentation model name
@@ -33,7 +33,7 @@ MovingObjectExtractor:
   loglevel: 1 # 0: no log, 1: print log, 2: display image, 3: debug with detailed image
   resultimg_width: 1280 # result image width [pix]
   skip_frames: 0 # skip frames at the beginning
-  
+
   # Focus of Expansion (FoE) settings
   ransac_all_inlier_estimation: true # whether all inlier estimation at the RANSAC final step
   foe_search_step: 5 # search step size when computing FoE inlier
@@ -42,7 +42,7 @@ MovingObjectExtractor:
   thre_inlier_rate: 0.6 # if inlier rate is higher than this value, RANSAC will be stopped
   thre_flow_existing_rate: 0.01 # if flow existing pixel rate is lower than this value, the camera is considered as stopping
   thre_flowlength: 2.0 # if flow length is lower than this value, the flow orientation will be ignored, and considered as coinside with mean flow angle.
-  
+
   # moving object detection thresholds
   thre_moving_fraction_in_obj: 0.01 # threshold of moving pixel fraction in an object to be considered as moving
   movprob_lengthfactor_coeff: 0.25 # coefficient for moving probability based on flow length
@@ -50,7 +50,7 @@ MovingObjectExtractor:
   thre_moving_prob: 0.25 # if moving probability is lower than this value, the pixel is considered as static
   thre_static_prob: 0.1 # threshold of static probability
   # thre_dominantflow_angle_deg: 10 # when computing undominant flow, if the angle differenct between the flow and median is larger than this value, the flow is considered as outlier [degree] currently unused.
-  
+
   # visualization settings
   flowarrow_step_forvis: 60 # every this pixel, draw flow arrow
   flowlength_factor_forvis: 10 # flow arrow length factor for visualization

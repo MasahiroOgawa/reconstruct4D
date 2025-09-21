@@ -150,6 +150,8 @@ else
 
                      # Run MemFlow inference (need to cd to memflow directory for imports to work)
                      cd ${ROOT_DIR}/reconstruct4D/ext/memflow
+                     # Unset PYTORCH_CUDA_ALLOC_CONF to avoid compatibility issues with PyTorch 1.13
+                     unset PYTORCH_CUDA_ALLOC_CONF
                      # Use absolute path for input if not already absolute
                      if [[ "${INPUT}" != /* ]]; then
                             INPUT_ABS="${ROOT_DIR}/${INPUT}"
@@ -162,13 +164,31 @@ else
                      else
                             WEIGHTS_ABS="${MEMFLOW_WEIGHTS}"
                      fi
-                     ${CMD_PREFIX} /home/mas/anaconda3/envs/memflow/bin/python inference.py \
+                     # Use absolute path for output directory
+                     if [[ "${RESULT_FLOW_DIR}" != /* ]]; then
+                            OUTPUT_ABS="${ROOT_DIR}/${RESULT_FLOW_DIR}"
+                     else
+                            OUTPUT_ABS="${RESULT_FLOW_DIR}"
+                     fi
+                     ${CMD_PREFIX} python inference_wrapper.py \
                      --name ${MEMFLOW_MODEL} \
                      --stage ${MEMFLOW_STAGE} \
                      --restore_ckpt ${WEIGHTS_ABS} \
                      --seq_dir ${INPUT_ABS} \
-                     --vis_dir ${RESULT_FLOW_DIR}
+                     --vis_dir ${OUTPUT_ABS}
                      cd ${ROOT_DIR}
+
+                     # Rename flow files from 0-indexed to 1-indexed for compatibility
+                     echo "[INFO] Renaming flow files for compatibility..."
+                     for file in ${OUTPUT_ABS}/00000*_pred.flo; do
+                         if [ -f "$file" ]; then
+                             # Extract the number and increment it
+                             num=$(basename "$file" | cut -c1-6)
+                             newnum=$(printf "%05d" $((10#$num + 1)))
+                             newname="${OUTPUT_ABS}/${newnum}_pred.flo"
+                             mv "$file" "$newname"
+                         fi
+                     done
 
                      # Reactivate main environment
                      conda deactivate
