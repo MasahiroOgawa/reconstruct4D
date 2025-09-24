@@ -259,9 +259,9 @@ else
               fi
 
               python "${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py" \
-              --inference_dir ${INPUT} \
-              --output_path ${RESULT_FLOW_DIR} \
-              --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME} \
+              --inference_dir "${INPUT}" \
+              --output_path "${RESULT_FLOW_DIR}" \
+              --resume "${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME}" \
               --padding_factor 32 \
               --upsample_factor 4 \
               --num_scales 2 \
@@ -322,16 +322,16 @@ else
                      echo "[INFO] run segmentation using: ${SEG_MODEL_TYPE} ${SEG_TASK_TYPE}"
                      if [ "$SEG_TASK_TYPE" = "instance" ]; then
                             python "${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/image_demo.py" \
-                            ${INPUT} \
-                            ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/configs/coco/${SEG_MODEL_NAME%.*}.py  \
-                            ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det/${SEG_MODEL_NAME} \
-                            --out ${RESULT_SEG_DIR}
+                            "${INPUT}" \
+                            "${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/configs/coco/${SEG_MODEL_NAME%.*}.py" \
+                            "${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det/${SEG_MODEL_NAME}" \
+                            --out "${RESULT_SEG_DIR}"
                      elif [ "$SEG_TASK_TYPE" = "semantic" ]; then
                             python "${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py" \
-                                   ${INPUT} \
-                                   ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/${SEG_MODEL_NAME%.*}.py  \
-                                   ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg/${SEG_MODEL_NAME} \
-                                   --palette ade20k --out ${RESULT_SEG_DIR}
+                                   "${INPUT}" \
+                                   "${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/${SEG_MODEL_NAME%.*}.py" \
+                                   "${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg/${SEG_MODEL_NAME}" \
+                                   --palette ade20k --out "${RESULT_SEG_DIR}"
                      else
                             echo "[ERROR] unknown segmentation task type: ${SEG_TASK_TYPE}"
                             exit 1
@@ -348,22 +348,22 @@ fi
 
 
 echo "[INFO] run extract moving objects"
-source ${ROOT_DIR}/.venv/bin/activate
+source "${ROOT_DIR}/.venv/bin/activate"
 echo "[INFO] env: $VIRTUAL_ENV"
 
 # Count input frames
-NUM_INPUT_FRAMES=$(ls -1 ${INPUT_DIR}/*.{jpg,png} 2>/dev/null | wc -l)
+NUM_INPUT_FRAMES=$(ls -1 "${INPUT_DIR}"/*.{jpg,png} 2>/dev/null | wc -l)
 
 if [ "$SKIP_FRAMES" -ge "$NUM_INPUT_FRAMES" ]; then
     echo "[WARNING] SKIP_FRAMES (${SKIP_FRAMES}) >= number of input frames (${NUM_INPUT_FRAMES}). No frames will be processed. Skipping moving object extraction."
     exit 0
 else
-    mkdir -p ${RESULT_MOVOBJ_DIR}
+    mkdir -p "${RESULT_MOVOBJ_DIR}"
     MOVOBJ_OPTS="--config ${PARAM_FILE} \
-    --input_dir ${INPUT_DIR} \
-    --flow_result_dir ${RESULT_FLOW_DIR} \
-    --segment_result_dir ${RESULT_SEG_DIR} \
-    --result_dir ${RESULT_MOVOBJ_DIR}" # overwrite result dirs based on input data.
+    --input_dir \"${INPUT_DIR}\" \
+    --flow_result_dir \"${RESULT_FLOW_DIR}\" \
+    --segment_result_dir \"${RESULT_SEG_DIR}\" \
+    --result_dir \"${RESULT_MOVOBJ_DIR}\"" # overwrite result dirs based on input data.
     if [ $LOG_LEVEL -ge 5 ]; then
        echo "[NOTE] Please press F5 to start debugging!"
        python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJ_OPTS}
