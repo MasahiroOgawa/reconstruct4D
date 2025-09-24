@@ -213,11 +213,11 @@ else
                      cd "${ROOT_DIR}/reconstruct4D/ext/memflow"
                      # Unset PYTORCH_CUDA_ALLOC_CONF to avoid compatibility issues with PyTorch 1.13
                      unset PYTORCH_CUDA_ALLOC_CONF
-                     # Use absolute path for input if not already absolute
-                     if [[ "${INPUT}" != /* ]]; then
-                            INPUT_ABS="${ROOT_DIR}/${INPUT}"
+                     # Use absolute path for input directory (not the original INPUT which might be a video file)
+                     if [[ "${INPUT_DIR}" != /* ]]; then
+                            INPUT_ABS="${ROOT_DIR}/${INPUT_DIR}"
                      else
-                            INPUT_ABS="${INPUT}"
+                            INPUT_ABS="${INPUT_DIR}"
                      fi
                      # Use absolute path for weights
                      if [[ "${MEMFLOW_WEIGHTS}" != /* ]]; then
@@ -268,7 +268,7 @@ else
               fi
 
               python "${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py" \
-              --inference_dir "${INPUT}" \
+              --inference_dir "${INPUT_DIR}" \
               --output_path "${RESULT_FLOW_DIR}" \
               --resume "${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME}" \
               --padding_factor 32 \
@@ -331,13 +331,13 @@ else
                      echo "[INFO] run segmentation using: ${SEG_MODEL_TYPE} ${SEG_TASK_TYPE}"
                      if [ "$SEG_TASK_TYPE" = "instance" ]; then
                             python "${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/image_demo.py" \
-                            "${INPUT}" \
+                            "${INPUT_DIR}" \
                             "${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/configs/coco/${SEG_MODEL_NAME%.*}.py" \
                             "${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det/${SEG_MODEL_NAME}" \
                             --out "${RESULT_SEG_DIR}"
                      elif [ "$SEG_TASK_TYPE" = "semantic" ]; then
                             python "${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py" \
-                                   "${INPUT}" \
+                                   "${INPUT_DIR}" \
                                    "${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/${SEG_MODEL_NAME%.*}.py" \
                                    "${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg/${SEG_MODEL_NAME}" \
                                    --palette ade20k --out "${RESULT_SEG_DIR}"
