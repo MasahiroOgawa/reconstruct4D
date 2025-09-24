@@ -212,7 +212,8 @@ else
                      cd "${ROOT_DIR}"
 
                      # Check if input images start from 00000 or 00001 to determine if renaming is needed
-                     # MemFlow's inference_wrapper.py now correctly detects the starting index
+                     # MemFlow's inference_wrapper.py now automatically scans the input directory for image files,
+                     # detects the starting index (e.g., 00000, 000000, or 00001), and generates flow files with the correct indexing.
                      if [ -f "${INPUT_ABS}/00000.jpg" ] || [ -f "${INPUT_ABS}/00000.png" ]; then
                          echo "[INFO] Input images start from 00000, MemFlow generated 0-indexed flow files correctly"
                      elif [ -f "${INPUT_ABS}/000000.jpg" ] || [ -f "${INPUT_ABS}/000000.png" ]; then
