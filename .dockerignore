@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Git
+.git/
+.gitignore
+.gitmodules
+
+# Data files
+result/
+data/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.pkl
+*.pth
+*.pt
+*.onnx
+*.h5
+*.hdf5
+*.safetensors
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+docs/
+*.md
+!CLAUDE.md
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Models
+models/
+checkpoints/
+weights/
+
+# Logs
+*.log
+logs/
+
+# Build
+build/
+dist/
+*.egg
+
+# Submodules - will be initialized after container creation
+reconstruct4D/ext/
+InternImage/
+unsupervised_detection/
+UniMatch/
+
+# Keep only essential files for uv sync
+!pyproject.toml
+!uv.lock
+!requirements*.txt

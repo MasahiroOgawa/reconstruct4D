@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reconstruct4D</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <style>
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      color: #333;
+    }
+
+    .project-title {
+      font-size: 2.6rem;
+      font-weight: bold;
+      margin-top: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .author-list {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .author-list a {
+      color: #333;
+      text-decoration: none;
+    }
+
+    .author-list a:hover {
+      text-decoration: underline;
+    }
+
+    .affiliation {
+      font-size: 1rem;
+      color: #666;
+    }
+
+    .link-buttons .btn {
+      margin: 5px;
+      font-size: 1.1rem;
+      padding: 10px 20px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      margin-top: 3.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+
+    .teaser-img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .video-container {
+      position: relative;
+      padding-bottom: 56.25%;
+      /* 16:9 aspect ratio */
+      height: 0;
+      overflow: hidden;
+      max-width: 100%;
+      background: #000;
+      margin: 2rem 0;
+      border-radius: 10px;
+    }
+
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .bibtex {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      padding: 15px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.9em;
+    }
+
+    .caption {
+      font-size: 0.9em;
+      color: #6c757d;
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-10 offset-md-1 text-center">
+
+        <h1 class="project-title">FoELS<br>Moving Object Detection from Moving Camera Using Focus of Expansion Likelihood
+          and Segmentation</h1>
+
+        <div class="author-list">
+          <a href="https://github.com/MasahiroOgawa">Masahiro Ogawa</a><sup>1</sup>,
+          Qi An<sup>2</sup>, and
+          Atsushi Yamashita<sup>2</sup>
+        </div>
+
+        <div class="affiliation">
+          <sup>1</sup>Department of Precision Engineering, Graduate School of Engineering, The University of Tokyo,
+          Japan<br>
+          <sup>2</sup>Department of Human and Engineered Environmental Studies, Graduate School of Frontier Sciences,
+          The University of Tokyo, Japan
+        </div>
+
+        <div class="link-buttons my-4">
+          <a href="https://arxiv.org/abs/2507.13628" class="btn btn-primary">[ 📄 Paper ]</a>
+          <a href="https://github.com/MasahiroOgawa/reconstruct4D" class="btn btn-dark">[ 💻 Code ]</a>
+          <a href="#" class="btn btn-danger">[ 📊 Slides ]</a>
+        </div>
+
+        <img src="assets/teaser.png" alt="Teaser Image for Reconstruct4D" class="teaser-img">
+        <p class="caption">A captivating description of your teaser image.</p>
+
+        <div class="text-start">
+          <h2 class="section-title">Abstract</h2>
+          <p>
+            Separating moving and static objects from a moving camera viewpoint is essential for 3D reconstruction,
+            autonomous navigation, and scene understanding in robotics. Existing approaches often rely primarily on
+            optical flow, which struggles to detect moving objects in complex, structured scenes involving camera
+            motion. To address this limitation, we propose Focus of Expansion Likelihood and Segmentation (FoELS), a
+            method based on the core idea of integrating both optical flow and texture information. FoELS computes the
+            focus of expansion (FoE) from optical flow and derives an initial motion likelihood from the outliers of the
+            FoE computation. This likelihood is then fused with a segmentation-based prior to estimate the final moving
+            probability. The method effectively handles challenges including complex structured scenes, rotational
+            camera motion, and parallel motion. Comprehensive evaluations on the DAVIS 2016 dataset and real-world
+            traffic videos demonstrate its effectiveness and state-of-the-art performance.
+          </p>
+        </div>
+
+        <h2 class="section-title text-start">Video</h2>
+        <div class="video-container">
+          <iframe src="https://www.youtube.com/embed/SAyG0HIEenQ" title="Project Video" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen></iframe>
+        </div>
+
+        <div class="text-start">
+          <h2 class="section-title">Method</h2>
+          <p>
+            FoELS (Focus of Expansion Likelihood and Segmentation) integrates optical flow and segmentation to overcome
+            limitations of previous methods that rely primarily on optical flow alone. The proposed pipeline consists of
+            six main stages:
+          </p>
+          <ol>
+            <li><strong>Optical Flow Estimation:</strong> Captures pixel-wise motion cues between consecutive frames
+              using UniMatch.</li>
+            <li><strong>Segmentation:</strong> Uses OneFormer for panoptic segmentation, assigning class-specific prior
+              moving probabilities to each pixel.</li>
+            <li><strong>Camera Motion Detection:</strong> Determines if the camera is in motion by analyzing the optical
+              flow ratio within static regions.</li>
+            <li><strong>FoE Computation:</strong> Utilizes RANSAC to compute the Focus of Expansion from optical flow
+              within static regions.</li>
+            <li><strong>Moving Pixel Probability Estimation:</strong> Computes FoE-based moving pixel likelihood from
+              RANSAC outliers and multiplies it with segmentation-derived priors.</li>
+            <li><strong>Object-Level Refinement:</strong> Validates moving pixel regions against panoptic segmentation
+              results to ensure entire objects are classified as moving.</li>
+          </ol>
+          <p>
+            The key innovation is the integration of FoE-based flow analysis with segmentation priors. The moving pixel
+            probability is computed as: <em>P<sub>M</sub> ∝ P<sub>seg</sub> · P<sub>FoE</sub></em>, where
+            P<sub>seg</sub> is the segmentation-based prior and P<sub>FoE</sub> is the FoE-based likelihood that
+            considers both flow angle and length differences to handle parallel motion scenarios.
+          </p>
+          <img src="assets/method.png" alt="Method diagram" class="img-fluid rounded">
+          <p class="caption">System overview of the FoELS pipeline showing the integration of optical flow and
+            segmentation.</p>
+        </div>
+
+        <div class="text-start">
+          <h2 class="section-title">Results</h2>
+          <p>
+            FoELS demonstrates superior performance compared to state-of-the-art methods on standard benchmarks and
+            challenging real-world scenarios. Our comprehensive evaluation includes quantitative results on DAVIS 2016
+            and FBMS-59 datasets, as well as qualitative assessment on custom traffic videos.
+          </p>
+
+          <h3>Quantitative Results</h3>
+          <p>
+            FoELS significantly outperforms the Adversarial Network baseline on both evaluation datasets:
+          </p>
+          <div class="table-responsive mb-4">
+            <table class="table table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>Method</th>
+                  <th>DAVIS 2016 (IoU)</th>
+                  <th>FBMS-59 (IoU)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Adversarial Network</td>
+                  <td>0.599</td>
+                  <td>0.369</td>
+                </tr>
+                <tr class="table-success">
+                  <td><strong>FoELS (Ours)</strong></td>
+                  <td><strong>0.757</strong></td>
+                  <td><strong>0.695</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Key Capabilities</h3>
+          <p>
+            FoELS successfully handles challenging scenarios that previous methods struggle with:
+          </p>
+          <ul>
+            <li><strong>Complex Structured Scenes:</strong> Accurately detects moving objects while ignoring nearby
+              static objects with large optical flow</li>
+            <li><strong>Parallel Motion:</strong> Successfully identifies objects moving parallel to camera trajectory
+              using flow length information</li>
+            <li><strong>Low-textured Environments:</strong> Leverages segmentation priors to detect motion in regions
+              with insufficient optical flow</li>
+            <li><strong>Camera Zoom Operations:</strong> Robustly handles zoom scenarios that challenge existing methods
+            </li>
+            <li><strong>Partially Moving Objects:</strong> Detects entire objects even when only small parts exhibit
+              motion through object-level refinement</li>
+          </ul>
+
+          <div class="row align-items-center">
+            <div class="col-md-6 mb-4">
+              <img src="assets/result1.png" class="img-fluid rounded">
+              <p class="caption">Comparison with Adversarial Network showing FoELS correctly identifies moving objects
+                while avoiding false positives from nearby vegetation.</p>
+            </div>
+            <div class="col-md-6 mb-4">
+              <img src="assets/result2.png" class="img-fluid rounded">
+              <p class="caption">FoELS successfully detects a moving train during camera zoom while the Adversarial
+                Network fails to detect any moving objects.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="text-start">
+          <h2 class="section-title">BibTeX</h2>
+          <pre class="bibtex"><code>@misc{ogawa2025movingobjectdetectionmoving,
+      title={Moving Object Detection from Moving Camera Using Focus of Expansion Likelihood and Segmentation}, 
+      author={Masahiro Ogawa and Qi An and Atsushi Yamashita},
+      year={2025},
+      eprint={2507.13628},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2507.13628}, 
+}</code></pre>
+        </div>
+
+        <footer class="my-5"></footer>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

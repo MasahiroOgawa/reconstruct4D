@@ -1,6 +1,6 @@
 #!/bin/bash
 ###
-USAGE="Usage: $0 [input image directory or movie (default: data/sample)] [result directory (default: result)]"
+USAGE="Usage: $0 [input image directory or movie (default: from foels_param.yaml)] [result directory (default: from foels_param.yaml)]"
 echo $USAGE
 
 # -e: stop immediately when error occurred
@@ -15,9 +15,31 @@ ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 # Load parameters from YAML file
 PARAM_FILE="${ROOT_DIR}/script/foels_param.yaml"
 
-# input image directory or video variables. You can change this.
-INPUT=${1:-${ROOT_DIR}/data/sample}
-RESULT_PARENT_DIR=${2:-${ROOT_DIR}/result}
+# Read input_dir from YAML file if no argument provided
+if [ $# -eq 0 ]; then
+    INPUT_FROM_YAML=$(yq -r '.MovingObjectExtractor.input_dir' "${PARAM_FILE}")
+    # Convert relative path to absolute path if needed
+    if [[ ! "$INPUT_FROM_YAML" = /* ]]; then
+        INPUT="${ROOT_DIR}/${INPUT_FROM_YAML}"
+    else
+        INPUT="${INPUT_FROM_YAML}"
+    fi
+else
+    INPUT="${1}"
+fi
+
+# Read result_dir from YAML file if no second argument provided
+if [ $# -le 1 ]; then
+    RESULT_FROM_YAML=$(yq -r '.MovingObjectExtractor.result_dir' "${PARAM_FILE}")
+    # Convert relative path to absolute path if needed
+    if [[ ! "$RESULT_FROM_YAML" = /* ]]; then
+        RESULT_PARENT_DIR="${ROOT_DIR}/${RESULT_FROM_YAML}"
+    else
+        RESULT_PARENT_DIR="${RESULT_FROM_YAML}"
+    fi
+else
+    RESULT_PARENT_DIR="${2}"
+fi
 
 # Read parameters from YAML
 LOG_LEVEL=$(yq -r ' .MovingObjectExtractor.loglevel' "${PARAM_FILE}")

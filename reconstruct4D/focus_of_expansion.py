@@ -146,9 +146,10 @@ class FoE:
                 u = self.flow[row, col, 0]
                 v = self.flow[row, col, 1]
 
-                flow_lentgh = np.sqrt(u**2 + v**2)
+                flow_length = np.sqrt(u**2 + v**2)
+                # we use the similar probability as camera is moving case.
                 self.moving_prob[row, col] = min(
-                    1.0, abs(flow_lentgh / self.THRE_FLOWLENGTH)
+                    1.0, abs(np.log10(1+abs(flow_length / self.THRE_FLOWLENGTH)))
                 )
 
     def comp_foe_by_ransac(self):
@@ -656,10 +657,12 @@ class FoE:
             for col in range(0, flow.shape[1], self.FLOWARROW_STEP_FORVIS):
                 if self.foe_hom is None:
                     self.logger.warning(
-                        "[WARNING] FoE is None. Cannot draw flow arrow."
+                        "[WARNING] FoE is None."
                     )
-                    return
-                decision = self._inlier_decision(row, col, self.foe_hom, self.foe_sign)
+                    decision = 0
+                else:
+                    decision = self._inlier_decision(row, col, self.foe_hom, self.foe_sign)
+                
                 if decision == 1:
                     color = (0, 255, 0)  # inlier: green
                 elif decision == -1:
