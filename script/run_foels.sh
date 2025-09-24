@@ -82,6 +82,34 @@ echo "[INFO] check input is whether a directory or movie."
 if [ -d "${INPUT}" ]; then
        echo "[INFO] input is a directory."
        INPUT_DIR="${INPUT}"
+
+       # Validate that the directory contains image files
+       image_count=$(find "${INPUT_DIR}" -maxdepth 1 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" \) 2>/dev/null | wc -l)
+
+       if [ "$image_count" -eq 0 ]; then
+              # Check if there are video files instead
+              video_files=$(find "${INPUT_DIR}" -maxdepth 1 -type f \( -iname "*.mp4" -o -iname "*.avi" -o -iname "*.mov" -o -iname "*.mkv" -o -iname "*.webm" \) -printf "%f\n" 2>/dev/null | head -3)
+
+              if [ -n "$video_files" ]; then
+                     echo "[ERROR] The input directory contains video file(s) but no image sequences."
+                     echo "[ERROR] Found video files: $(echo "$video_files" | paste -sd ', ')"
+                     echo ""
+                     echo "[INFO] Please provide either:"
+                     echo "       1. A video file directly as input (not a directory containing videos)"
+                     echo "          Example: ./script/run_foels.sh ~/data/video.mp4"
+                     echo "       2. A directory containing image sequences (e.g., 00001.jpg, 00002.jpg, ...)"
+                     echo "          Example: ./script/run_foels.sh ~/data/image_sequences/"
+              else
+                     echo "[ERROR] No image files found in directory: ${INPUT_DIR}"
+                     echo "[ERROR] The directory must contain image files (.jpg, .jpeg, or .png)"
+                     echo ""
+                     echo "[INFO] If you have a video file, please provide it directly as input:"
+                     echo "       Example: ./script/run_foels.sh ~/data/video.mp4"
+              fi
+              exit 1
+       fi
+
+       echo "[INFO] Found ${image_count} image file(s) in the directory."
 elif [ -f "${INPUT}" ]; then
        echo "[INFO] input is a movie."
        echo "[INFO] convert movie to images"
