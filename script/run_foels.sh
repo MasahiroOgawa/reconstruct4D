@@ -117,9 +117,10 @@ deactivate_allenvs() {
 
 echo "[INFO] compute optical flow using ${FLOW_TYPE}"
 CMD_PREFIX=""
-if [ "$(uname -s)" = "Linux" ]; then
-       CMD_PREFIX="env CUDA_VISIBLE_DEVICES=0"
-fi
+# Temporarily disabled due to CUDA initialization issues
+# if [ "$(uname -s)" = "Linux" ]; then
+#        CMD_PREFIX="env CUDA_VISIBLE_DEVICES=0"
+# fi
 if [ -d ${RESULT_FLOW_DIR} ] && [ -n "$(ls -A ${RESULT_FLOW_DIR}/*.mp4)" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
@@ -182,18 +183,30 @@ else
                      if [ -f "${INPUT_ABS}/00000.jpg" ] || [ -f "${INPUT_ABS}/00000.png" ]; then
                          echo "[INFO] Input images start from 00000, keeping 0-indexed flow files"
                          # No renaming needed for DAVIS2016 and similar datasets
+                     elif [ -f "${INPUT_ABS}/000000.jpg" ] || [ -f "${INPUT_ABS}/000000.png" ]; then
+                         echo "[INFO] Input images start from 000000 (6-digit), keeping 0-indexed flow files"
+                         # No renaming needed
                      else
-                         # Rename flow files from 0-indexed to 1-indexed for compatibility
-                         echo "[INFO] Renaming flow files for 1-indexed compatibility..."
-                         for file in ${OUTPUT_ABS}/00000*_pred.flo; do
-                             if [ -f "$file" ]; then
-                                 # Extract the number and increment it
-                                 num=$(basename "$file" | cut -c1-6)
-                                 newnum=$(printf "%05d" $((10#$num + 1)))
-                                 newname="${OUTPUT_ABS}/${newnum}_pred.flo"
-                                 mv "$file" "$newname"
-                             fi
-                         done
+                         # Detect number of digits from first flow file
+                         FIRST_FLOW=$(ls ${OUTPUT_ABS}/0*_pred.flo 2>/dev/null | head -1)
+                         if [ -n "$FIRST_FLOW" ]; then
+                             # Get the filename without path and extension
+                             BASE_NAME=$(basename "$FIRST_FLOW" | sed 's/_pred.flo$//')
+                             NUM_DIGITS=${#BASE_NAME}
+
+                             # Rename flow files from 0-indexed to 1-indexed for compatibility
+                             echo "[INFO] Renaming flow files for 1-indexed compatibility (${NUM_DIGITS} digits)..."
+                             for file in ${OUTPUT_ABS}/0*_pred.flo; do
+                                 if [ -f "$file" ]; then
+                                     # Extract the number
+                                     num=$(basename "$file" | sed 's/_pred.flo$//')
+                                     # Increment and format with same number of digits
+                                     newnum=$(printf "%0${NUM_DIGITS}d" $((10#$num + 1)))
+                                     newname="${OUTPUT_ABS}/${newnum}_pred.flo"
+                                     mv "$file" "$newname"
+                                 fi
+                             done
+                         fi
                      fi
 
                      # Reactivate main environment
