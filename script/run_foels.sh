@@ -150,11 +150,9 @@ deactivate_all_environments() {
 
 
 echo "[INFO] compute optical flow using ${FLOW_TYPE}"
+# CMD_PREFIX can be used to set CUDA device if needed
+# Example: CMD_PREFIX="env CUDA_VISIBLE_DEVICES=0"
 CMD_PREFIX=""
-# Temporarily disabled due to CUDA initialization issues
-# if [ "$(uname -s)" = "Linux" ]; then
-#        CMD_PREFIX="env CUDA_VISIBLE_DEVICES=0"
-# fi
 if [ -d "${RESULT_FLOW_DIR}" ] && [ -n "$(ls -A "${RESULT_FLOW_DIR}"/*.mp4 2>/dev/null)" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
@@ -205,7 +203,7 @@ else
                      else
                             OUTPUT_ABS="${RESULT_FLOW_DIR}"
                      fi
-                     ${CMD_PREFIX} python inference_wrapper.py \
+                     python inference_wrapper.py \
                      --name "${MEMFLOW_MODEL}" \
                      --stage "${MEMFLOW_STAGE}" \
                      --restore_ckpt "${WEIGHTS_ABS}" \
@@ -260,7 +258,7 @@ else
                      wget "https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME}" -P "${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained"
               fi
 
-              ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
+              python "${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py" \
               --inference_dir ${INPUT} \
               --output_path ${RESULT_FLOW_DIR} \
               --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME} \
@@ -323,13 +321,13 @@ else
 
                      echo "[INFO] run segmentation using: ${SEG_MODEL_TYPE} ${SEG_TASK_TYPE}"
                      if [ "$SEG_TASK_TYPE" = "instance" ]; then
-                            ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/image_demo.py \
+                            python "${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/image_demo.py" \
                             ${INPUT} \
                             ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/configs/coco/${SEG_MODEL_NAME%.*}.py  \
                             ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det/${SEG_MODEL_NAME} \
                             --out ${RESULT_SEG_DIR}
                      elif [ "$SEG_TASK_TYPE" = "semantic" ]; then
-                            ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py \
+                            python "${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py" \
                                    ${INPUT} \
                                    ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/${SEG_MODEL_NAME%.*}.py  \
                                    ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg/${SEG_MODEL_NAME} \
