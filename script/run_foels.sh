@@ -211,34 +211,15 @@ else
                      --vis_dir "${OUTPUT_ABS}"
                      cd "${ROOT_DIR}"
 
-                     # Check if input images start from 00000 or 00001 to determine renaming strategy
+                     # Check if input images start from 00000 or 00001 to determine if renaming is needed
+                     # MemFlow's inference_wrapper.py now automatically scans the input directory for image files,
+                     # detects the starting index (e.g., 00000, 000000, or 00001), and generates flow files with the correct indexing.
                      if [ -f "${INPUT_ABS}/00000.jpg" ] || [ -f "${INPUT_ABS}/00000.png" ]; then
-                         echo "[INFO] Input images start from 00000, keeping 0-indexed flow files"
-                         # No renaming needed for DAVIS2016 and similar datasets
+                         echo "[INFO] Input images start from 00000, MemFlow generated 0-indexed flow files correctly"
                      elif [ -f "${INPUT_ABS}/000000.jpg" ] || [ -f "${INPUT_ABS}/000000.png" ]; then
-                         echo "[INFO] Input images start from 000000 (6-digit), keeping 0-indexed flow files"
-                         # No renaming needed
+                         echo "[INFO] Input images start from 000000, MemFlow generated 0-indexed flow files correctly"
                      else
-                         # Detect number of digits from first flow file
-                         FIRST_FLOW=$(ls "${OUTPUT_ABS}"/0*_pred.flo 2>/dev/null | head -1)
-                         if [ -n "$FIRST_FLOW" ]; then
-                             # Get the filename without path and extension
-                             BASE_NAME=$(basename "$FIRST_FLOW" | sed 's/_pred.flo$//')
-                             NUM_DIGITS=${#BASE_NAME}
-
-                             # Rename flow files from 0-indexed to 1-indexed for compatibility
-                             echo "[INFO] Renaming flow files for 1-indexed compatibility (${NUM_DIGITS} digits)..."
-                             for file in "${OUTPUT_ABS}"/0*_pred.flo; do
-                                 if [ -f "$file" ]; then
-                                     # Extract the number
-                                     num=$(basename "$file" | sed 's/_pred.flo$//')
-                                     # Remove leading zeros and increment (handle "00000" case with :-0)
-                                     newnum=$(printf "%0${NUM_DIGITS}d" $(( ${num##0*:-0} + 1 )))
-                                     newname="${OUTPUT_ABS}/${newnum}_pred.flo"
-                                     mv "$file" "$newname"
-                                 fi
-                             done
-                         fi
+                         echo "[INFO] Input images start from 00001 or higher, MemFlow generated correctly indexed flow files"
                      fi
 
                      # Reactivate main environment
@@ -359,16 +340,21 @@ if [ "$SKIP_FRAMES" -ge "$NUM_INPUT_FRAMES" ]; then
     exit 0
 else
     mkdir -p "${RESULT_MOVOBJ_DIR}"
-    MOVOBJ_OPTS="--config ${PARAM_FILE} \
-    --input_dir \"${INPUT_DIR}\" \
-    --flow_result_dir \"${RESULT_FLOW_DIR}\" \
-    --segment_result_dir \"${RESULT_SEG_DIR}\" \
-    --result_dir \"${RESULT_MOVOBJ_DIR}\"" # overwrite result dirs based on input data.
     if [ $LOG_LEVEL -ge 5 ]; then
        echo "[NOTE] Please press F5 to start debugging!"
-       python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJ_OPTS}
+       python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client "${ROOT_DIR}/reconstruct4D/extract_moving_objects.py" \
+       --config "${PARAM_FILE}" \
+       --input_dir "${INPUT_DIR}" \
+       --flow_result_dir "${RESULT_FLOW_DIR}" \
+       --segment_result_dir "${RESULT_SEG_DIR}" \
+       --result_dir "${RESULT_MOVOBJ_DIR}"
     else
-       python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJ_OPTS}
+       python "${ROOT_DIR}/reconstruct4D/extract_moving_objects.py" \
+       --config "${PARAM_FILE}" \
+       --input_dir "${INPUT_DIR}" \
+       --flow_result_dir "${RESULT_FLOW_DIR}" \
+       --segment_result_dir "${RESULT_SEG_DIR}" \
+       --result_dir "${RESULT_MOVOBJ_DIR}"
     fi
 fi
 
