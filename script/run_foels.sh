@@ -359,16 +359,21 @@ if [ "$SKIP_FRAMES" -ge "$NUM_INPUT_FRAMES" ]; then
     exit 0
 else
     mkdir -p "${RESULT_MOVOBJ_DIR}"
-    MOVOBJ_OPTS="--config ${PARAM_FILE} \
-    --input_dir \"${INPUT_DIR}\" \
-    --flow_result_dir \"${RESULT_FLOW_DIR}\" \
-    --segment_result_dir \"${RESULT_SEG_DIR}\" \
-    --result_dir \"${RESULT_MOVOBJ_DIR}\"" # overwrite result dirs based on input data.
     if [ $LOG_LEVEL -ge 5 ]; then
        echo "[NOTE] Please press F5 to start debugging!"
-       python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJ_OPTS}
+       python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client "${ROOT_DIR}/reconstruct4D/extract_moving_objects.py" \
+       --config "${PARAM_FILE}" \
+       --input_dir "${INPUT_DIR}" \
+       --flow_result_dir "${RESULT_FLOW_DIR}" \
+       --segment_result_dir "${RESULT_SEG_DIR}" \
+       --result_dir "${RESULT_MOVOBJ_DIR}"
     else
-       python ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJ_OPTS}
+       python "${ROOT_DIR}/reconstruct4D/extract_moving_objects.py" \
+       --config "${PARAM_FILE}" \
+       --input_dir "${INPUT_DIR}" \
+       --flow_result_dir "${RESULT_FLOW_DIR}" \
+       --segment_result_dir "${RESULT_SEG_DIR}" \
+       --result_dir "${RESULT_MOVOBJ_DIR}"
     fi
 fi
 
