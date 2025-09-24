@@ -232,8 +232,8 @@ else
                                  if [ -f "$file" ]; then
                                      # Extract the number
                                      num=$(basename "$file" | sed 's/_pred.flo$//')
-                                     # Increment and format with same number of digits
-                                     newnum=$(printf "%0${NUM_DIGITS}d" $((10#$num + 1)))
+                                     # Remove leading zeros and increment (handle "00000" case with :-0)
+                                     newnum=$(printf "%0${NUM_DIGITS}d" $(( ${num##0*:-0} + 1 )))
                                      newname="${OUTPUT_ABS}/${newnum}_pred.flo"
                                      mv "$file" "$newname"
                                  fi
