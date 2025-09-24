@@ -79,24 +79,24 @@ fi
 
 # to define INPUT_DIR, we need to do below first.
 echo "[INFO] check input is whether a directory or movie."
-if [ -d ${INPUT} ]; then
+if [ -d "${INPUT}" ]; then
        echo "[INFO] input is a directory."
-       INPUT_DIR=${INPUT}
-elif [ -f ${INPUT} ]; then
+       INPUT_DIR="${INPUT}"
+elif [ -f "${INPUT}" ]; then
        echo "[INFO] input is a movie."
        echo "[INFO] convert movie to images"
-       INPUT_DIR=$(dirname ${INPUT})
-       ffmpeg -i ${INPUT} -r ${IN_FPS} -vf scale=${IMG_WIDTH}:-1 ${INPUT_DIR}/%06d.png
+       INPUT_DIR=$(dirname "${INPUT}")
+       ffmpeg -i "${INPUT}" -r "${IN_FPS}" -vf scale="${IMG_WIDTH}":-1 "${INPUT_DIR}"/%06d.png
 else
        echo "[ERROR] input is neither a directory nor a movie."
        exit 1
 fi
 
 # automatically defined variables from INPUT
-RESULT_PARENT_DIR=${RESULT_PARENT_DIR}/$(basename ${INPUT_DIR})
-RESULT_FLOW_DIR=${RESULT_PARENT_DIR}/flow
-RESULT_SEG_DIR=${RESULT_PARENT_DIR}/segmentation
-RESULT_MOVOBJ_DIR=${RESULT_PARENT_DIR}/moving_object
+RESULT_PARENT_DIR="${RESULT_PARENT_DIR}/$(basename "${INPUT_DIR}")"
+RESULT_FLOW_DIR="${RESULT_PARENT_DIR}/flow"
+RESULT_SEG_DIR="${RESULT_PARENT_DIR}/segmentation"
+RESULT_MOVOBJ_DIR="${RESULT_PARENT_DIR}/moving_object"
 case ${SEG_MODEL_NAME} in
        "upernet_internimage_t_512_160k_ade20k.pth" |\
        "upernet_internimage_xl_640_160k_ade20k.pth" |\
@@ -117,23 +117,35 @@ case ${SEG_MODEL_NAME} in
 esac
 
 
-deactivate_allenvs() {
-       # Check if in virtual environment
-       if [ -n "$VIRTUAL_ENV" ]; then
-              echo "[INFO] deactivate venv: $VIRTUAL_ENV"
-              deactivate 2>/dev/null || true
+deactivate_all_environments() {
+       local environment_deactivated=false
+
+       # Check and deactivate virtual environment
+       if [ -n "${VIRTUAL_ENV:-}" ]; then
+              echo "[INFO] Deactivating venv: $VIRTUAL_ENV"
+              if deactivate 2>/dev/null; then
+                     environment_deactivated=true
+              else
+                     echo "[WARNING] Failed to deactivate venv"
+              fi
        fi
 
-       # Check if in conda environment
-       if [ -n "$CONDA_DEFAULT_ENV" ] && [ "$CONDA_DEFAULT_ENV" != "base" ]; then
-              echo "[INFO] deactivate conda env: $CONDA_DEFAULT_ENV"
-              conda deactivate 2>/dev/null || true
+       # Check and deactivate conda environment
+       if [ -n "${CONDA_DEFAULT_ENV:-}" ] && [ "$CONDA_DEFAULT_ENV" != "base" ]; then
+              echo "[INFO] Deactivating conda env: $CONDA_DEFAULT_ENV"
+              if conda deactivate 2>/dev/null; then
+                     environment_deactivated=true
+              else
+                     echo "[WARNING] Failed to deactivate conda env"
+              fi
        fi
 
-       echo "[INFO] deactivated all envs"
+       if [ "$environment_deactivated" = true ]; then
+              echo "[INFO] Successfully deactivated environments"
+       fi
 
-       # remove .venv from PATH
-       PATH=$(echo $PATH | tr ':' '\n' | grep -v "\.venv" | tr '\n' ':' | sed 's/:$//')
+       # Clean PATH
+       export PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "\.venv" | tr '\n' ':' | sed 's/:$//')
 }
 
 
@@ -143,10 +155,10 @@ CMD_PREFIX=""
 # if [ "$(uname -s)" = "Linux" ]; then
 #        CMD_PREFIX="env CUDA_VISIBLE_DEVICES=0"
 # fi
-if [ -d ${RESULT_FLOW_DIR} ] && [ -n "$(ls -A ${RESULT_FLOW_DIR}/*.mp4)" ]; then
+if [ -d "${RESULT_FLOW_DIR}" ] && [ -n "$(ls -A "${RESULT_FLOW_DIR}"/*.mp4 2>/dev/null)" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
-       mkdir -p ${RESULT_FLOW_DIR}
+       mkdir -p "${RESULT_FLOW_DIR}"
        export OMP_NUM_THREADS=1
        # to avoid CUDA out of memory error.
        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
@@ -166,13 +178,13 @@ else
                      # GPU is available, proceed with MemFlow
                      # Activate memflow conda environment
                      set +eu
-                     deactivate_allenvs
-                     source $(conda info --base)/etc/profile.d/conda.sh
+                     deactivate_all_environments
+                     source "$(conda info --base)/etc/profile.d/conda.sh"
                      conda activate memflow
                      set -eu
 
                      # Run MemFlow inference (need to cd to memflow directory for imports to work)
-                     cd ${ROOT_DIR}/reconstruct4D/ext/memflow
+                     cd "${ROOT_DIR}/reconstruct4D/ext/memflow"
                      # Unset PYTORCH_CUDA_ALLOC_CONF to avoid compatibility issues with PyTorch 1.13
                      unset PYTORCH_CUDA_ALLOC_CONF
                      # Use absolute path for input if not already absolute
@@ -194,12 +206,12 @@ else
                             OUTPUT_ABS="${RESULT_FLOW_DIR}"
                      fi
                      ${CMD_PREFIX} python inference_wrapper.py \
-                     --name ${MEMFLOW_MODEL} \
-                     --stage ${MEMFLOW_STAGE} \
-                     --restore_ckpt ${WEIGHTS_ABS} \
-                     --seq_dir ${INPUT_ABS} \
-                     --vis_dir ${OUTPUT_ABS}
-                     cd ${ROOT_DIR}
+                     --name "${MEMFLOW_MODEL}" \
+                     --stage "${MEMFLOW_STAGE}" \
+                     --restore_ckpt "${WEIGHTS_ABS}" \
+                     --seq_dir "${INPUT_ABS}" \
+                     --vis_dir "${OUTPUT_ABS}"
+                     cd "${ROOT_DIR}"
 
                      # Check if input images start from 00000 or 00001 to determine renaming strategy
                      if [ -f "${INPUT_ABS}/00000.jpg" ] || [ -f "${INPUT_ABS}/00000.png" ]; then
@@ -210,7 +222,7 @@ else
                          # No renaming needed
                      else
                          # Detect number of digits from first flow file
-                         FIRST_FLOW=$(ls ${OUTPUT_ABS}/0*_pred.flo 2>/dev/null | head -1)
+                         FIRST_FLOW=$(ls "${OUTPUT_ABS}"/0*_pred.flo 2>/dev/null | head -1)
                          if [ -n "$FIRST_FLOW" ]; then
                              # Get the filename without path and extension
                              BASE_NAME=$(basename "$FIRST_FLOW" | sed 's/_pred.flo$//')
@@ -218,7 +230,7 @@ else
 
                              # Rename flow files from 0-indexed to 1-indexed for compatibility
                              echo "[INFO] Renaming flow files for 1-indexed compatibility (${NUM_DIGITS} digits)..."
-                             for file in ${OUTPUT_ABS}/0*_pred.flo; do
+                             for file in "${OUTPUT_ABS}"/0*_pred.flo; do
                                  if [ -f "$file" ]; then
                                      # Extract the number
                                      num=$(basename "$file" | sed 's/_pred.flo$//')
@@ -233,19 +245,19 @@ else
 
                      # Reactivate main environment
                      conda deactivate
-                     source ${ROOT_DIR}/.venv/bin/activate
+                     source "${ROOT_DIR}/.venv/bin/activate"
               fi
        fi
 
        if [ "${FLOW_TYPE}" = "unimatch" ]; then
               echo "[INFO] using Unimatch for optical flow computation"
-              source ${ROOT_DIR}/.venv/bin/activate
+              source "${ROOT_DIR}/.venv/bin/activate"
               echo "[INFO] env: $VIRTUAL_ENV"
 
-              if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME} ]; then
+              if [ ! -f "${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME}" ]; then
                      echo "[INFO] download pretrained model"
-                     mkdir -p ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
-                     wget https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME} -P ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
+                     mkdir -p "${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained"
+                     wget "https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME}" -P "${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained"
               fi
 
               ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
