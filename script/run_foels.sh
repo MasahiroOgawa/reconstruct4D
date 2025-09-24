@@ -211,8 +211,9 @@ else
 
                      # Run MemFlow inference (need to cd to memflow directory for imports to work)
                      cd "${ROOT_DIR}/reconstruct4D/ext/memflow"
-                     # Unset PYTORCH_CUDA_ALLOC_CONF to avoid compatibility issues with PyTorch 1.13
-                     unset PYTORCH_CUDA_ALLOC_CONF
+                     # Set memory optimization for CUDA (PyTorch 1.13 compatible)
+                     export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+                     export CUDA_LAUNCH_BLOCKING=0
                      # Use absolute path for input directory (not the original INPUT which might be a video file)
                      if [[ "${INPUT_DIR}" != /* ]]; then
                             INPUT_ABS="${ROOT_DIR}/${INPUT_DIR}"
@@ -231,7 +232,8 @@ else
                      else
                             OUTPUT_ABS="${RESULT_FLOW_DIR}"
                      fi
-                     python inference_wrapper.py \
+                     # Use optimized inference wrapper for better memory management
+                     python inference_wrapper_optimized.py \
                      --name "${MEMFLOW_MODEL}" \
                      --stage "${MEMFLOW_STAGE}" \
                      --restore_ckpt "${WEIGHTS_ABS}" \
