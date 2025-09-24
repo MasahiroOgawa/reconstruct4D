@@ -7,8 +7,8 @@ echo $USAGE
 # -u: stop immediately when undefined variable is used
 set -eu
 
-# set root directory
-ROOT_DIR=$(dirname "$0")/..
+# set root directory (get absolute path)
+ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 
 
 
@@ -50,10 +50,23 @@ SEG_MODEL_NAME=$(yq -r ' .MovingObjectExtractor.segment_model_name ' "$PARAM_FIL
 # Strip quotes and whitespace from SEG_MODEL_NAME
 SEG_MODEL_NAME=$(echo "$SEG_MODEL_NAME" | sed -e 's/^\s*//;s/\s*$//' -e 's/^"//;s/"$//' -e "s/^'//;s/'$//")
 NUM_RANSAC=$(yq ' .NUM_RANSAC ' "$PARAM_FILE")
-# Read FLOW_MODEL_NAME from YAML
-FLOW_MODEL_NAME=$(yq -r ' .OpticalFlow.model ' "$PARAM_FILE")
-# Strip quotes and whitespace from FLOW_MODEL_NAME
-FLOW_MODEL_NAME=$(echo "$FLOW_MODEL_NAME" | sed -e 's/^\s*//;s/\s*$//' -e 's/^"//;s/"$//' -e "s/^'//;s/'$//")
+# Read flow settings from YAML
+FLOW_TYPE=$(yq -r ' .OpticalFlow.flow_type ' "$PARAM_FILE")
+# Strip quotes and whitespace from FLOW_TYPE
+FLOW_TYPE=$(echo "$FLOW_TYPE" | sed -e 's/^\s*//;s/\s*$//' -e 's/^"//;s/"$//' -e "s/^'//;s/'$//")
+
+# Read model-specific settings based on flow type
+if [ "${FLOW_TYPE}" = "memflow" ]; then
+    MEMFLOW_MODEL=$(yq -r ' .OpticalFlow.memflow_model ' "$PARAM_FILE")
+    MEMFLOW_STAGE=$(yq -r ' .OpticalFlow.memflow_stage ' "$PARAM_FILE")
+    MEMFLOW_WEIGHTS=$(yq -r ' .OpticalFlow.memflow_weights ' "$PARAM_FILE")
+else
+    # Default to unimatch
+    FLOW_MODEL_NAME=$(yq -r ' .OpticalFlow.unimatch_model ' "$PARAM_FILE")
+    # Strip quotes and whitespace from FLOW_MODEL_NAME
+    FLOW_MODEL_NAME=$(echo "$FLOW_MODEL_NAME" | sed -e 's/^\s*//;s/\s*$//' -e 's/^"//;s/"$//' -e "s/^'//;s/'$//")
+fi
+
 RANSAC_ALL_INLIER_ESTIMATION=$(yq ' .RANSAC_ALL_INLIER_ESTIMATION ' "$PARAM_FILE")
 FOE_SEARCH_STEP=$(yq ' .FOE_SEARCH_STEP ' "$PARAM_FILE")
 THRE_MOVING_FRACTION_IN_OBJ=$(yq ' .THRE_MOVING_FRACTION_IN_OBJ ' "$PARAM_FILE")
@@ -66,24 +79,24 @@ fi
 
 # to define INPUT_DIR, we need to do below first.
 echo "[INFO] check input is whether a directory or movie."
-if [ -d ${INPUT} ]; then
+if [ -d "${INPUT}" ]; then
        echo "[INFO] input is a directory."
-       INPUT_DIR=${INPUT}
-elif [ -f ${INPUT} ]; then
+       INPUT_DIR="${INPUT}"
+elif [ -f "${INPUT}" ]; then
        echo "[INFO] input is a movie."
        echo "[INFO] convert movie to images"
-       INPUT_DIR=$(dirname ${INPUT})
-       ffmpeg -i ${INPUT} -r ${IN_FPS} -vf scale=${IMG_WIDTH}:-1 ${INPUT_DIR}/%06d.png
+       INPUT_DIR=$(dirname "${INPUT}")
+       ffmpeg -i "${INPUT}" -r "${IN_FPS}" -vf scale="${IMG_WIDTH}":-1 "${INPUT_DIR}"/%06d.png
 else
        echo "[ERROR] input is neither a directory nor a movie."
        exit 1
 fi
 
 # automatically defined variables from INPUT
-RESULT_PARENT_DIR=${RESULT_PARENT_DIR}/$(basename ${INPUT_DIR})
-RESULT_FLOW_DIR=${RESULT_PARENT_DIR}/flow
-RESULT_SEG_DIR=${RESULT_PARENT_DIR}/segmentation
-RESULT_MOVOBJ_DIR=${RESULT_PARENT_DIR}/moving_object
+RESULT_PARENT_DIR="${RESULT_PARENT_DIR}/$(basename "${INPUT_DIR}")"
+RESULT_FLOW_DIR="${RESULT_PARENT_DIR}/flow"
+RESULT_SEG_DIR="${RESULT_PARENT_DIR}/segmentation"
+RESULT_MOVOBJ_DIR="${RESULT_PARENT_DIR}/moving_object"
 case ${SEG_MODEL_NAME} in
        "upernet_internimage_t_512_160k_ade20k.pth" |\
        "upernet_internimage_xl_640_160k_ade20k.pth" |\
@@ -104,52 +117,162 @@ case ${SEG_MODEL_NAME} in
 esac
 
 
-deactivate_allenvs() {
-       while [ -n "$VIRTUAL_ENV" ]; do
-              echo "[INFO] deactivate env: $VIRTUAL_ENV"
-              deactivate || conda deactivate
-       done
-       echo "[INFO] deactivate all envs. current env: $VIRTUAL_ENV"
+deactivate_all_environments() {
+       local environment_deactivated=false
 
-       # remove .venv from PATH
-       PATH=$(echo $PATH | tr ':' '\n' | grep -v "\.venv" | tr '\n' ':' | sed 's/:$//')
-       echo "[INFO] PATH: $PATH"
+       # Check and deactivate virtual environment
+       if [ -n "${VIRTUAL_ENV:-}" ]; then
+              echo "[INFO] Deactivating venv: $VIRTUAL_ENV"
+              if deactivate 2>/dev/null; then
+                     environment_deactivated=true
+              else
+                     echo "[WARNING] Failed to deactivate venv"
+              fi
+       fi
+
+       # Check and deactivate conda environment
+       if [ -n "${CONDA_DEFAULT_ENV:-}" ] && [ "$CONDA_DEFAULT_ENV" != "base" ]; then
+              echo "[INFO] Deactivating conda env: $CONDA_DEFAULT_ENV"
+              if conda deactivate 2>/dev/null; then
+                     environment_deactivated=true
+              else
+                     echo "[WARNING] Failed to deactivate conda env"
+              fi
+       fi
+
+       if [ "$environment_deactivated" = true ]; then
+              echo "[INFO] Successfully deactivated environments"
+       fi
+
+       # Clean PATH
+       export PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "\.venv" | tr '\n' ':' | sed 's/:$//')
 }
 
 
-echo "[INFO] compute optical flow"
-source ${ROOT_DIR}/.venv/bin/activate
-echo "[INFO] env: $VIRTUAL_ENV"
+echo "[INFO] compute optical flow using ${FLOW_TYPE}"
+# CMD_PREFIX can be used to set CUDA device if needed
+# Example: CMD_PREFIX="env CUDA_VISIBLE_DEVICES=0"
 CMD_PREFIX=""
-if [ "$(uname -s)" = "Linux" ]; then
-       CMD_PREFIX="env CUDA_VISIBLE_DEVICES=0"
-fi
-if [ -d ${RESULT_FLOW_DIR} ] && [ -n "$(ls -A ${RESULT_FLOW_DIR}/*.mp4)" ]; then
+if [ -d "${RESULT_FLOW_DIR}" ] && [ -n "$(ls -A "${RESULT_FLOW_DIR}"/*.mp4 2>/dev/null)" ]; then
        echo "[INFO] optical flow output files already exist. Skip computing optical flow."
 else
-       if [ ! -f ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth ]; then
-              echo "[INFO] download pretrained model"
-              mkdir -p ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
-              wget https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME} -P ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained
-       fi
-
-       mkdir -p ${RESULT_FLOW_DIR}
+       mkdir -p "${RESULT_FLOW_DIR}"
        export OMP_NUM_THREADS=1
        # to avoid CUDA out of memory error.
        export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-       ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py \
-       --inference_dir ${INPUT} \
-       --output_path ${RESULT_FLOW_DIR} \
-       --resume ${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME} \
-       --padding_factor 32 \
-       --upsample_factor 4 \
-       --num_scales 2 \
-       --attn_splits_list 2 8 \
-       --corr_radius_list -1 4 \
-       --prop_radius_list -1 1 \
-       --reg_refine \
-       --num_reg_refine 6 \
-       --save_flo_flow
+
+       if [ "${FLOW_TYPE}" = "memflow" ]; then
+              echo "[INFO] using MemFlow for optical flow computation"
+
+              # Check if GPU is available
+              if ! command -v nvidia-smi &> /dev/null || ! nvidia-smi &> /dev/null; then
+                     echo "[ERROR] No NVIDIA GPU detected. MemFlow requires a GPU for processing."
+                     echo "[ERROR] Cannot proceed with MemFlow without GPU support."
+                     echo "[INFO] Please either:"
+                     echo "       1. Run this on a system with an NVIDIA GPU, or"
+                     echo "       2. Change 'flow_type' to 'unimatch' in script/foels_param.yaml"
+                     exit 1
+              else
+                     # GPU is available, proceed with MemFlow
+                     # Activate memflow conda environment
+                     set +eu
+                     deactivate_all_environments
+                     source "$(conda info --base)/etc/profile.d/conda.sh"
+                     conda activate memflow
+                     set -eu
+
+                     # Run MemFlow inference (need to cd to memflow directory for imports to work)
+                     cd "${ROOT_DIR}/reconstruct4D/ext/memflow"
+                     # Unset PYTORCH_CUDA_ALLOC_CONF to avoid compatibility issues with PyTorch 1.13
+                     unset PYTORCH_CUDA_ALLOC_CONF
+                     # Use absolute path for input if not already absolute
+                     if [[ "${INPUT}" != /* ]]; then
+                            INPUT_ABS="${ROOT_DIR}/${INPUT}"
+                     else
+                            INPUT_ABS="${INPUT}"
+                     fi
+                     # Use absolute path for weights
+                     if [[ "${MEMFLOW_WEIGHTS}" != /* ]]; then
+                            WEIGHTS_ABS="${ROOT_DIR}/${MEMFLOW_WEIGHTS}"
+                     else
+                            WEIGHTS_ABS="${MEMFLOW_WEIGHTS}"
+                     fi
+                     # Use absolute path for output directory
+                     if [[ "${RESULT_FLOW_DIR}" != /* ]]; then
+                            OUTPUT_ABS="${ROOT_DIR}/${RESULT_FLOW_DIR}"
+                     else
+                            OUTPUT_ABS="${RESULT_FLOW_DIR}"
+                     fi
+                     python inference_wrapper.py \
+                     --name "${MEMFLOW_MODEL}" \
+                     --stage "${MEMFLOW_STAGE}" \
+                     --restore_ckpt "${WEIGHTS_ABS}" \
+                     --seq_dir "${INPUT_ABS}" \
+                     --vis_dir "${OUTPUT_ABS}"
+                     cd "${ROOT_DIR}"
+
+                     # Check if input images start from 00000 or 00001 to determine renaming strategy
+                     if [ -f "${INPUT_ABS}/00000.jpg" ] || [ -f "${INPUT_ABS}/00000.png" ]; then
+                         echo "[INFO] Input images start from 00000, keeping 0-indexed flow files"
+                         # No renaming needed for DAVIS2016 and similar datasets
+                     elif [ -f "${INPUT_ABS}/000000.jpg" ] || [ -f "${INPUT_ABS}/000000.png" ]; then
+                         echo "[INFO] Input images start from 000000 (6-digit), keeping 0-indexed flow files"
+                         # No renaming needed
+                     else
+                         # Detect number of digits from first flow file
+                         FIRST_FLOW=$(ls "${OUTPUT_ABS}"/0*_pred.flo 2>/dev/null | head -1)
+                         if [ -n "$FIRST_FLOW" ]; then
+                             # Get the filename without path and extension
+                             BASE_NAME=$(basename "$FIRST_FLOW" | sed 's/_pred.flo$//')
+                             NUM_DIGITS=${#BASE_NAME}
+
+                             # Rename flow files from 0-indexed to 1-indexed for compatibility
+                             echo "[INFO] Renaming flow files for 1-indexed compatibility (${NUM_DIGITS} digits)..."
+                             for file in "${OUTPUT_ABS}"/0*_pred.flo; do
+                                 if [ -f "$file" ]; then
+                                     # Extract the number
+                                     num=$(basename "$file" | sed 's/_pred.flo$//')
+                                     # Remove leading zeros and increment (handle "00000" case with :-0)
+                                     newnum=$(printf "%0${NUM_DIGITS}d" $(( ${num##0*:-0} + 1 )))
+                                     newname="${OUTPUT_ABS}/${newnum}_pred.flo"
+                                     mv "$file" "$newname"
+                                 fi
+                             done
+                         fi
+                     fi
+
+                     # Reactivate main environment
+                     conda deactivate
+                     source "${ROOT_DIR}/.venv/bin/activate"
+              fi
+       fi
+
+       if [ "${FLOW_TYPE}" = "unimatch" ]; then
+              echo "[INFO] using Unimatch for optical flow computation"
+              source "${ROOT_DIR}/.venv/bin/activate"
+              echo "[INFO] env: $VIRTUAL_ENV"
+
+              if [ ! -f "${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME}" ]; then
+                     echo "[INFO] download pretrained model"
+                     mkdir -p "${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained"
+                     wget "https://s3.eu-central-1.amazonaws.com/avg-projects/unimatch/pretrained/${FLOW_MODEL_NAME}" -P "${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained"
+              fi
+
+              python "${ROOT_DIR}/reconstruct4D/ext/unimatch/main_flow.py" \
+              --inference_dir "${INPUT}" \
+              --output_path "${RESULT_FLOW_DIR}" \
+              --resume "${ROOT_DIR}/reconstruct4D/ext/unimatch/pretrained/${FLOW_MODEL_NAME}" \
+              --padding_factor 32 \
+              --upsample_factor 4 \
+              --num_scales 2 \
+              --attn_splits_list 2 8 \
+              --corr_radius_list -1 4 \
+              --prop_radius_list -1 1 \
+              --reg_refine \
+              --num_reg_refine 6 \
+              --save_flo_flow
+       fi
+
        echo "[INFO] save optical flow to ${RESULT_FLOW_DIR}"
        echo "[INFO] creating a flow movie"
        ffmpeg -framerate 30  -pattern_type glob -i "${RESULT_FLOW_DIR}/*.png" \
@@ -198,17 +321,17 @@ else
 
                      echo "[INFO] run segmentation using: ${SEG_MODEL_TYPE} ${SEG_TASK_TYPE}"
                      if [ "$SEG_TASK_TYPE" = "instance" ]; then
-                            ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/image_demo.py \
-                            ${INPUT} \
-                            ${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/configs/coco/${SEG_MODEL_NAME%.*}.py  \
-                            ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det/${SEG_MODEL_NAME} \
-                            --out ${RESULT_SEG_DIR}
+                            python "${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/image_demo.py" \
+                            "${INPUT}" \
+                            "${ROOT_DIR}/reconstruct4D/ext/InternImage/detection/configs/coco/${SEG_MODEL_NAME%.*}.py" \
+                            "${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/det/${SEG_MODEL_NAME}" \
+                            --out "${RESULT_SEG_DIR}"
                      elif [ "$SEG_TASK_TYPE" = "semantic" ]; then
-                            ${CMD_PREFIX} python ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py \
-                                   ${INPUT} \
-                                   ${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/${SEG_MODEL_NAME%.*}.py  \
-                                   ${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg/${SEG_MODEL_NAME} \
-                                   --palette ade20k --out ${RESULT_SEG_DIR}
+                            python "${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/image_demo.py" \
+                                   "${INPUT}" \
+                                   "${ROOT_DIR}/reconstruct4D/ext/InternImage/segmentation/configs/ade20k/${SEG_MODEL_NAME%.*}.py" \
+                                   "${ROOT_DIR}/reconstruct4D/ext/InternImage/checkpoint_dir/seg/${SEG_MODEL_NAME}" \
+                                   --palette ade20k --out "${RESULT_SEG_DIR}"
                      else
                             echo "[ERROR] unknown segmentation task type: ${SEG_TASK_TYPE}"
                             exit 1
@@ -225,22 +348,22 @@ fi
 
 
 echo "[INFO] run extract moving objects"
-source ${ROOT_DIR}/.venv/bin/activate
+source "${ROOT_DIR}/.venv/bin/activate"
 echo "[INFO] env: $VIRTUAL_ENV"
 
 # Count input frames
-NUM_INPUT_FRAMES=$(ls -1 ${INPUT_DIR}/*.{jpg,png} 2>/dev/null | wc -l)
+NUM_INPUT_FRAMES=$(ls -1 "${INPUT_DIR}"/*.{jpg,png} 2>/dev/null | wc -l)
 
 if [ "$SKIP_FRAMES" -ge "$NUM_INPUT_FRAMES" ]; then
     echo "[WARNING] SKIP_FRAMES (${SKIP_FRAMES}) >= number of input frames (${NUM_INPUT_FRAMES}). No frames will be processed. Skipping moving object extraction."
     exit 0
 else
-    mkdir -p ${RESULT_MOVOBJ_DIR}
+    mkdir -p "${RESULT_MOVOBJ_DIR}"
     MOVOBJ_OPTS="--config ${PARAM_FILE} \
-    --input_dir ${INPUT_DIR} \
-    --flow_result_dir ${RESULT_FLOW_DIR} \
-    --segment_result_dir ${RESULT_SEG_DIR} \
-    --result_dir ${RESULT_MOVOBJ_DIR}" # overwrite result dirs based on input data.
+    --input_dir \"${INPUT_DIR}\" \
+    --flow_result_dir \"${RESULT_FLOW_DIR}\" \
+    --segment_result_dir \"${RESULT_SEG_DIR}\" \
+    --result_dir \"${RESULT_MOVOBJ_DIR}\"" # overwrite result dirs based on input data.
     if [ $LOG_LEVEL -ge 5 ]; then
        echo "[NOTE] Please press F5 to start debugging!"
        python -Xfrozen_modules=off -m debugpy --listen 5678 --wait-for-client ${ROOT_DIR}/reconstruct4D/extract_moving_objects.py ${MOVOBJ_OPTS}

@@ -6,8 +6,14 @@ CreateImage:
   fps: 30 # frames per second
 
 OpticalFlow:
-  model: "gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth" # unimatch model
-  weights: "weights/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth"
+  flow_type: "memflow" # optical flow method: "unimatch" or "memflow"
+  # Unimatch settings
+  unimatch_model: "gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth" # unimatch model
+  unimatch_weights: "weights/gmflow-scale2-regrefine6-mixdata-train320x576-4e7b215d.pth"
+  # MemFlow settings
+  memflow_model: "MemFlowNet_T" # MemFlowNet or MemFlowNet_T (T is stronger)
+  memflow_stage: "things" # things, sintel, kitti, spring, things_kitti
+  memflow_weights: "reconstruct4D/ext/memflow/ckpts/MemFlowNet_T_things.pth"
 
 MovingObjectExtractor:
   # input/output directories
